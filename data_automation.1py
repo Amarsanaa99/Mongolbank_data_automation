@@ -1,20 +1,9 @@
-import requests
 import pandas as pd
 from datetime import datetime
-import os
 
-# Working directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-os.chdir(BASE_DIR)
-
-# Example URL (placeholder – дараа бодит линкээр солино)
-URL = "https://www.mongolbank.mn/mn/statistic.aspx"
-
-# Output filename
 today = datetime.now().strftime("%Y-%m-%d")
 output_file = f"mongolbank_data_{today}.csv"
 
-# Dummy data (Actions test хийхэд хэрэгтэй)
 data = {
     "date": [today],
     "status": ["automation test success"]
