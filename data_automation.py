@@ -111,10 +111,14 @@ def main():
 
     def pivot_validate(df, mapping, label):
         df["component"] = df["Бүрэлдэхүүн"].replace(mapping)
-        pv = df.pivot_table(
+        pv = (
+            df.pivot_table(
             index="ОН", columns="component", values="DTVAL_CO", aggfunc="sum"
         ).reset_index()
-
+        )
+        # 👉 COLUMN ORDER-ийг mapping dict-ийн дарааллаар тогтооно
+        ordered_cols = ["ОН"] + list(mapping.values())
+        pv = pv.reindex(columns=ordered_cols)
         logging.info(f"📊 {label} pivot үүслээ")
 
         if pv.empty:
