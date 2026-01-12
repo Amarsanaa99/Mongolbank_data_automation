@@ -1,23 +1,26 @@
 import streamlit as st
-st.write("🔥 APP STARTED")
 import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
-# -------------------------
-# PAGE CONFIG
-# -------------------------
+# =====================================================
+# PAGE CONFIG (⚠️ ЗААВАЛ ЭХНИЙ МӨРҮҮДИЙН НЭГ БАЙНА)
+# =====================================================
 st.set_page_config(
     page_title="Mongolbank Macro Dashboard",
     layout="wide"
 )
 
+# =====================================================
+# APP START (TEST RENDER)
+# =====================================================
 st.title("📊 Mongolbank Macro Dashboard")
 st.caption("Quarterly GDP indicators (2000–2025)")
+st.success("🔥 APP STARTED — UI rendering OK")
 
-# -------------------------
-# BIGQUERY CONNECTION
-# -------------------------
+# =====================================================
+# BIGQUERY LOAD
+# =====================================================
 @st.cache_data(ttl=3600)
 def load_data():
     credentials = service_account.Credentials.from_service_account_info(
@@ -30,30 +33,42 @@ def load_data():
     )
 
     query = """
-    SELECT
-        year,
-        indicator_code,
-        value
-    FROM `mongol-bank-macro-data.Automation_data.fact_macro`
-    ORDER BY year
+        SELECT
+            year,
+            indicator_code,
+            value
+        FROM `mongol-bank-macro-data.Automation_data.fact_macro`
+        ORDER BY year
     """
 
-    return client.query(query).to_dataframe()
+    df = client.query(query).to_dataframe()
+    return df
 
-df = load_data()
 
-# -------------------------
+with st.spinner("⏳ Loading data from BigQuery..."):
+    df = load_data()
+
+# =====================================================
+# DATA VALIDATION (⚠️ МАШ ЧУХАЛ)
+# =====================================================
+if df.empty:
+    st.error("❌ BigQuery-ээс өгөгдөл ирсэнгүй")
+    st.stop()
+
+st.info(f"✅ Loaded rows: {len(df):,}")
+
+# =====================================================
 # PREP DATA
-# -------------------------
-# year = "2000-1" → numeric index for plotting
+# =====================================================
+# "2000-1" → 2000.00, "2000-2" → 2000.25
 df["year_num"] = (
     df["year"].str.split("-").str[0].astype(int)
     + (df["year"].str.split("-").str[1].astype(int) - 1) / 4
 )
 
-# -------------------------
-# SIDEBAR
-# -------------------------
+# =====================================================
+# SIDEBAR FILTER
+# =====================================================
 st.sidebar.header("🔎 Filters")
 
 indicator_list = sorted(df["indicator_code"].unique())
@@ -65,18 +80,21 @@ selected_indicator = st.sidebar.selectbox(
 
 filtered_df = df[df["indicator_code"] == selected_indicator]
 
-# -------------------------
+# =====================================================
 # MAIN CHART
-# -------------------------
+# =====================================================
 st.subheader(f"📈 Indicator: {selected_indicator}")
 
-st.line_chart(
-    filtered_df.set_index("year_num")["value"]
-)
+if filtered_df.empty:
+    st.warning("⚠️ Сонгосон indicator-д өгөгдөл алга")
+else:
+    st.line_chart(
+        filtered_df.set_index("year_num")["value"]
+    )
 
-# -------------------------
+# =====================================================
 # DATA PREVIEW
-# -------------------------
+# =====================================================
 with st.expander("📄 Raw data"):
     st.dataframe(
         filtered_df[["year", "indicator_code", "value"]],
