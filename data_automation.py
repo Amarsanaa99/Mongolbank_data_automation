@@ -167,18 +167,18 @@ def main():
     df_ngdp = jsonstat_to_dataframe(get_nso_data(table_path, build_query("0")))
     pv_ngdp = pivot_validate(df_ngdp, ngdp_map, "NGDP")
 
-# ===================== RGDP by 2005 =====================
-rgdp_2005_map = {k: f"rgdp_2005{v[4:]}" for k, v in ngdp_map.items()}
-
-df_rgdp_2005 = jsonstat_to_dataframe(get_nso_data(table_path, build_query("1")))
-
-pv_rgdp_2005 = pivot_validate(df_rgdp_2005, rgdp_2005_map, "RGDP 2005")
-
-
-# ===================== RGDP by 2010 =====================
-rgdp_2010_map = {k: f"rgdp_2010{v[4:]}" for k, v in ngdp_map.items()}
-df_rgdp_2010 = jsonstat_to_dataframe(get_nso_data(table_path, build_query("2")))
-pv_rgdp_2010 = pivot_validate(df_rgdp_2010,rgdp_2010_map,"RGDP 2010")
+    # ===================== RGDP by 2005 =====================
+    rgdp_2005_map = {k: f"rgdp_2005{v[4:]}" for k, v in ngdp_map.items()}
+    
+    df_rgdp_2005 = jsonstat_to_dataframe(get_nso_data(table_path, build_query("1")))
+    
+    pv_rgdp_2005 = pivot_validate(df_rgdp_2005, rgdp_2005_map, "RGDP 2005")
+    
+    
+    # ===================== RGDP by 2010 =====================
+    rgdp_2010_map = {k: f"rgdp_2010{v[4:]}" for k, v in ngdp_map.items()}
+    df_rgdp_2010 = jsonstat_to_dataframe(get_nso_data(table_path, build_query("2")))
+    pv_rgdp_2010 = pivot_validate(df_rgdp_2010,rgdp_2010_map,"RGDP 2010")
 
     # ===================== RGDP by 2015 =====================
     rgdp_map_2015 = {k: f"rgdp_2015{v[4:]}" for k, v in ngdp_map.items()}
