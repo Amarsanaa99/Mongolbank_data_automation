@@ -216,6 +216,38 @@ def main():
     output_file,
     index=False
     )
+        # ===================== LOAD TO BIGQUERY (RAW, NO CHANGE) =====================
+    table_id = "mongol-bank-macro-data.Automation_data.fact_macro"
+
+    # Wide → Long (ямар ч drop / filter хийхгүй)
+    id_col = "ОН"
+    value_cols = [c for c in final_df.columns if c != id_col]
+
+    long_df = final_df.melt(
+        id_vars=id_col,
+        value_vars=value_cols,
+        var_name="indicator_code",
+        value_name="value"
+    )
+
+    long_df = long_df.rename(columns={"ОН": "year"})
+    long_df["source"] = "NSO 1212.mn"
+    long_df["loaded_at"] = pd.Timestamp.utcnow()
+
+    # ⚠️ ЯМАР Ч DROPNA, FILLNA ХИЙХГҮЙ ⚠️
+    # 0 → 0 хэвээр
+    # NaN → BigQuery дээр NULL болно
+
+    job = bq_client.load_table_from_dataframe(
+        long_df,
+        table_id,
+        job_config=bigquery.LoadJobConfig(
+            write_disposition="WRITE_APPEND"
+        )
+    )
+
+    job.result()
+    logging.info(f"☁️ BigQuery-д яг байгаа өгөгдлөөр {len(long_df)} мөр нэмэгдлээ")
 
     
     logging.info(f"✅ Pipeline амжилттай дууслаа → {output_file}")
