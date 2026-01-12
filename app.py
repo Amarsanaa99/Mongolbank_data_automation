@@ -28,13 +28,14 @@ def load_data():
     )
 
     query = """
-        SELECT
-            year,
-            indicator_code,
-            value
-        FROM `cleveland-411203.YOUR_DATASET.YOUR_TABLE`
-        ORDER BY year
+    SELECT
+        CAST(year AS INT64) AS year,
+        indicator_code,
+        value
+    FROM `mongol-bank-macro-data.Automation_data.fact_macro`
+    ORDER BY year
     """
+
 
     df = client.query(query).to_dataframe()
     return df
