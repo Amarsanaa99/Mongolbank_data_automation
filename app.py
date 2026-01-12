@@ -1,99 +1,63 @@
 import streamlit as st
 import pandas as pd
 from google.cloud import bigquery
-from google.oauth2 import service_account
-import json
-import os
-import plotly.express as px
 
-# -------------------------------------------------
+# -------------------------
 # PAGE CONFIG
-# -------------------------------------------------
+# -------------------------
 st.set_page_config(
-    page_title="Mongolia Macro Dashboard",
+    page_title="Mongolbank Macro Dashboard",
     layout="wide"
 )
 
-st.title("📊 Mongolia Macroeconomic Dashboard")
-st.caption("Source: NSO / Mongolbank API")
+st.title("📊 Mongolbank Macro Dashboard")
 
-# -------------------------------------------------
-# AUTH (Streamlit Secrets)
-# -------------------------------------------------
-credentials_info = json.loads(st.secrets["gcp_service_account"])
-
-credentials = service_account.Credentials.from_service_account_info(
-    credentials_info
-)
-
-client = bigquery.Client(
-    credentials=credentials,
-    project=credentials.project_id
-)
-
-# -------------------------------------------------
-# LOAD DATA FROM BIGQUERY
-# -------------------------------------------------
+# -------------------------
+# BIGQUERY CONNECTION
+# -------------------------
 @st.cache_data(ttl=3600)
 def load_data():
+    client = bigquery.Client()
+
     query = """
         SELECT
             year,
             indicator_code,
             value
         FROM `mongol-bank-macro-data.Automation_data.fact_macro`
-        WHERE indicator_code IN ('ngdp', 'rgdp_2015', 'growth')
+        ORDER BY year
     """
-    return client.query(query).to_dataframe()
+
+    df = client.query(query).to_dataframe()
+    return df
+
 
 df = load_data()
 
-# -------------------------------------------------
+# -------------------------
 # SIDEBAR FILTERS
-# -------------------------------------------------
+# -------------------------
 st.sidebar.header("🔎 Filters")
 
-indicator = st.sidebar.selectbox(
-    "Indicator",
-    options=df["indicator_code"].unique()
+indicator_list = sorted(df["indicator_code"].unique())
+selected_indicator = st.sidebar.selectbox(
+    "Select indicator",
+    indicator_list
 )
 
-years = sorted(df["year"].unique())
-selected_years = st.sidebar.multiselect(
-    "Year / Quarter",
-    years,
-    default=years[-8:]
+filtered_df = df[df["indicator_code"] == selected_indicator].copy()
+
+# -------------------------
+# MAIN CHART
+# -------------------------
+st.subheader(f"📈 Indicator: {selected_indicator}")
+
+st.line_chart(
+    filtered_df.set_index("year")["value"]
 )
 
-filtered = df[
-    (df["indicator_code"] == indicator) &
-    (df["year"].isin(selected_years))
-]
-
-# -------------------------------------------------
-# KPI
-# -------------------------------------------------
-latest = filtered.sort_values("year").iloc[-1]
-
-col1, col2 = st.columns(2)
-col1.metric("Indicator", indicator.upper())
-col2.metric("Latest value", f"{latest['value']:,.2f}")
-
-# -------------------------------------------------
-# CHART
-# -------------------------------------------------
-fig = px.line(
-    filtered,
-    x="year",
-    y="value",
-    markers=True,
-    title=f"{indicator.upper()} over time"
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-# -------------------------------------------------
-# DATA TABLE
-# -------------------------------------------------
-with st.expander("📄 View raw data"):
-    st.dataframe(filtered, use_container_width=True)
+# -------------------------
+# DATA PREVIEW
+# -------------------------
+with st.expander("📄 Raw data"):
+    st.dataframe(filtered_df)
