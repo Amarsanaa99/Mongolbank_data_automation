@@ -213,10 +213,10 @@ def main():
     )
     
     final_df.to_excel(
-        output_file,
-        index=False,
-        engine="xlsxwriter"
+    output_file,
+    index=False
     )
+
     
     logging.info(f"✅ Pipeline амжилттай дууслаа → {output_file}")
 
