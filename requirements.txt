@@ -1,7 +1,7 @@
 pandas
 requests
 openpyxl
-
+streamlit
 google-cloud-bigquery
 google-auth
-pyarrow
+plotly
