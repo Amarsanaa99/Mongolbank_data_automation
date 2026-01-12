@@ -93,10 +93,23 @@ else:
     )
 
 # =====================================================
-# DATA PREVIEW
+# DATA PREVIEW (PIVOT)
 # =====================================================
-with st.expander("📄 Raw data"):
+with st.expander("📄 Raw data (Pivot – Excel шиг)"):
+
+    df_pivot = (
+        df
+        .pivot_table(
+            index="year",
+            columns="indicator_code",
+            values="value",
+            aggfunc="sum"
+        )
+        .reset_index()
+    )
+
     st.dataframe(
-        filtered_df[["year", "indicator_code", "value"]],
+        df_pivot,
         use_container_width=True
     )
+
