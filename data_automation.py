@@ -10,6 +10,9 @@ import logging
 from datetime import datetime
 import os
 import sys
+from google.cloud import bigquery
+from google.oauth2 import service_account
+import json
 
 # ---------------------------------------------------------
 # PATHS (GitHub Actions friendly)
@@ -42,6 +45,21 @@ pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
 
 TIMEOUT = 30
+
+# ---------------------------------------------------------
+# BIGQUERY AUTH (GitHub Secret)
+# ---------------------------------------------------------
+credentials_info = json.loads(os.environ["GCP_SERVICE_ACCOUNT_KEY"])
+
+credentials = service_account.Credentials.from_service_account_info(
+    credentials_info
+)
+
+bq_client = bigquery.Client(
+    credentials=credentials,
+    project=credentials.project_id
+)
+
 
 # ---------------------------------------------------------
 # FUNCTIONS
@@ -172,6 +190,40 @@ def main():
     final_df.to_excel(output_file, index=False, float_format="%.2f")
 
     logging.info(f"✅ Амжилттай дууслаа → {output_file}")
+
+    # ===================== LONG FORMAT FOR BIGQUERY =====================
+    id_col = "ОН"
+    value_cols = [c for c in final_df.columns if c != id_col]
+
+    long_df = final_df.melt(
+        id_vars=id_col,
+        value_vars=value_cols,
+        var_name="indicator_code",
+        value_name="value"
+    )
+
+    long_df = long_df.rename(columns={"ОН": "year"})
+
+    long_df["source"] = "NSO / Mongolbank API"
+    long_df["loaded_at"] = pd.Timestamp.utcnow()
+
+    # 0 / NULL цэвэрлэгээ
+    long_df = long_df.dropna(subset=["value"])
+
+    # ===================== LOAD TO BIGQUERY =====================
+    table_id = "mongol-bank-macro-data.Automation_data.fact_macro"
+
+    job = bq_client.load_table_from_dataframe(
+        long_df,
+        table_id,
+        job_config=bigquery.LoadJobConfig(
+            write_disposition="WRITE_APPEND"
+        )
+    )
+
+    job.result()
+    logging.info("✅ Long macro data BigQuery-д амжилттай нэмэгдлээ")
+
 
 # ---------------------------------------------------------
 # ENTRY POINT
