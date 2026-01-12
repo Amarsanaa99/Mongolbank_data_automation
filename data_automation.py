@@ -66,7 +66,7 @@ bq_client = bigquery.Client(
 # ---------------------------------------------------------
 def get_table_metadata(table_path):
     encoded_path = quote(table_path, safe="/")
-    url = f"https://data.1212.mn/api/v1/mn/NSO/{encoded_path}"
+    url = f"https://data.1212.mn:443/api/v1/mn/NSO/{encoded_path}"
     r = requests.get(url, timeout=TIMEOUT)
     r.raise_for_status()
     return r.json()
@@ -74,7 +74,7 @@ def get_table_metadata(table_path):
 
 def get_nso_data(table_path, payload):
     encoded_path = quote(table_path, safe="/")
-    url = f"https://data.1212.mn/api/v1/mn/NSO/{encoded_path}"
+    url = f"https://data.1212.mn:443/api/v1/mn/NSO/{encoded_path}"
     r = requests.post(url, json=payload, timeout=TIMEOUT)
     r.raise_for_status()
     return r.json()
