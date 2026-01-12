@@ -16,12 +16,12 @@ st.title("📊 Mongolbank Macro Dashboard")
 # -------------------------
 # BIGQUERY CONNECTION
 # -------------------------
-credentials = service_account.Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"]
-)
-
 @st.cache_data(ttl=3600)
 def load_data():
+    credentials = service_account.Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"]
+    )
+
     client = bigquery.Client(
         credentials=credentials,
         project=st.secrets["gcp_service_account"]["project_id"]
@@ -35,7 +35,6 @@ def load_data():
     FROM `mongol-bank-macro-data.Automation_data.fact_macro`
     ORDER BY year
     """
-
 
     df = client.query(query).to_dataframe()
     return df
