@@ -197,12 +197,12 @@ def main():
     pv_growth = pivot_validate(df_growth, growth_map, "GDP Growth")
 
     final_df = (
-    pv_ngdp
-    .merge(pv_rgdp_2005, on="ОН", how="outer")
-    .merge(pv_rgdp_2010, on="ОН", how="outer")
-    .merge(pv_rgdp_2015, on="ОН", how="outer")
-    .merge(pv_growth, on="ОН", how="outer")
-    )
+        pv_ngdp
+        .merge(pv_rgdp_2005, on="ОН", how="outer")
+        .merge(pv_rgdp_2010, on="ОН", how="outer")
+        .merge(pv_rgdp_2015, on="ОН", how="outer")
+        .merge(pv_growth, on="ОН", how="outer")
+        )
 
 
     # EXPORT
