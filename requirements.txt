@@ -1,3 +1,7 @@
 pandas
 requests
 openpyxl
+
+google-cloud-bigquery
+google-auth
+pyarrow
