@@ -186,7 +186,16 @@ def main():
     df_rgdp_2015 = jsonstat_to_dataframe(get_nso_data(table_path, build_query("3")))
     pv_rgdp_2015 = pivot_validate(df_rgdp_2015, rgdp_map_2015, "RGDP")
 
-    final_df = pv_ngdp.merge(pv_rgdp_2005, on="ОН", how="outer")
+        final_df = pv_ngdp.merge(pv_rgdp_2005, on="ОН", how="outer")
+        # ===================== GROWTH =====================
+    growth_map = {k: f"growth{v[4:]}" for k, v in ngdp_map.items()}
+    
+    df_growth = jsonstat_to_dataframe(
+        get_nso_data(table_path, build_query("6"))
+    )
+    
+    pv_growth = pivot_validate(df_growth, growth_map, "GDP Growth")
+
     final_df = (
     pv_ngdp
     .merge(pv_rgdp_2005, on="ОН", how="outer")
