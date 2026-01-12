@@ -49,7 +49,7 @@ TIMEOUT = 30
 # ---------------------------------------------------------
 # BIGQUERY AUTH (GitHub Secret)
 # ---------------------------------------------------------
-credentials_info = json.loads(os.environ["GCP_SERVICE_ACCOUNT_KEY"])
+credentials_info = json.loads(os.environ["DATA_SERVICE_ACCOUNT_KEY"])
 
 credentials = service_account.Credentials.from_service_account_info(
     credentials_info
