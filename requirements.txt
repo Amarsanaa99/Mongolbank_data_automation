@@ -5,3 +5,4 @@ streamlit
 google-cloud-bigquery
 google-auth
 plotly
+pyarrow
