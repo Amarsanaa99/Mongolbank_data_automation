@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from google.cloud import bigquery
+from google.oauth2 import service_account
 
 # -------------------------
 # PAGE CONFIG
@@ -15,16 +16,23 @@ st.title("📊 Mongolbank Macro Dashboard")
 # -------------------------
 # BIGQUERY CONNECTION
 # -------------------------
+credentials = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"]
+)
+
 @st.cache_data(ttl=3600)
 def load_data():
-    client = bigquery.Client()
+    client = bigquery.Client(
+        credentials=credentials,
+        project=st.secrets["gcp_service_account"]["project_id"]
+    )
 
     query = """
         SELECT
             year,
             indicator_code,
             value
-        FROM `mongol-bank-macro-data.Automation_data.fact_macro`
+        FROM `cleveland-411203.YOUR_DATASET.YOUR_TABLE`
         ORDER BY year
     """
 
