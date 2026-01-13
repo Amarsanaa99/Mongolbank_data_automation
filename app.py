@@ -19,38 +19,6 @@ st.caption("Quarterly GDP indicators (2000–2025)")
 st.success("🔥 APP STARTED — UI rendering OK")
 
 # =====================================================
-# BIGQUERY LOAD
-# =====================================================
-@st.cache_data(ttl=3600)
-def load_data(topic):
-    credentials = service_account.Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"]
-    )
-
-    client = bigquery.Client(
-        credentials=credentials,
-        project=st.secrets["gcp_service_account"]["project_id"]
-    )
-
-    query = f"""
-        SELECT
-            year,
-            indicator_code,
-            value,
-            sex,
-            age_group
-        FROM `mongol-bank-macro-data.Automation_data.fact_macro`
-        WHERE topic = '{topic}'
-        ORDER BY year
-    """
-    return client.query(query).to_dataframe()
-with st.spinner("⏳ Loading data from BigQuery..."):
-    df = load_data(topic)   # ⚠️ ЭНД topic дамжуулна
-if df.empty:
-    st.error("❌ BigQuery-ээс өгөгдөл ирсэнгүй")
-    st.stop()
-st.caption("Data loaded successfully")
-# =====================================================
 # PREP DATA
 # =====================================================
 # "2000-1" → 2000.00, "2000-2" → 2000.25
@@ -104,8 +72,8 @@ with left_col:
             ORDER BY year
         """
         return client.query(query).to_dataframe()
-
-    df = load_data(topic)
+    with st.spinner("⏳ Loading data from BigQuery..."):
+        df = load_data(topic)
 
     if topic == "gdp":
         df["year_num"] = (
