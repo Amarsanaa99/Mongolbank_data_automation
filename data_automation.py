@@ -273,9 +273,10 @@ def main():
         long_df,
         table_id,
         job_config=bigquery.LoadJobConfig(
-            write_disposition="WRITE_APPEND"
+            write_disposition="WRITE_TRUNCATE"
         )
     )
+
 
     job.result()
     logging.info(f"☁️ BigQuery-д яг байгаа өгөгдлөөр {len(long_df)} мөр нэмэгдлээ")
