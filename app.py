@@ -4,24 +4,6 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import altair as alt
 
-chart = (
-    alt.Chart(plot_df)
-    .mark_line()
-    .encode(
-        x=alt.X("year_num:Q", title="Year"),
-        y=alt.Y("value:Q", title="Population"),
-        color=alt.Color(
-            "Series:N",
-            legend=alt.Legend(orient="right")
-        ),
-        tooltip=["year", "sex", "age_group", "value"]
-    )
-    .properties(height=400)
-)
-
-st.altair_chart(chart, use_container_width=True)
-
-
 # =====================================================
 # PAGE CONFIG (⚠️ ЗААВАЛ ЭХНИЙ МӨРҮҮДИЙН НЭГ БАЙНА)
 # =====================================================
@@ -166,17 +148,27 @@ with left_col:
                 (int(df["year"].min()), int(df["year"].max()))
             )
 
-    # ---------- ⬅️ TIME FILTER ----------
+        # ---------- ⬅️ TIME FILTER ----------
     if topic == "gdp":
+        start_num = (
+            int(start_q.split("-")[0])
+            + (int(start_q.split("-")[1]) - 1) / 4
+        )
+        end_num = (
+            int(end_q.split("-")[0])
+            + (int(end_q.split("-")[1]) - 1) / 4
+        )
+    
         time_filtered_df = filtered_df[
-            (filtered_df["year"] >= start_q) &
-            (filtered_df["year"] <= end_q)
+            (filtered_df["year_num"] >= start_num) &
+            (filtered_df["year_num"] <= end_num)
         ]
     else:
         time_filtered_df = filtered_df[
             (filtered_df["year_num"] >= start_y) &
             (filtered_df["year_num"] <= end_y)
         ]
+
     # ---------- SERIES COLUMN (POPULATION) ----------
     if topic == "population":
         time_filtered_df["Series"] = (
@@ -194,7 +186,9 @@ with right_col:
 
         if time_filtered_df.empty:
             st.warning("No data for selected filters")
+
         else:
+            # ===== GDP =====
             if topic == "gdp":
                 chart_df = (
                     time_filtered_df
@@ -207,27 +201,27 @@ with right_col:
                     .sort_index()
                 )
                 st.line_chart(chart_df)
-        else:
-            # ---------- POPULATION MULTI-LINE CHART ----------
-            plot_df = time_filtered_df.copy()
-            plot_df["Series"] = plot_df["sex"] + " | " + plot_df["age_group"]
-        
-            chart = (
-                alt.Chart(plot_df)
-                .mark_line()
-                .encode(
-                    x=alt.X("year_num:Q", title="Year"),
-                    y=alt.Y("value:Q", title="Population"),
-                    color=alt.Color(
-                        "Series:N",
-                        legend=alt.Legend(orient="right")
-                    ),
-                    tooltip=["year", "sex", "age_group", "value"]
+
+            # ===== POPULATION =====
+            else:
+                plot_df = time_filtered_df.copy()
+
+                chart = (
+                    alt.Chart(plot_df)
+                    .mark_line()
+                    .encode(
+                        x=alt.X("year_num:Q", title="Year"),
+                        y=alt.Y("value:Q", title="Population"),
+                        color=alt.Color(
+                            "Series:N",
+                            legend=alt.Legend(orient="right")
+                        ),
+                        tooltip=["year", "sex", "age_group", "value"]
+                    )
+                    .properties(height=400)
                 )
-                .properties(height=400)
-            )
-        
-            st.altair_chart(chart, use_container_width=True)
+
+                st.altair_chart(chart, use_container_width=True)
 
 
 
