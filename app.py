@@ -19,6 +19,19 @@ st.caption("Quarterly GDP indicators (2000–2025)")
 st.success("🔥 APP STARTED — UI rendering OK")
 
 # =====================================================
+# SIDEBAR — DATASET SELECTOR (⚠️ ХАМГИЙН ЧУХАЛ)
+# =====================================================
+st.sidebar.header("📂 Dataset")
+
+dataset = st.sidebar.selectbox(
+    "Select dataset",
+    ["GDP", "Population"]
+)
+
+topic = dataset.lower()  # gdp / population
+
+
+# =====================================================
 # BIGQUERY LOAD
 # =====================================================
 @st.cache_data(ttl=3600)
@@ -42,13 +55,12 @@ def load_data(topic):
         ORDER BY year
     """
 
-
-    df = client.query(query).to_dataframe()
-    return df
+    return client.query(query).to_dataframe()
 
 
 with st.spinner("⏳ Loading data from BigQuery..."):
-    df = load_data()
+    df = load_data(topic)   # ⚠️ ЭНД topic дамжуулна
+
 
 # =====================================================
 # DATA VALIDATION (⚠️ МАШ ЧУХАЛ)
