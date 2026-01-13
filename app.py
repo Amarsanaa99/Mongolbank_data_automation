@@ -3,6 +3,13 @@ import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import altair as alt
+# =====================================================
+# CHART STYLE (GLOBAL)
+# =====================================================
+COLOR_PALETTE = [
+    "#60A5FA", "#34D399", "#FBBF24", "#F87171",
+    "#A78BFA", "#FB7185", "#22D3EE", "#E5E7EB"
+]
 
 # =====================================================
 # PAGE CONFIG (⚠️ ЗААВАЛ ЭХНИЙ МӨРҮҮДИЙН НЭГ БАЙНА)
@@ -190,38 +197,101 @@ with right_col:
         else:
             # ===== GDP =====
             if topic == "gdp":
-                chart_df = (
+            
+                plot_df = (
                     time_filtered_df
-                    .pivot_table(
-                        index="year_num",
-                        columns="indicator_code",
-                        values="value",
-                        aggfunc="sum"
-                    )
-                    .sort_index()
+                    .groupby(["year_num", "indicator_code"], as_index=False)
+                    .agg({"value": "sum"})
+                    .rename(columns={"indicator_code": "Series"})
                 )
-                st.line_chart(chart_df)
+            
+                hover = alt.selection_point(
+                    fields=["Series"],
+                    on="mouseover",
+                    nearest=True,
+                    clear="mouseout"
+                )
+            
+                chart = (
+                    alt.Chart(plot_df)
+                    .mark_line(
+                        interpolate="monotone",
+                        strokeWidth=2.6,
+                        point=alt.OverlayMarkDef(filled=True, size=35)
+                    )
+                    .encode(
+                        x=alt.X(
+                            "year_num:Q",
+                            title="",
+                            axis=alt.Axis(grid=False, labelColor="#9CA3AF")
+                        ),
+                        y=alt.Y(
+                            "value:Q",
+                            title="",
+                            axis=alt.Axis(gridColor="#1F2937", labelColor="#9CA3AF")
+                        ),
+                        color=alt.Color(
+                            "Series:N",
+                            scale=alt.Scale(range=COLOR_PALETTE),
+                            legend=alt.Legend(orient="bottom", title=None)
+                        ),
+                        opacity=alt.condition(hover, alt.value(1), alt.value(0.15)),
+                        tooltip=["Series", "value"]
+                    )
+                    .add_selection(hover)
+                    .properties(height=420)
+                    .configure_view(stroke=None)
+                    .configure_axis(domain=False)
+                )
+            
+                st.altair_chart(chart, use_container_width=True)
+
 
             # ===== POPULATION =====
             else:
                 plot_df = time_filtered_df.copy()
 
+                hover = alt.selection_point(
+                    fields=["Series"],
+                    on="mouseover",
+                    nearest=True,
+                    clear="mouseout"
+                )
+                
                 chart = (
                     alt.Chart(plot_df)
-                    .mark_line()
+                    .mark_line(
+                        interpolate="monotone",
+                        strokeWidth=2.6,
+                        point=alt.OverlayMarkDef(filled=True, size=30)
+                    )
                     .encode(
-                        x=alt.X("year_num:Q", title="Year"),
-                        y=alt.Y("value:Q", title="Population"),
+                        x=alt.X(
+                            "year_num:Q",
+                            title="",
+                            axis=alt.Axis(grid=False, labelColor="#9CA3AF")
+                        ),
+                        y=alt.Y(
+                            "value:Q",
+                            title="",
+                            axis=alt.Axis(gridColor="#1F2937", labelColor="#9CA3AF")
+                        ),
                         color=alt.Color(
                             "Series:N",
-                            legend=alt.Legend(orient="right")
+                            scale=alt.Scale(range=COLOR_PALETTE),
+                            legend=alt.Legend(orient="bottom", title=None)
                         ),
-                        tooltip=["year", "sex", "age_group", "value"]
+                        opacity=alt.condition(hover, alt.value(1), alt.value(0.15)),
+                        tooltip=["Series", "value"]
                     )
-                    .properties(height=400)
+                    .add_selection(hover)
+                    .properties(height=420)
+                    .configure_view(stroke=None)
+                    .configure_axis(domain=False)
                 )
-
+                
                 st.altair_chart(chart, use_container_width=True)
+
 
 
 
