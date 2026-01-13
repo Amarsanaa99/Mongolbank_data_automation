@@ -89,18 +89,45 @@ dataset = st.sidebar.selectbox(
 topic = dataset.lower()  # gdp / population
 
 # =====================================================
-# SIDEBAR FILTER
+# SIDEBAR FILTER (CONTEXT-AWARE)
 # =====================================================
 st.sidebar.header("🔎 Filters")
 
-indicator_list = sorted(df["indicator_code"].unique())
+# ===================== GDP =====================
+if topic == "gdp":
+    indicator_list = sorted(
+        df["indicator_code"].dropna().unique()
+    )
 
-selected_indicator = st.sidebar.selectbox(
-    "Select indicator",
-    indicator_list
-)
+    selected_indicator = st.sidebar.selectbox(
+        "Select indicator",
+        indicator_list
+    )
 
-filtered_df = df[df["indicator_code"] == selected_indicator]
+    filtered_df = df[
+        df["indicator_code"] == selected_indicator
+    ]
+
+# ===================== POPULATION =====================
+elif topic == "population":
+    sex = st.sidebar.selectbox(
+        "Select sex",
+        sorted(df["sex"].unique())
+    )
+
+    age_group = st.sidebar.selectbox(
+        "Select age group",
+        sorted(df["age_group"].unique())
+    )
+
+    filtered_df = df[
+        (df["sex"] == sex) &
+        (df["age_group"] == age_group)
+    ]
+
+# ===================== FALLBACK =====================
+else:
+    filtered_df = df
 
 # =====================================================
 # MAIN CHART
