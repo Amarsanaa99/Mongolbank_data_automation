@@ -27,17 +27,16 @@ with left_col:
 
     # ---------- DATASET ----------
     st.markdown("### 📦 Dataset")
-    dataset_box = st.container(border=True)
-    with dataset_box:
-        dataset = st.radio(
-            "",
-            ["GDP", "Population"],
-            horizontal=True
-        )
+    dataset = st.radio(
+        "",
+        ["GDP", "Population"],
+        horizontal=True
+    )
 
+    # 1️⃣ topic ЭХЭЛЖ тодорхойлогдоно
     topic = dataset.lower()
 
-    # ---------- LOAD DATA (ЗӨВ ГАЗАР) ----------
+    # 2️⃣ load_data FUNCTION (дуудахаас ӨМНӨ)
     @st.cache_data(ttl=3600)
     def load_data(topic):
         credentials = service_account.Credentials.from_service_account_info(
@@ -60,9 +59,12 @@ with left_col:
             ORDER BY year
         """
         return client.query(query).to_dataframe()
+
+    # 3️⃣ DATA LOAD
     with st.spinner("⏳ Loading data from BigQuery..."):
         df = load_data(topic)
 
+    # 4️⃣ PREP DATA (year → year_num)
     if topic == "gdp":
         df["year_num"] = (
             df["year"].str.split("-").str[0].astype(int)
@@ -73,42 +75,38 @@ with left_col:
 
     # ---------- TIME RANGE ----------
     st.markdown("### ⏱ Time range")
-    time_box = st.container(border=True)
-    with time_box:
-        if topic == "gdp":
-            start_y, end_y = st.slider(
-                "Quarter range",
-                float(df["year_num"].min()),
-                float(df["year_num"].max()),
-                (float(df["year_num"].min()), float(df["year_num"].max())),
-                step=0.25
-            )
-        else:
-            start_y, end_y = st.slider(
-                "Year range",
-                int(df["year_num"].min()),
-                int(df["year_num"].max()),
-                (int(df["year_num"].min()), int(df["year_num"].max()))
-            )
+    if topic == "gdp":
+        start_y, end_y = st.slider(
+            "Quarter range",
+            float(df["year_num"].min()),
+            float(df["year_num"].max()),
+            (float(df["year_num"].min()), float(df["year_num"].max())),
+            step=0.25
+        )
+    else:
+        start_y, end_y = st.slider(
+            "Year range",
+            int(df["year_num"].min()),
+            int(df["year_num"].max()),
+            (int(df["year_num"].min()), int(df["year_num"].max()))
+        )
 
     # ---------- FILTERS ----------
     st.markdown("### 🔎 Filters")
-    filter_box = st.container(border=True)
-    with filter_box:
-        if topic == "gdp":
-            selected_indicators = st.multiselect(
-                "Indicators",
-                sorted(df["indicator_code"].dropna().unique()),
-                default=["ngdp"]
-            )
-            filtered_df = df[df["indicator_code"].isin(selected_indicators)]
-        else:
-            sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
-            age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
-            filtered_df = df[
-                (df["sex"] == sex) &
-                (df["age_group"] == age_group)
-            ]
+    if topic == "gdp":
+        selected_indicators = st.multiselect(
+            "Indicators",
+            sorted(df["indicator_code"].dropna().unique()),
+            default=["ngdp"]
+        )
+        filtered_df = df[df["indicator_code"].isin(selected_indicators)]
+    else:
+        sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
+        age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
+        filtered_df = df[
+            (df["sex"] == sex) &
+            (df["age_group"] == age_group)
+        ]
 
 # ================= RIGHT COLUMN =================
 with right_col:
