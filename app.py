@@ -131,7 +131,7 @@ if topic == "gdp":
                     default=available_indicators[:1]
                 )
     
-            filtered_df = df[df["indicator_code"].isin(selected_indicators)]
+                filtered_df = df[df["indicator_code"].isin(selected_indicators)]
         else:
             sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
             age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
