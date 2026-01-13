@@ -22,7 +22,7 @@ st.success("🔥 APP STARTED — UI rendering OK")
 # BIGQUERY LOAD
 # =====================================================
 @st.cache_data(ttl=3600)
-def load_data():
+def load_data(topic):
     credentials = service_account.Credentials.from_service_account_info(
         st.secrets["gcp_service_account"]
     )
@@ -32,14 +32,16 @@ def load_data():
         project=st.secrets["gcp_service_account"]["project_id"]
     )
 
-    query = """
+    query = f"""
         SELECT
             year,
             indicator_code,
             value
         FROM `mongol-bank-macro-data.Automation_data.fact_macro`
+        WHERE topic = '{topic}'
         ORDER BY year
     """
+
 
     df = client.query(query).to_dataframe()
     return df
@@ -65,6 +67,14 @@ df["year_num"] = (
     df["year"].str.split("-").str[0].astype(int)
     + (df["year"].str.split("-").str[1].astype(int) - 1) / 4
 )
+st.sidebar.header("📂 Dataset")
+
+dataset = st.sidebar.selectbox(
+    "Select dataset",
+    ["GDP", "Population"]
+)
+
+topic = dataset.lower()  # gdp / population
 
 # =====================================================
 # SIDEBAR FILTER
@@ -106,6 +116,35 @@ with st.expander("📄 Raw data (Pivot – Excel шиг)"):
             aggfunc="sum"
         )
         .reset_index()
+    )
+
+    GDP_ORDER = [
+        "ngdp",
+        "ngdp_agri",
+        "ngdp_mine",
+        "ngdp_manu",
+        "ngdp_elec",
+        "ngdp_cons",
+        "ngdp_trad",
+        "ngdp_tran",
+        "ngdp_info",
+        "ngdp_oser",
+        "ngdp_taxe"
+    ]
+
+    POP_ORDER = ["population"]
+
+    if topic == "gdp":
+        col_order = GDP_ORDER
+    elif topic == "population":
+        col_order = POP_ORDER
+    else:
+        col_order = []
+
+    existing_cols = [c for c in col_order if c in df_pivot.columns]
+
+    df_pivot = df_pivot.reindex(
+        columns=["year"] + existing_cols
     )
 
     st.dataframe(
