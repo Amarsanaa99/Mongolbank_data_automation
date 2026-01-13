@@ -17,20 +17,6 @@ st.set_page_config(
 st.title("🏦 Mongolbank Macro Dashboard")
 st.caption("Quarterly GDP indicators (2000–2025)")
 st.success("🔥 APP STARTED — UI rendering OK")
-# =====================================================
-# DATASET SELECTOR
-st.markdown("## 📦 Dataset")
-
-dataset_box = st.container(border=True)
-with dataset_box:
-    dataset = st.radio(
-        "",
-        ["GDP", "Population"],
-        horizontal=True
-    )
-
-topic = dataset.lower()
-
 
 # =====================================================
 # BIGQUERY LOAD
@@ -63,9 +49,7 @@ with st.spinner("⏳ Loading data from BigQuery..."):
 if df.empty:
     st.error("❌ BigQuery-ээс өгөгдөл ирсэнгүй")
     st.stop()
-
-st.info(f"✅ Loaded rows: {len(df):,}")
-
+st.caption("Data loaded successfully")
 # =====================================================
 # PREP DATA
 # =====================================================
@@ -77,97 +61,125 @@ if topic == "gdp":
     )
 else:
     df["year_num"] = df["year"].astype(int)
+# =====================================================
+# MAIN LAYOUT
+# =====================================================
+left_col, right_col = st.columns([1.4, 4.6], gap="large")
 
-# =====================================================
-# MAIN GRID
-# =====================================================
-left_col, right_col = st.columns(
-    [1.2, 3.8],
-    gap="large"
-)
+# ================= LEFT COLUMN =================
 with left_col:
 
-    # ---------------- TIME RANGE ----------------
-    st.markdown("### ⏱ Time range")
+    # ---------- DATASET ----------
+    st.markdown("### 📦 Dataset")
+    dataset_box = st.container(border=True)
+    with dataset_box:
+        dataset = st.radio(
+            "",
+            ["GDP", "Population"],
+            horizontal=True
+        )
 
+    topic = dataset.lower()
+
+    # ---------- LOAD DATA (ЗӨВ ГАЗАР) ----------
+    @st.cache_data(ttl=3600)
+    def load_data(topic):
+        credentials = service_account.Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"]
+        )
+        client = bigquery.Client(
+            credentials=credentials,
+            project=st.secrets["gcp_service_account"]["project_id"]
+        )
+
+        query = f"""
+            SELECT
+                year,
+                indicator_code,
+                value,
+                sex,
+                age_group
+            FROM `mongol-bank-macro-data.Automation_data.fact_macro`
+            WHERE topic = '{topic}'
+            ORDER BY year
+        """
+        return client.query(query).to_dataframe()
+
+    df = load_data(topic)
+
+    if topic == "gdp":
+        df["year_num"] = (
+            df["year"].str.split("-").str[0].astype(int)
+            + (df["year"].str.split("-").str[1].astype(int) - 1) / 4
+        )
+    else:
+        df["year_num"] = df["year"].astype(int)
+
+    # ---------- TIME RANGE ----------
+    st.markdown("### ⏱ Time range")
     time_box = st.container(border=True)
     with time_box:
         if topic == "gdp":
-            start_q, end_q = st.slider(
-                "Quarterly period",
-                min_value=float(df["year_num"].min()),
-                max_value=float(df["year_num"].max()),
-                value=(
-                    float(df["year_num"].min()),
-                    float(df["year_num"].max())
-                ),
+            start_y, end_y = st.slider(
+                "Quarter range",
+                float(df["year_num"].min()),
+                float(df["year_num"].max()),
+                (float(df["year_num"].min()), float(df["year_num"].max())),
                 step=0.25
             )
         else:
             start_y, end_y = st.slider(
-                "Yearly period",
-                min_value=int(df["year_num"].min()),
-                max_value=int(df["year_num"].max()),
-                value=(
-                    int(df["year_num"].min()),
-                    int(df["year_num"].max())
-                )
+                "Year range",
+                int(df["year_num"].min()),
+                int(df["year_num"].max()),
+                (int(df["year_num"].min()), int(df["year_num"].max()))
             )
 
-    # ---------------- FILTERS ----------------
+    # ---------- FILTERS ----------
     st.markdown("### 🔎 Filters")
-
     filter_box = st.container(border=True)
     with filter_box:
         if topic == "gdp":
-            selected_indicator = st.selectbox(
-                "Indicator",
-                sorted(df["indicator_code"].dropna().unique())
+            selected_indicators = st.multiselect(
+                "Indicators",
+                sorted(df["indicator_code"].dropna().unique()),
+                default=["ngdp"]
             )
-
-            filtered_df = df[
-                df["indicator_code"] == selected_indicator
-            ]
+            filtered_df = df[df["indicator_code"].isin(selected_indicators)]
         else:
-            sex = st.selectbox(
-                "Sex",
-                sorted(df["sex"].dropna().unique())
-            )
-
-            age_group = st.selectbox(
-                "Age group",
-                sorted(df["age_group"].dropna().unique())
-            )
-
+            sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
+            age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
             filtered_df = df[
                 (df["sex"] == sex) &
                 (df["age_group"] == age_group)
             ]
 
+# ================= RIGHT COLUMN =================
 with right_col:
 
-    # ---------------- TIME FILTER APPLY ----------------
-    if topic == "gdp":
-        time_filtered_df = filtered_df[
-            (filtered_df["year_num"] >= start_q) &
-            (filtered_df["year_num"] <= end_q)
-        ]
-        st.subheader(f"📈 {selected_indicator}")
-    else:
-        time_filtered_df = filtered_df[
-            (filtered_df["year_num"] >= start_y) &
-            (filtered_df["year_num"] <= end_y)
-        ]
-        st.subheader(f"📈 Population — {sex}, {age_group}")
+    st.subheader("📈 Main chart")
+
+    time_filtered_df = filtered_df[
+        (filtered_df["year_num"] >= start_y) &
+        (filtered_df["year_num"] <= end_y)
+    ]
 
     if time_filtered_df.empty:
-        st.warning("⚠️ No data in selected range")
+        st.warning("No data")
     else:
-        st.line_chart(
-            time_filtered_df
-            .sort_values("year_num")
-            .set_index("year_num")["value"]
-        )
+        if topic == "gdp":
+            chart_df = time_filtered_df.pivot(
+                index="year_num",
+                columns="indicator_code",
+                values="value"
+            )
+            st.line_chart(chart_df.sort_index())
+        else:
+            st.line_chart(
+                time_filtered_df
+                .sort_values("year_num")
+                .set_index("year_num")["value"]
+            )
 
 # =====================================================
 # RAW DATA Preview
