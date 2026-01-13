@@ -14,21 +14,23 @@ st.set_page_config(
 # =====================================================
 # APP START (TEST RENDER)
 # =====================================================
-st.title("📊 Mongolbank Macro Dashboard")
+st.title("🏦 Mongolbank Macro Dashboard")
 st.caption("Quarterly GDP indicators (2000–2025)")
 st.success("🔥 APP STARTED — UI rendering OK")
 
 # =====================================================
 # SIDEBAR — DATASET SELECTOR (⚠️ ХАМГИЙН ЧУХАЛ)
 # =====================================================
-st.sidebar.header("📂 Dataset")
+st.sidebar.markdown("## 📊 Dataset")
 
-dataset = st.sidebar.selectbox(
-    "Select dataset",
-    ["GDP", "Population"]
+dataset = st.sidebar.radio(
+    label="",
+    options=["GDP", "Population"],
+    horizontal=True,
+    key="dataset_selector"
 )
 
-topic = dataset.lower()  # gdp / population
+topic = dataset.lower()# gdp / population
 
 
 # =====================================================
@@ -49,11 +51,14 @@ def load_data(topic):
         SELECT
             year,
             indicator_code,
-            value
+            value,
+            sex,
+            age_group
         FROM `mongol-bank-macro-data.Automation_data.fact_macro`
         WHERE topic = '{topic}'
         ORDER BY year
     """
+
 
     return client.query(query).to_dataframe()
 
@@ -75,23 +80,25 @@ st.info(f"✅ Loaded rows: {len(df):,}")
 # PREP DATA
 # =====================================================
 # "2000-1" → 2000.00, "2000-2" → 2000.25
-df["year_num"] = (
-    df["year"].str.split("-").str[0].astype(int)
-    + (df["year"].str.split("-").str[1].astype(int) - 1) / 4
-)
-st.sidebar.header("📂 Dataset")
+if topic == "gdp":
+    df["year_num"] = (
+        df["year"].str.split("-").str[0].astype(int)
+        + (df["year"].str.split("-").str[1].astype(int) - 1) / 4
+    )
+else:
+    df["year_num"] = df["year"].astype(int)
 
-dataset = st.sidebar.selectbox(
-    "Select dataset",
-    ["GDP", "Population"]
-)
+st.sidebar.markdown("---")
 
-topic = dataset.lower()  # gdp / population
+if topic == "gdp":
+    st.sidebar.markdown("### 📈 GDP Filters")
+elif topic == "population":
+    st.sidebar.markdown("### 👥 Population Filters")
 
 # =====================================================
 # SIDEBAR FILTER (CONTEXT-AWARE)
 # =====================================================
-st.sidebar.header("🔎 Filters")
+
 
 # ===================== GDP =====================
 if topic == "gdp":
@@ -132,7 +139,13 @@ else:
 # =====================================================
 # MAIN CHART
 # =====================================================
-st.subheader(f"📈 Indicator: {selected_indicator}")
+if topic == "gdp":
+    st.subheader(f"📈 Indicator: {selected_indicator}")
+else:
+    st.subheader(
+        f"👥 Population trend — {sex} · Age {age_group}"
+    )
+
 
 if filtered_df.empty:
     st.warning("⚠️ Сонгосон indicator-д өгөгдөл алга")
@@ -144,50 +157,47 @@ else:
 # =====================================================
 # DATA PREVIEW (PIVOT)
 # =====================================================
-with st.expander("📄 Raw data (Pivot – Excel шиг)"):
+with st.expander("📄 Raw data"):
 
-    df_pivot = (
-        df
-        .pivot_table(
-            index="year",
-            columns="indicator_code",
-            values="value",
-            aggfunc="sum"
-        )
-        .reset_index()
-    )
-
-    GDP_ORDER = [
-        "ngdp",
-        "ngdp_agri",
-        "ngdp_mine",
-        "ngdp_manu",
-        "ngdp_elec",
-        "ngdp_cons",
-        "ngdp_trad",
-        "ngdp_tran",
-        "ngdp_info",
-        "ngdp_oser",
-        "ngdp_taxe"
-    ]
-
-    POP_ORDER = ["population"]
-
+    # ===================== GDP =====================
     if topic == "gdp":
-        col_order = GDP_ORDER
-    elif topic == "population":
-        col_order = POP_ORDER
+        df_pivot = (
+            df
+            .pivot_table(
+                index="year",
+                columns="indicator_code",
+                values="value",
+                aggfunc="sum"
+            )
+            .reset_index()
+        )
+
+        GDP_ORDER = [
+            "ngdp",
+            "ngdp_agri",
+            "ngdp_mine",
+            "ngdp_manu",
+            "ngdp_elec",
+            "ngdp_cons",
+            "ngdp_trad",
+            "ngdp_tran",
+            "ngdp_info",
+            "ngdp_oser",
+            "ngdp_taxe"
+        ]
+
+        existing_cols = [c for c in GDP_ORDER if c in df_pivot.columns]
+        df_pivot = df_pivot.reindex(columns=["year"] + existing_cols)
+
+        st.dataframe(df_pivot, use_container_width=True)
+
+    # ===================== POPULATION =====================
     else:
-        col_order = []
+        df_pop = (
+            df
+            .sort_values("year")
+            [["year", "sex", "age_group", "value"]]
+        )
 
-    existing_cols = [c for c in col_order if c in df_pivot.columns]
-
-    df_pivot = df_pivot.reindex(
-        columns=["year"] + existing_cols
-    )
-
-    st.dataframe(
-        df_pivot,
-        use_container_width=True
-    )
+        st.dataframe(df_pop, use_container_width=True)
 
