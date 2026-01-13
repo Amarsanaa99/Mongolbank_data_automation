@@ -17,18 +17,6 @@ st.set_page_config(
 st.title("🏦 Mongolbank Macro Dashboard")
 st.caption("Quarterly GDP indicators (2000–2025)")
 st.success("🔥 APP STARTED — UI rendering OK")
-
-# =====================================================
-# PREP DATA
-# =====================================================
-# "2000-1" → 2000.00, "2000-2" → 2000.25
-if topic == "gdp":
-    df["year_num"] = (
-        df["year"].str.split("-").str[0].astype(int)
-        + (df["year"].str.split("-").str[1].astype(int) - 1) / 4
-    )
-else:
-    df["year_num"] = df["year"].astype(int)
 # =====================================================
 # MAIN LAYOUT
 # =====================================================
