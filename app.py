@@ -106,8 +106,9 @@ with left_col:
         selected_indicators = st.multiselect(
             "Indicators",
             available_indicators,
-            default=available_indicators[:1]
+            default=available_indicators[:1] if available_indicators else []
         )
+
 
         filtered_df = df[df["indicator_code"].isin(selected_indicators)]
     else:
@@ -127,36 +128,38 @@ with left_col:
             df["sex"].isin(sex) &
             df["age_group"].isin(age_group)
         ]
-        # ---------- TIME RANGE ----------
-        with st.container(border=True):
-            st.markdown("### ⏱ Time range")
+     # ---------- TIME RANGE ----------
+    with st.container(border=True):
+        st.markdown("### ⏱ Time range")
         
-            if topic == "gdp":
-                quarters = sorted(df["year"].unique())
-                col1, col2 = st.columns(2)
-                with col1:
-                    start_q = st.selectbox("Start quarter", quarters, index=0)
-                with col2:
-                    end_q = st.selectbox("End quarter", quarters, index=len(quarters)-1)
-            else:
-                start_y, end_y = st.slider(
-                    "Year range",
-                    int(df["year"].min()),
-                    int(df["year"].max()),
-                    (int(df["year"].min()), int(df["year"].max()))
-                )
-        
-        # ---------- ⬅️ TIME FILTER ЭНД ----------
         if topic == "gdp":
-            time_filtered_df = filtered_df[
-                (filtered_df["year"] >= start_q) &
-                (filtered_df["year"] <= end_q)
-            ]
+            quarters = sorted(df["year"].unique())
+            col1, col2 = st.columns(2)
+            with col1:
+                start_q = st.selectbox("Start quarter", quarters, index=0)
+            with col2:
+                end_q = st.selectbox("End quarter", quarters, index=len(quarters)-1)
         else:
-            time_filtered_df = filtered_df[
-                (filtered_df["year"].astype(int) >= start_y) &
-                (filtered_df["year"].astype(int) <= end_y)
-            ]
+            start_y, end_y = st.slider(
+                "Year range",
+                int(df["year"].min()),
+                int(df["year"].max()),
+                (int(df["year"].min()), int(df["year"].max()))
+            )
+
+         
+    # ---------- ⬅️ TIME FILTER ЭНД ----------
+    if topic == "gdp":
+        time_filtered_df = filtered_df[
+            (filtered_df["year_num"] >= start_y) &
+            (filtered_df["year_num"] <= end_y)
+        ]
+
+    else:
+        time_filtered_df = filtered_df[
+            (filtered_df["year"].astype(int) >= start_y) &
+            (filtered_df["year"].astype(int) <= end_y)
+        ]
 
 
     
