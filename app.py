@@ -86,9 +86,9 @@ with left_col:
             )
     if topic == "gdp":
         prefix_map = {
-            "RGDP2005": "rgdp2005",
-            "RGDP2010": "rgdp2010",
-            "RGDP2015": "rgdp2015",
+            "RGDP2005": "rgdp_2005",
+            "RGDP2010": "rgdp_2010",
+            "RGDP2015": "rgdp_2015",
             "NGDP": "ngdp",
             "GROWTH": "growth"
         }
