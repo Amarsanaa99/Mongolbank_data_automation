@@ -7,7 +7,7 @@ from google.oauth2 import service_account
 # PAGE CONFIG (⚠️ ЗААВАЛ ЭХНИЙ МӨРҮҮДИЙН НЭГ БАЙНА)
 # =====================================================
 st.set_page_config(
-    page_title="Mongolbank Macro Dashboard",
+    page_title="Mongolbank Macro Data Dashboard",
     layout="wide"
 )
 
@@ -72,46 +72,73 @@ with left_col:
         )
     else:
         df["year_num"] = df["year"].astype(int)
+    # ---------- GDP TYPE SELECTOR ----------
+if topic == "gdp":
+    st.markdown("### 📊 GDP type")
 
-# ---------- TIME RANGE ----------
-st.markdown("### ⏱ Time range")
-time_box = st.container(border=True)
+    gdp_type = st.radio(
+        "",
+        ["RGDP2005", "RGDP2010", "RGDP2015", "NGDP", "GROWTH"],
+        horizontal=True
+    )
 
-with time_box:
-    if topic == "gdp":
-        quarters = sorted(df["year"].unique())
+    gdp_prefix_map = {
+        "RGDP2005": "rgdp2005",
+        "RGDP2010": "rgdp2010",
+        "RGDP2015": "rgdp2015",
+        "NGDP": "ngdp",
+        "GROWTH": "growth"
+    }
 
-        col1, col2 = st.columns(2)
-        with col1:
-            start_q = st.selectbox("Start quarter", quarters, index=0)
-        with col2:
-            end_q = st.selectbox("End quarter", quarters, index=len(quarters)-1)
-
-    else:
-        start_y, end_y = st.slider(
-            "Year range",
-            int(df["year"].min()),
-            int(df["year"].max()),
-            (int(df["year"].min()), int(df["year"].max()))
-        )
+    selected_prefix = gdp_prefix_map[gdp_type]
 
 
-    # ---------- FILTERS ----------
-    st.markdown("### 🔎 Filters")
-    if topic == "gdp":
-        selected_indicators = st.multiselect(
-            "Indicators",
-            sorted(df["indicator_code"].dropna().unique()),
-            default=["ngdp"]
-        )
-        filtered_df = df[df["indicator_code"].isin(selected_indicators)]
-    else:
-        sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
-        age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
-        filtered_df = df[
-            (df["sex"] == sex) &
-            (df["age_group"] == age_group)
-        ]
+    # ---------- TIME RANGE ----------
+    st.markdown("### ⏱ Time range")
+    time_box = st.container(border=True)
+    
+    with time_box:
+        if topic == "gdp":
+            quarters = sorted(df["year"].unique())
+    
+            col1, col2 = st.columns(2)
+            with col1:
+                start_q = st.selectbox("Start quarter", quarters, index=0)
+            with col2:
+                end_q = st.selectbox("End quarter", quarters, index=len(quarters)-1)
+    
+        else:
+            start_y, end_y = st.slider(
+                "Year range",
+                int(df["year"].min()),
+                int(df["year"].max()),
+                (int(df["year"].min()), int(df["year"].max()))
+            )
+    
+    
+        # ---------- FILTERS ----------
+        st.markdown("### 🔎 Filters")
+        if topic == "gdp":
+             available_indicators = sorted(
+                    df[df["indicator_code"].str.startswith(selected_prefix)]["indicator_code"]
+                    .dropna()
+                    .unique()
+                )
+            
+                selected_indicators = st.multiselect(
+                    "Indicators",
+                    available_indicators,
+                    default=available_indicators[:1]
+                )
+    
+            filtered_df = df[df["indicator_code"].isin(selected_indicators)]
+        else:
+            sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
+            age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
+            filtered_df = df[
+                (df["sex"] == sex) &
+                (df["age_group"] == age_group)
+            ]
 
 # ================= RIGHT COLUMN =================
 with right_col:
