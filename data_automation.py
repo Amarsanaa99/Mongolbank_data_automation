@@ -115,6 +115,7 @@ def pivot_validate(df, mapping, label):
 
     ordered_cols = ["ОН"] + list(mapping.values())
     pv = pv.reindex(columns=ordered_cols)
+    pv = pv.fillna(0)
 
     if pv.empty:
         raise ValueError(f"{label} pivot хоосон байна")
