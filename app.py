@@ -73,23 +73,28 @@ with left_col:
     else:
         df["year_num"] = df["year"].astype(int)
 
-    # ---------- TIME RANGE ----------
-    st.markdown("### ⏱ Time range")
+# ---------- TIME RANGE ----------
+st.markdown("### ⏱ Time range")
+time_box = st.container(border=True)
+
+with time_box:
     if topic == "gdp":
-        start_y, end_y = st.slider(
-            "Quarter range",
-            float(df["year_num"].min()),
-            float(df["year_num"].max()),
-            (float(df["year_num"].min()), float(df["year_num"].max())),
-            step=0.25
-        )
+        quarters = sorted(df["year"].unique())
+
+        col1, col2 = st.columns(2)
+        with col1:
+            start_q = st.selectbox("Start quarter", quarters, index=0)
+        with col2:
+            end_q = st.selectbox("End quarter", quarters, index=len(quarters)-1)
+
     else:
         start_y, end_y = st.slider(
             "Year range",
-            int(df["year_num"].min()),
-            int(df["year_num"].max()),
-            (int(df["year_num"].min()), int(df["year_num"].max()))
+            int(df["year"].min()),
+            int(df["year"].max()),
+            (int(df["year"].min()), int(df["year"].max()))
         )
+
 
     # ---------- FILTERS ----------
     st.markdown("### 🔎 Filters")
@@ -113,10 +118,17 @@ with right_col:
 
     st.subheader("📈 Main chart")
 
-    time_filtered_df = filtered_df[
-        (filtered_df["year_num"] >= start_y) &
-        (filtered_df["year_num"] <= end_y)
-    ]
+    if topic == "gdp":
+        time_filtered_df = filtered_df[
+            (filtered_df["year"] >= start_q) &
+            (filtered_df["year"] <= end_q)
+        ]
+    else:
+        time_filtered_df = filtered_df[
+            (filtered_df["year"] >= start_y) &
+            (filtered_df["year"] <= end_y)
+        ]
+
 
     if time_filtered_df.empty:
         st.warning("No data")
@@ -143,7 +155,7 @@ with st.expander("📄 Raw data"):
     # ===================== GDP =====================
     if topic == "gdp":
         df_pivot = (
-            df
+            time_filtered_df
             .pivot_table(
                 index="year",
                 columns="indicator_code",
@@ -152,6 +164,7 @@ with st.expander("📄 Raw data"):
             )
             .reset_index()
         )
+
 
         GDP_ORDER = [
             "ngdp",
@@ -174,11 +187,8 @@ with st.expander("📄 Raw data"):
 
     # ===================== POPULATION =====================
     else:
-        df_pop = (
-            df
-            .sort_values("year")
-            [["year", "sex", "age_group", "value"]]
-        )
+        df_pop = time_filtered_df.sort_values("year")[["year", "sex", "age_group", "value"]]
+
 
         st.dataframe(df_pop, use_container_width=True)
 
