@@ -24,7 +24,7 @@ left_col, right_col = st.columns([1.4, 4.6], gap="large")
 
 # ================= LEFT COLUMN =================
 with left_col:
-
+    
     # ---------- DATASET ----------
     st.markdown("### 📦 Dataset")
     dataset = st.radio(
@@ -72,27 +72,48 @@ with left_col:
         )
     else:
         df["year_num"] = df["year"].astype(int)
+        # ---------- GDP TYPE SELECTOR ----------
     # ---------- GDP TYPE SELECTOR ----------
-if topic == "gdp":
-    st.markdown("### 📊 GDP type")
+    if topic == "gdp":
+        st.markdown("### 📊 GDP type")
+        gdp_type = st.radio(
+            "",
+            ["RGDP2005", "RGDP2010", "RGDP2015", "NGDP", "GROWTH"],
+            horizontal=True
+        )
+        
+    if topic == "gdp":
+        prefix_map = {
+            "RGDP2005": "rgdp2005",
+            "RGDP2010": "rgdp2010",
+            "RGDP2015": "rgdp2015",
+            "NGDP": "ngdp",
+            "GROWTH": "growth"
+        }
 
-    gdp_type = st.radio(
-        "",
-        ["RGDP2005", "RGDP2010", "RGDP2015", "NGDP", "GROWTH"],
-        horizontal=True
-    )
+        prefix = prefix_map[gdp_type]
 
-    gdp_prefix_map = {
-        "RGDP2005": "rgdp2005",
-        "RGDP2010": "rgdp2010",
-        "RGDP2015": "rgdp2015",
-        "NGDP": "ngdp",
-        "GROWTH": "growth"
-    }
+        available_indicators = sorted(
+            [i for i in df["indicator_code"].unique() if i.startswith(prefix)]
+        )
 
-    selected_prefix = gdp_prefix_map[gdp_type]
+        selected_indicators = st.multiselect(
+            "Indicators",
+            available_indicators,
+            default=available_indicators[:1]
+        )
 
+        filtered_df = df[df["indicator_code"].isin(selected_indicators)]
+    else:
+        sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
+        age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
+    
+        filtered_df = df[
+            (df["sex"] == sex) &
+            (df["age_group"] == age_group)
+        ]
 
+    
     # ---------- TIME RANGE ----------
     st.markdown("### ⏱ Time range")
     time_box = st.container(border=True)
@@ -115,40 +136,12 @@ if topic == "gdp":
                 (int(df["year"].min()), int(df["year"].max()))
             )
     
-    
-# ---------- FILTERS ----------
-st.markdown("### 🔎 Filters")
-
-if topic == "gdp":
-
-    available_indicators = sorted(
-        df[df["indicator_code"].str.startswith(selected_prefix)]["indicator_code"]
-        .dropna()
-        .unique()
-    )
-
-    selected_indicators = st.multiselect(
-        "Indicators",
-        available_indicators,
-        default=available_indicators[:1]
-    )
-
-    filtered_df = df[df["indicator_code"].isin(selected_indicators)]
-
-else:
-    sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
-    age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
-
-    filtered_df = df[
-        (df["sex"] == sex) &
-        (df["age_group"] == age_group)
-    ]
-
 # ================= RIGHT COLUMN =================
 with right_col:
 
     st.subheader("📈 Main chart")
 
+    # ---------- TIME FILTER ----------
     if topic == "gdp":
         time_filtered_df = filtered_df[
             (filtered_df["year"] >= start_q) &
@@ -156,27 +149,33 @@ with right_col:
         ]
     else:
         time_filtered_df = filtered_df[
-            (filtered_df["year"] >= start_y) &
-            (filtered_df["year"] <= end_y)
+            (filtered_df["year"].astype(int) >= start_y) &
+            (filtered_df["year"].astype(int) <= end_y)
         ]
 
-
+    # ---------- CHART ----------
     if time_filtered_df.empty:
-        st.warning("No data")
+        st.warning("No data for selected filters")
     else:
         if topic == "gdp":
-            chart_df = time_filtered_df.pivot(
-                index="year_num",
-                columns="indicator_code",
-                values="value"
+            chart_df = (
+                time_filtered_df
+                .pivot_table(
+                    index="year_num",
+                    columns="indicator_code",
+                    values="value",
+                    aggfunc="sum"
+                )
+                .sort_index()
             )
-            st.line_chart(chart_df.sort_index())
+            st.line_chart(chart_df)
         else:
             st.line_chart(
                 time_filtered_df
                 .sort_values("year_num")
                 .set_index("year_num")["value"]
             )
+
 
 # =====================================================
 # RAW DATA Preview
