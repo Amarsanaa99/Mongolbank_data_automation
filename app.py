@@ -17,20 +17,19 @@ st.set_page_config(
 st.title("🏦 Mongolbank Macro Dashboard")
 st.caption("Quarterly GDP indicators (2000–2025)")
 st.success("🔥 APP STARTED — UI rendering OK")
-
 # =====================================================
-# SIDEBAR — DATASET SELECTOR (⚠️ ХАМГИЙН ЧУХАЛ)
-# =====================================================
-st.sidebar.markdown("## 📊 Dataset")
+# DATASET SELECTOR
+st.markdown("## 📦 Dataset")
 
-dataset = st.sidebar.radio(
-    label="",
-    options=["GDP", "Population"],
-    horizontal=True,
-    key="dataset_selector"
-)
+dataset_box = st.container(border=True)
+with dataset_box:
+    dataset = st.radio(
+        "",
+        ["GDP", "Population"],
+        horizontal=True
+    )
 
-topic = dataset.lower()# gdp / population
+topic = dataset.lower()
 
 
 # =====================================================
@@ -58,18 +57,9 @@ def load_data(topic):
         WHERE topic = '{topic}'
         ORDER BY year
     """
-
-
     return client.query(query).to_dataframe()
-
-
 with st.spinner("⏳ Loading data from BigQuery..."):
     df = load_data(topic)   # ⚠️ ЭНД topic дамжуулна
-
-
-# =====================================================
-# DATA VALIDATION (⚠️ МАШ ЧУХАЛ)
-# =====================================================
 if df.empty:
     st.error("❌ BigQuery-ээс өгөгдөл ирсэнгүй")
     st.stop()
@@ -88,74 +78,99 @@ if topic == "gdp":
 else:
     df["year_num"] = df["year"].astype(int)
 
-st.sidebar.markdown("---")
+# =====================================================
+# MAIN GRID
+# =====================================================
+left_col, right_col = st.columns(
+    [1.2, 3.8],
+    gap="large"
+)
+with left_col:
 
-if topic == "gdp":
-    st.sidebar.markdown("### 📈 GDP Filters")
-elif topic == "population":
-    st.sidebar.markdown("### 👥 Population Filters")
+    # ---------------- TIME RANGE ----------------
+    st.markdown("### ⏱ Time range")
+
+    time_box = st.container(border=True)
+    with time_box:
+        if topic == "gdp":
+            start_q, end_q = st.slider(
+                "Quarterly period",
+                min_value=float(df["year_num"].min()),
+                max_value=float(df["year_num"].max()),
+                value=(
+                    float(df["year_num"].min()),
+                    float(df["year_num"].max())
+                ),
+                step=0.25
+            )
+        else:
+            start_y, end_y = st.slider(
+                "Yearly period",
+                min_value=int(df["year_num"].min()),
+                max_value=int(df["year_num"].max()),
+                value=(
+                    int(df["year_num"].min()),
+                    int(df["year_num"].max())
+                )
+            )
+
+    # ---------------- FILTERS ----------------
+    st.markdown("### 🔎 Filters")
+
+    filter_box = st.container(border=True)
+    with filter_box:
+        if topic == "gdp":
+            selected_indicator = st.selectbox(
+                "Indicator",
+                sorted(df["indicator_code"].dropna().unique())
+            )
+
+            filtered_df = df[
+                df["indicator_code"] == selected_indicator
+            ]
+        else:
+            sex = st.selectbox(
+                "Sex",
+                sorted(df["sex"].dropna().unique())
+            )
+
+            age_group = st.selectbox(
+                "Age group",
+                sorted(df["age_group"].dropna().unique())
+            )
+
+            filtered_df = df[
+                (df["sex"] == sex) &
+                (df["age_group"] == age_group)
+            ]
+
+with right_col:
+
+    # ---------------- TIME FILTER APPLY ----------------
+    if topic == "gdp":
+        time_filtered_df = filtered_df[
+            (filtered_df["year_num"] >= start_q) &
+            (filtered_df["year_num"] <= end_q)
+        ]
+        st.subheader(f"📈 {selected_indicator}")
+    else:
+        time_filtered_df = filtered_df[
+            (filtered_df["year_num"] >= start_y) &
+            (filtered_df["year_num"] <= end_y)
+        ]
+        st.subheader(f"📈 Population — {sex}, {age_group}")
+
+    if time_filtered_df.empty:
+        st.warning("⚠️ No data in selected range")
+    else:
+        st.line_chart(
+            time_filtered_df
+            .sort_values("year_num")
+            .set_index("year_num")["value"]
+        )
 
 # =====================================================
-# SIDEBAR FILTER (CONTEXT-AWARE)
-# =====================================================
-
-
-# ===================== GDP =====================
-if topic == "gdp":
-    indicator_list = sorted(
-        df["indicator_code"].dropna().unique()
-    )
-
-    selected_indicator = st.sidebar.selectbox(
-        "Select indicator",
-        indicator_list
-    )
-
-    filtered_df = df[
-        df["indicator_code"] == selected_indicator
-    ]
-
-# ===================== POPULATION =====================
-elif topic == "population":
-    sex = st.sidebar.selectbox(
-        "Select sex",
-        sorted(df["sex"].unique())
-    )
-
-    age_group = st.sidebar.selectbox(
-        "Select age group",
-        sorted(df["age_group"].unique())
-    )
-
-    filtered_df = df[
-        (df["sex"] == sex) &
-        (df["age_group"] == age_group)
-    ]
-
-# ===================== FALLBACK =====================
-else:
-    filtered_df = df
-
-# =====================================================
-# MAIN CHART
-# =====================================================
-if topic == "gdp":
-    st.subheader(f"📈 Indicator: {selected_indicator}")
-else:
-    st.subheader(
-        f"👥 Population trend — {sex} · Age {age_group}"
-    )
-
-
-if filtered_df.empty:
-    st.warning("⚠️ Сонгосон indicator-д өгөгдөл алга")
-else:
-    st.line_chart(
-        filtered_df.set_index("year_num")["value"]
-    )
-
-# =====================================================
-# DATA PREVIEW (PIVOT)
+# RAW DATA Preview
 # =====================================================
 with st.expander("📄 Raw data"):
 
