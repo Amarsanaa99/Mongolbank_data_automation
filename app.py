@@ -116,29 +116,33 @@ if topic == "gdp":
             )
     
     
-        # ---------- FILTERS ----------
-        st.markdown("### 🔎 Filters")
-        if topic == "gdp":
-             available_indicators = sorted(
-                    df[df["indicator_code"].str.startswith(selected_prefix)]["indicator_code"]
-                    .dropna()
-                    .unique()
-                )
-            
-                selected_indicators = st.multiselect(
-                    "Indicators",
-                    available_indicators,
-                    default=available_indicators[:1]
-                )
-    
-                filtered_df = df[df["indicator_code"].isin(selected_indicators)]
-        else:
-            sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
-            age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
-            filtered_df = df[
-                (df["sex"] == sex) &
-                (df["age_group"] == age_group)
-            ]
+# ---------- FILTERS ----------
+st.markdown("### 🔎 Filters")
+
+if topic == "gdp":
+
+    available_indicators = sorted(
+        df[df["indicator_code"].str.startswith(selected_prefix)]["indicator_code"]
+        .dropna()
+        .unique()
+    )
+
+    selected_indicators = st.multiselect(
+        "Indicators",
+        available_indicators,
+        default=available_indicators[:1]
+    )
+
+    filtered_df = df[df["indicator_code"].isin(selected_indicators)]
+
+else:
+    sex = st.selectbox("Sex", sorted(df["sex"].dropna().unique()))
+    age_group = st.selectbox("Age group", sorted(df["age_group"].dropna().unique()))
+
+    filtered_df = df[
+        (df["sex"] == sex) &
+        (df["age_group"] == age_group)
+    ]
 
 # ================= RIGHT COLUMN =================
 with right_col:
