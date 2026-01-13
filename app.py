@@ -195,38 +195,32 @@ with right_col:
 # =====================================================
 with st.expander("📄 Raw data"):
 
-    # ===================== GDP =====================
-    if topic == "gdp":
-        df_pivot = (
-            time_filtered_df
-            .pivot_table(
-                index="year",
-                columns="indicator_code",
-                values="value",
-                aggfunc="sum"
-            )
-            .reset_index()
+# ===================== GDP =====================
+if topic == "gdp":
+
+    df_pivot = (
+        time_filtered_df
+        .pivot_table(
+            index="year",
+            columns="indicator_code",
+            values="value",
+            aggfunc="sum"
         )
+        .reset_index()
+    )
 
+    # 🔑 GDP TYPE-д таарсан prefix
+    raw_prefix = prefix_map[gdp_type]
 
-        GDP_ORDER = [
-            "ngdp",
-            "ngdp_agri",
-            "ngdp_mine",
-            "ngdp_manu",
-            "ngdp_elec",
-            "ngdp_cons",
-            "ngdp_trad",
-            "ngdp_tran",
-            "ngdp_info",
-            "ngdp_oser",
-            "ngdp_taxe"
-        ]
+    ordered_cols = (
+        ["year"] +
+        sorted([c for c in df_pivot.columns if c.startswith(raw_prefix)])
+    )
 
-        existing_cols = [c for c in GDP_ORDER if c in df_pivot.columns]
-        df_pivot = df_pivot.reindex(columns=["year"] + existing_cols)
+    df_pivot = df_pivot[ordered_cols]
 
-        st.dataframe(df_pivot, use_container_width=True)
+    st.dataframe(df_pivot, use_container_width=True)
+
 
     # ===================== POPULATION =====================
     else:
