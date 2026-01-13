@@ -227,6 +227,7 @@ def main():
         .merge(pv_rgdp_2015, on="ОН", how="outer")
         .merge(pv_growth, on="ОН", how="outer")
         )
+    final_df = final_df.fillna(0)
 
 
     # ===================== EXPORT =====================
