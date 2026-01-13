@@ -195,31 +195,31 @@ with right_col:
 # =====================================================
 with st.expander("📄 Raw data"):
 
-# ===================== GDP =====================
-if topic == "gdp":
-
-    df_pivot = (
-        time_filtered_df
-        .pivot_table(
-            index="year",
-            columns="indicator_code",
-            values="value",
-            aggfunc="sum"
+    # ===================== GDP =====================
+    if topic == "gdp":
+    
+        df_pivot = (
+            time_filtered_df
+            .pivot_table(
+                index="year",
+                columns="indicator_code",
+                values="value",
+                aggfunc="sum"
+            )
+            .reset_index()
         )
-        .reset_index()
-    )
-
-    # 🔑 GDP TYPE-д таарсан prefix
-    raw_prefix = prefix_map[gdp_type]
-
-    ordered_cols = (
-        ["year"] +
-        sorted([c for c in df_pivot.columns if c.startswith(raw_prefix)])
-    )
-
-    df_pivot = df_pivot[ordered_cols]
-
-    st.dataframe(df_pivot, use_container_width=True)
+    
+        # 🔑 GDP TYPE-д таарсан prefix
+        raw_prefix = prefix_map[gdp_type]
+    
+        ordered_cols = (
+            ["year"] +
+            sorted([c for c in df_pivot.columns if c.startswith(raw_prefix)])
+        )
+    
+        df_pivot = df_pivot[ordered_cols]
+    
+        st.dataframe(df_pivot, use_container_width=True)
 
 
     # ===================== POPULATION =====================
