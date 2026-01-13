@@ -147,18 +147,16 @@ with left_col:
                 (int(df["year"].min()), int(df["year"].max()))
             )
 
-         
-    # ---------- ⬅️ TIME FILTER ЭНД ----------
+    # ---------- ⬅️ TIME FILTER ----------
     if topic == "gdp":
+        time_filtered_df = filtered_df[
+            (filtered_df["year"] >= start_q) &
+            (filtered_df["year"] <= end_q)
+        ]
+    else:
         time_filtered_df = filtered_df[
             (filtered_df["year_num"] >= start_y) &
             (filtered_df["year_num"] <= end_y)
-        ]
-
-    else:
-        time_filtered_df = filtered_df[
-            (filtered_df["year"].astype(int) >= start_y) &
-            (filtered_df["year"].astype(int) <= end_y)
         ]
 
 
