@@ -2,6 +2,25 @@ import streamlit as st
 import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
+import altair as alt
+
+chart = (
+    alt.Chart(plot_df)
+    .mark_line()
+    .encode(
+        x=alt.X("year_num:Q", title="Year"),
+        y=alt.Y("value:Q", title="Population"),
+        color=alt.Color(
+            "Series:N",
+            legend=alt.Legend(orient="right")
+        ),
+        tooltip=["year", "sex", "age_group", "value"]
+    )
+    .properties(height=400)
+)
+
+st.altair_chart(chart, use_container_width=True)
+
 
 # =====================================================
 # PAGE CONFIG (⚠️ ЗААВАЛ ЭХНИЙ МӨРҮҮДИЙН НЭГ БАЙНА)
@@ -158,6 +177,13 @@ with left_col:
             (filtered_df["year_num"] >= start_y) &
             (filtered_df["year_num"] <= end_y)
         ]
+    # ---------- SERIES COLUMN (POPULATION) ----------
+    if topic == "population":
+        time_filtered_df["Series"] = (
+            time_filtered_df["sex"].astype(str)
+            + " | "
+            + time_filtered_df["age_group"].astype(str)
+        )
 
 
     
@@ -181,12 +207,27 @@ with right_col:
                     .sort_index()
                 )
                 st.line_chart(chart_df)
-            else:
-                st.line_chart(
-                    time_filtered_df
-                    .sort_values("year_num")
-                    .set_index("year_num")["value"]
+        else:
+            # ---------- POPULATION MULTI-LINE CHART ----------
+            plot_df = time_filtered_df.copy()
+            plot_df["Series"] = plot_df["sex"] + " | " + plot_df["age_group"]
+        
+            chart = (
+                alt.Chart(plot_df)
+                .mark_line()
+                .encode(
+                    x=alt.X("year_num:Q", title="Year"),
+                    y=alt.Y("value:Q", title="Population"),
+                    color=alt.Color(
+                        "Series:N",
+                        legend=alt.Legend(orient="right")
+                    ),
+                    tooltip=["year", "sex", "age_group", "value"]
                 )
+                .properties(height=400)
+            )
+        
+            st.altair_chart(chart, use_container_width=True)
 
 
 
