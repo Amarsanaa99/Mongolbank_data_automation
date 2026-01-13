@@ -108,7 +108,7 @@ def pivot_validate(df, mapping, label):
             index="ОН",
             columns="component",
             values="DTVAL_CO",
-            aggfunc="sum"
+            aggfunc="first"
         )
         .reset_index()
     )
@@ -190,6 +190,35 @@ def main():
     
     df_growth = jsonstat_to_dataframe(get_nso_data(table_path, build_query("6")))
     pv_growth = pivot_validate(df_growth, growth_map, "GDP Growth")
+        # ===================== POPULATION =====================
+    pop_table_path = "Population, household/1_Population, household/DT_NSO_0300_003V1.px"
+
+    pop_payload = {
+        "query": [
+            {"code": "Хүйс", "selection": {"filter": "item", "values": ["0", "1", "2"]}},
+            {"code": "Насны бүлэг", "selection": {"filter": "item", "values": [str(i) for i in range(16)]}},
+            {"code": "Он", "selection": {"filter": "item", "values": [str(i) for i in range(40)]}},
+        ],
+        "response": {"format": "json-stat2"}
+    }
+
+    df_population = jsonstat_to_dataframe(
+        get_nso_data(pop_table_path, pop_payload)
+    )
+
+    pv_population = (
+        df_population
+        .pivot_table(
+            index=["Хүйс", "Насны бүлэг"],
+            columns="Он",
+            values="DTVAL_CO",
+            aggfunc="sum"
+        )
+        .reset_index()
+    )
+
+    logging.info("📊 Population pivot OK")
+
     final_df = (
         pv_ngdp
         .merge(pv_rgdp_2005, on="ОН", how="outer")
@@ -212,10 +241,10 @@ def main():
         f"GDP_pipeline_{datetime.now().strftime('%Y%m%d')}.xlsx"
     )
     
-    final_df.to_excel(
-    output_file,
-    index=False
-    )
+    with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
+        final_df.to_excel(writer, sheet_name="GDP", index=False)
+        pv_population.to_excel(writer, sheet_name="Population", index=False)
+
         # ===================== LOAD TO BIGQUERY (RAW, NO CHANGE) =====================
     table_id = "mongol-bank-macro-data.Automation_data.fact_macro"
 
