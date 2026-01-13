@@ -45,7 +45,7 @@ def load_data(topic):
     """
     return client.query(query).to_dataframe()
 with st.spinner("⏳ Loading data from BigQuery..."):
-    df = load_data(topic)   # ⚠️ ЭНД topic дамжуулна
+df = load_data(topic)   # ⚠️ ЭНД topic дамжуулна
 if df.empty:
     st.error("❌ BigQuery-ээс өгөгдөл ирсэнгүй")
     st.stop()
