@@ -217,6 +217,18 @@ def main():
         )
         .reset_index()
     )
+    pop_long = pv_population.melt(
+    id_vars=["Хүйс", "Насны бүлэг"],
+    var_name="year",
+    value_name="value"
+    )
+    
+    pop_long["indicator_code"] = "population"
+    pop_long["source"] = "NSO 1212.mn"
+    pop_long["loaded_at"] = pd.Timestamp.utcnow()
+    pop_long["topic"] = "population"
+
+    
 
     logging.info("📊 Population pivot OK")
 
@@ -264,13 +276,33 @@ def main():
     long_df = long_df.rename(columns={"ОН": "year"})
     long_df["source"] = "NSO 1212.mn"
     long_df["loaded_at"] = pd.Timestamp.utcnow()
+    long_df["topic"] = "gdp" #Sheet name option
+    # ===================== POPULATION → LONG =====================
+    pop_long = pv_population.melt(
+        id_vars=["Хүйс", "Насны бүлэг"],
+        var_name="year",
+        value_name="value"
+    )
+    
+    pop_long = pop_long.rename(columns={
+        "Хүйс": "sex",
+        "Насны бүлэг": "age_group"
+    })
+    
+    pop_long["topic"] = "population"
+    pop_long["source"] = "NSO 1212.mn"
+    pop_long["loaded_at"] = pd.Timestamp.utcnow()
 
-    # ⚠️ ЯМАР Ч DROPNA, FILLNA ХИЙХГҮЙ ⚠️
-    # 0 → 0 хэвээр
-    # NaN → BigQuery дээр NULL болно
+    pop_long["topic"] = "population"
 
+    # ===================== FINAL MERGE =====================
+    final_long = pd.concat(
+        [long_df, pop_long],
+        ignore_index=True
+    )
+    
     job = bq_client.load_table_from_dataframe(
-        long_df,
+        final_long,
         table_id,
         job_config=bigquery.LoadJobConfig(
             write_disposition="WRITE_TRUNCATE"
@@ -278,8 +310,9 @@ def main():
     )
 
 
+
     job.result()
-    logging.info(f"☁️ BigQuery-д яг байгаа өгөгдлөөр {len(long_df)} мөр нэмэгдлээ")
+    logging.info(f"☁️ BigQuery-д {len(final_long)} мөр (GDP + Population) бичигдлээ")
 
     
     logging.info(f"✅ Pipeline амжилттай дууслаа → {output_file}")
