@@ -322,17 +322,17 @@ with st.expander("📄 Raw data"):
     # ===================== POPULATION =====================
     else:
     # 🔑 Зөвхөн sex filter
-    raw_pop = df[
-        df["sex"].isin(sex)
-    ].copy()
-
-    df_pop = (
-        raw_pop
-        .sort_values(["year", "sex", "age_group"])
-        [["year", "sex", "age_group", "value"]]
-    )
-
-    st.dataframe(df_pop, use_container_width=True)
-
-
+        raw_pop = df[
+            df["sex"].isin(sex)
+        ].copy()
+    
+        df_pop = (
+            raw_pop
+            .sort_values(["year", "sex", "age_group"])
+            [["year", "sex", "age_group", "value"]]
+        )
+    
         st.dataframe(df_pop, use_container_width=True)
+    
+    
+            st.dataframe(df_pop, use_container_width=True)
