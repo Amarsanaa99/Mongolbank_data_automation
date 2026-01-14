@@ -333,17 +333,25 @@ with left_col:
             else:
                 # ===== GDP =====   👈👈👈 ЭНЭ ХЭСЭГ
                 if topic == "gdp":
+                
                     chart_df = (
                         time_filtered_df
+                        # 1️⃣ нэг indicator – нэг хугацаа = 1 мөр
+                        .drop_duplicates(
+                            subset=["year_num", "indicator_code"]
+                        )
+                        # 2️⃣ aggregation хийхдээ mean
                         .pivot_table(
                             index="year_num",
                             columns="indicator_code",
                             values="value",
-                            aggfunc="sum"   # ❌ ЯГ ЭНЭ МӨР
+                            aggfunc="mean"   # ✅ ЗӨВ
                         )
                         .sort_index()
                     )
+                
                     st.line_chart(chart_df)
+
 
 
     
