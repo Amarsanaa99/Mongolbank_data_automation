@@ -333,6 +333,3 @@ with st.expander("📄 Raw data"):
         )
     
         st.dataframe(df_pop, use_container_width=True)
-    
-    
-            st.dataframe(df_pop, use_container_width=True)
