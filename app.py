@@ -210,53 +210,6 @@ with left_col:
         else:
             filtered_df = df.copy()
 
-    # =================================================
-    # FREQUENCY (DATA-DRIVEN, SAFE)
-    # =================================================
-    if not filtered_df.empty:
-    
-        available_freqs = sorted(
-            filtered_df["time_freq"].dropna().unique()
-        )
-    
-        freq_label_map = {
-            "Q": "Quarterly",
-            "M": "Monthly",
-            "Y": "Yearly"
-        }
-    
-        freq_options = [
-            freq_label_map[f]
-            for f in available_freqs
-            if f in freq_label_map
-        ]
-    
-        if not freq_options:
-            st.warning("No frequency available for selected indicators")
-            st.stop()
-    
-        freq = st.radio(
-            "Frequency",
-            freq_options,
-            index=0,
-            horizontal=True
-        )
-    
-        freq_map_rev = {
-            "Quarterly": "Q",
-            "Monthly": "M",
-            "Yearly": "Y"
-        }
-    
-        filtered_df = filtered_df[
-            filtered_df["time_freq"] == freq_map_rev[freq]
-        ]
-    
-    else:
-        st.warning("No data for selected filters")
-        st.stop()
-
-
     #=====================================
     #Time filter
     #=====================================
