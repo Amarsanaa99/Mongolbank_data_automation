@@ -85,7 +85,12 @@ def load_headline_data():
         project=st.secrets["gcp_service_account"]["project_id"]
     )
 
-    codes = tuple(h["code"] for h in HEADLINE_CONFIG)
+    codes = tuple(
+    h["code"]
+    for h in HEADLINE_CONFIG
+    if h.get("type") == "indicator"
+    )
+
 
     query = f"""
         SELECT
@@ -354,17 +359,19 @@ for row in rows:
                         .set_index("year_num")[["value"]]
                         .sort_index()
                     )
-    
+                
                 # ===== POPULATION TOTAL =====
-                # ===== GDP INDICATOR =====
-                if cfg["type"] == "indicator":
+                elif cfg["type"] == "population_total":
                     plot_df = (
                         headline_df[
-                            headline_df["indicator_code"].str.lower() == cfg["code"]
+                            (headline_df["topic"] == "population") &
+                            (headline_df["sex"] == "Бүгд") &
+                            (headline_df["age_group"] == "Бүгд")
                         ]
                         .set_index("year_num")[["value"]]
                         .sort_index()
                     )
+
 
                 # ===== POPULATION TOTAL =====
                 elif cfg["type"] == "population_total":
