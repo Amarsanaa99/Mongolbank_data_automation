@@ -331,26 +331,34 @@ with left_col:
                 st.warning("No data for selected filters")
     
             else:
-                # ===== GDP =====   👈👈👈 ЭНЭ ХЭСЭГ
+                # ===== GDP (HEADLINE ONLY) =====
                 if topic == "gdp":
                 
+                    plot_df = time_filtered_df[
+                        time_filtered_df["indicator_code"]
+                        .str.lower()
+                        .isin([
+                            "rgdp_2005",
+                            "rgdp_2010",
+                            "rgdp_2015",
+                            "ngdp",
+                            "growth"
+                        ])
+                    ]
+                
                     chart_df = (
-                        time_filtered_df
-                        # 1️⃣ нэг indicator – нэг хугацаа = 1 мөр
-                        .drop_duplicates(
-                            subset=["year_num", "indicator_code"]
-                        )
-                        # 2️⃣ aggregation хийхдээ mean
+                        plot_df
                         .pivot_table(
                             index="year_num",
                             columns="indicator_code",
                             values="value",
-                            aggfunc="mean"   # ✅ ЗӨВ
+                            aggfunc="mean"   # 🔥 ЭНД Л ГОЛ ӨӨРЧЛӨЛТ
                         )
                         .sort_index()
                     )
                 
                     st.line_chart(chart_df)
+
 
 
 
