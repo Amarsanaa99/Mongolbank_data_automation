@@ -106,6 +106,7 @@ def load_headline_data():
     ORDER BY year_num
     """
     df = client.query(query).to_dataframe()
+    return df
 
 # ================= LEFT COLUMN =================
 with left_col:
@@ -225,38 +226,34 @@ with left_col:
     filtered_df = filtered_df[
     filtered_df["time_freq"] == freq_map[freq]
     ]
+    if filtered_df.empty:
+        st.warning("No data for selected filters")
+        st.stop()
 
-     # ---------- TIME RANGE ----------
-    with st.container(border=True):
-        st.markdown("### ⏱ Time range")
-        
-        if topic == "gdp":
-            quarters = sorted(df["year"].unique())
-            col1, col2 = st.columns(2)
-            with col1:
-                start_q = st.selectbox("Start quarter", quarters, index=0)
-            with col2:
-                end_q = st.selectbox("End quarter", quarters, index=len(quarters)-1)
-        else:
-            start_y, end_y = st.slider(
-                "Year range",
-                int(df["year"].min()),
-                int(df["year"].max()),
-                (int(df["year"].min()), int(df["year"].max()))
-            )
-
-        # ---------- ⬅️ TIME FILTER ----------
+    #Time filter
     with st.container(border=True):
         st.markdown("### ⏱ Time range")
     
+        min_t = float(filtered_df["year_num"].min())
+        max_t = float(filtered_df["year_num"].max())
+    
+        # Label-ийг frequency-ээс хамааруулна
+        if freq == "Quarterly":
+            label = "Quarter range"
+            step = 0.25
+        elif freq == "Monthly":
+            label = "Month range"
+            step = 1 / 12
+        else:  # Yearly
+            label = "Year range"
+            step = 1.0
+    
         start, end = st.slider(
-            "Time range",
-            float(filtered_df["year_num"].min()),
-            float(filtered_df["year_num"].max()),
-            (
-                float(filtered_df["year_num"].min()),
-                float(filtered_df["year_num"].max())
-            )
+            label,
+            min_t,
+            max_t,
+            (min_t, max_t),
+            step=step
         )
     
     time_filtered_df = filtered_df[
@@ -267,6 +264,7 @@ with left_col:
 
     # ---------- SERIES COLUMN (POPULATION) ----------
     if topic == "population":
+        time_filtered_df = time_filtered_df.copy()
         time_filtered_df["Series"] = (
             time_filtered_df["sex"].astype(str)
             + " | "
@@ -345,7 +343,7 @@ for row in rows:
                 if cfg["type"] == "indicator":
                     plot_df = (
                         headline_df[
-                            headline_df["indicator_code"].str.lower() == cfg["code"]
+                            headline_df["indicator_code"].str.lower().str.startswith(cfg["code"])
                         ]
                         .set_index("year_num")[["value"]]
                         .sort_index()
@@ -403,10 +401,10 @@ with st.expander("📄 Raw data"):
     # ===================== POPULATION =====================
     else:
     # 🔑 Зөвхөн sex filter
-        raw_pop = df[
-            df["sex"].isin(sex)
-        ].copy()
-    
+        if sex:
+            raw_pop = df[df["sex"].isin(sex)].copy()
+        else:
+            raw_pop = df.copy()
         df_pop = (
             raw_pop
             .sort_values(["year", "sex", "age_group"])
