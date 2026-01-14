@@ -90,39 +90,24 @@ def load_headline_data():
     for h in HEADLINE_CONFIG
     if h.get("type") == "indicator"
     )
-
-
-    query = f"""
-        SELECT
-            topic,
-            year,
-            indicator_code,
-            value,
-            sex,
-            age_group
-        FROM `mongol-bank-macro-data.Automation_data.fact_macro`
-        WHERE
-            (
-                LOWER(indicator_code) IN {codes}
-                OR topic = 'population'
-            )
-        ORDER BY year
+    query = """
+    SELECT
+        topic,
+        indicator_code,
+        value,
+        year,
+        period,
+        time_freq,
+        year_num,
+        sex,
+        age_group
+    FROM `mongol-bank-macro-data.Automation_data.fact_macro_clean`
+    WHERE topic IN ('gdp','population')
+    ORDER BY year_num
     """
     df = client.query(query).to_dataframe()
     
-    # ---------- SAFE year_num ----------
-    df["year"] = df["year"].astype(str)
-    
-    is_quarter = df["year"].str.contains("-")
-    
-    df.loc[is_quarter, "year_num"] = (
-        df.loc[is_quarter, "year"].str.split("-").str[0].astype(int)
-        + (df.loc[is_quarter, "year"].str.split("-").str[1].astype(int) - 1) / 4
-    )
-    
-    df.loc[~is_quarter, "year_num"] = df.loc[~is_quarter, "year"].astype(int)
-    
-    return df
+
 
 
 
@@ -160,7 +145,7 @@ with left_col:
                 value,
                 sex,
                 age_group
-            FROM `mongol-bank-macro-data.Automation_data.fact_macro`
+            FROM `mongol-bank-macro-data.Automation_data.fact_macro_clean`
             WHERE topic = '{topic}'
             ORDER BY year
         """
@@ -170,14 +155,6 @@ with left_col:
     with st.spinner("⏳ Loading data from BigQuery..."):
         df = load_data(topic)
 
-    # 4️⃣ PREP DATA (year → year_num)
-    if topic == "gdp":
-        df["year_num"] = (
-            df["year"].str.split("-").str[0].astype(int)
-            + (df["year"].str.split("-").str[1].astype(int) - 1) / 4
-        )
-    else:
-        df["year_num"] = df["year"].astype(int)
     # ---------- GDP TYPE SELECTOR ----------
     if topic == "gdp":
         with st.container(border=True):
@@ -235,6 +212,23 @@ with left_col:
             ]
         else:
             filtered_df = df.iloc[0:0]  # хоосон dataframe
+    freq = st.radio(
+    "Frequency",
+    ["Quarterly", "Monthly", "Yearly"],
+    horizontal=True
+    )
+    
+    freq_map = {
+        "Monthly": "M",
+        "Quarterly": "Q",
+        "Yearly": "Y"
+    }
+    
+    filtered_df = filtered_df[
+    filtered_df["time_freq"] == freq_map[freq]
+    ]
+
+
 
      # ---------- TIME RANGE ----------
     with st.container(border=True):
@@ -256,25 +250,24 @@ with left_col:
             )
 
         # ---------- ⬅️ TIME FILTER ----------
-    if topic == "gdp":
-        start_num = (
-            int(start_q.split("-")[0])
-            + (int(start_q.split("-")[1]) - 1) / 4
-        )
-        end_num = (
-            int(end_q.split("-")[0])
-            + (int(end_q.split("-")[1]) - 1) / 4
+    with st.container(border=True):
+        st.markdown("### ⏱ Time range")
+    
+        start, end = st.slider(
+            "Time range",
+            float(filtered_df["year_num"].min()),
+            float(filtered_df["year_num"].max()),
+            (
+                float(filtered_df["year_num"].min()),
+                float(filtered_df["year_num"].max())
+            )
         )
     
-        time_filtered_df = filtered_df[
-            (filtered_df["year_num"] >= start_num) &
-            (filtered_df["year_num"] <= end_num)
-        ]
-    else:
-        time_filtered_df = filtered_df[
-            (filtered_df["year_num"] >= start_y) &
-            (filtered_df["year_num"] <= end_y)
-        ]
+    time_filtered_df = filtered_df[
+        (filtered_df["year_num"] >= start) &
+        (filtered_df["year_num"] <= end)
+    ]
+
 
     # ---------- SERIES COLUMN (POPULATION) ----------
     if topic == "population":
