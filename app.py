@@ -109,15 +109,21 @@ def load_headline_data():
         ORDER BY year
     """
     df = client.query(query).to_dataframe()
-
-    if df["year"].str.contains("-").any():
-        df["year_num"] = (
-            df["year"].str.split("-").str[0].astype(int)
-            + (df["year"].str.split("-").str[1].astype(int).sub(1) / 4)
-        )
-    else:
-        df["year_num"] = df["year"].astype(int)
+    
+    # ---------- SAFE year_num ----------
+    df["year"] = df["year"].astype(str)
+    
+    is_quarter = df["year"].str.contains("-")
+    
+    df.loc[is_quarter, "year_num"] = (
+        df.loc[is_quarter, "year"].str.split("-").str[0].astype(int)
+        + (df.loc[is_quarter, "year"].str.split("-").str[1].astype(int) - 1) / 4
+    )
+    
+    df.loc[~is_quarter, "year_num"] = df.loc[~is_quarter, "year"].astype(int)
+    
     return df
+
 
 
 # ================= LEFT COLUMN =================
@@ -329,8 +335,6 @@ headline_df = load_headline_data()
 
 st.markdown("## 📊 Headline indicators")
 
-headline_df = load_headline_data()
-
 N_COLS = 4
 rows = [
     HEADLINE_CONFIG[i:i + N_COLS]
@@ -359,19 +363,6 @@ for row in rows:
                         .set_index("year_num")[["value"]]
                         .sort_index()
                     )
-                
-                # ===== POPULATION TOTAL =====
-                elif cfg["type"] == "population_total":
-                    plot_df = (
-                        headline_df[
-                            (headline_df["topic"] == "population") &
-                            (headline_df["sex"] == "Бүгд") &
-                            (headline_df["age_group"] == "Бүгд")
-                        ]
-                        .set_index("year_num")[["value"]]
-                        .sort_index()
-                    )
-
 
                 # ===== POPULATION TOTAL =====
                 elif cfg["type"] == "population_total":
