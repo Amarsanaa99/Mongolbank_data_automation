@@ -11,6 +11,32 @@ st.set_page_config(
     page_title="Mongolbank Macro Data Dashboard",
     layout="wide"
 )
+# =====================================================
+# HEADLINE CONFIG (EXTENSIBLE)
+# =====================================================
+
+HEADLINE_CONFIG = [
+    {
+        "code": "ngdp",
+        "title": "NGDP",
+        "subtitle": "Nominal GDP",
+        "topic": "gdp"
+    },
+    {
+        "code": "rgdp_2015",
+        "title": "RGDP 2015",
+        "subtitle": "Real GDP (2015 prices)",
+        "topic": "gdp"
+    },
+    {
+        "code": "population_total",
+        "title": "Population",
+        "subtitle": "Total population",
+        "topic": "population"
+    }
+    # 🔥 цаашдаа 12, 16 гээд нэмэгдэнэ
+]
+
 
 # =====================================================
 # APP START (TEST RENDER)
@@ -22,6 +48,44 @@ st.success("🔥 APP STARTED — UI rendering OK")
 # MAIN LAYOUT
 # =====================================================
 left_col, right_col = st.columns([1.4, 4.6], gap="large")
+# =====================================================
+# HEADLINE DATA LOADER (FILTER-INDEPENDENT)
+# =====================================================
+
+@st.cache_data(ttl=3600)
+def load_headline_data():
+    credentials = service_account.Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"]
+    )
+    client = bigquery.Client(
+        credentials=credentials,
+        project=st.secrets["gcp_service_account"]["project_id"]
+    )
+
+    codes = tuple(h["code"] for h in HEADLINE_CONFIG)
+
+    query = f"""
+        SELECT
+            topic,
+            year,
+            indicator_code,
+            value
+        FROM `mongol-bank-macro-data.Automation_data.fact_macro`
+        WHERE LOWER(indicator_code) IN {codes}
+        ORDER BY year
+    """
+
+    df = client.query(query).to_dataframe()
+
+    if df["year"].str.contains("-").any():
+        df["year_num"] = (
+            df["year"].str.split("-").str[0].astype(int)
+            + (df["year"].str.split("-").str[1].astype(int).sub(1) / 4)
+        )
+    else:
+        df["year_num"] = df["year"].astype(int)
+    return df
+
 
 # ================= LEFT COLUMN =================
 with left_col:
@@ -225,27 +289,16 @@ with left_col:
                     )
                     st.altair_chart(chart, use_container_width=True)
 # =====================================================
-# HEADLINE (ALWAYS VISIBLE — FILTER INDEPENDENT)
+# HEADLINE INDICATORS (EXTENSIBLE, FILTER-INDEPENDENT)
 # =====================================================
 
-headline_codes = [
-    "ngdp",
-    "rgdp_2005",
-    "rgdp_2010",
-    "rgdp_2015"
-]
+headline_df = load_headline_data()
 
-headline_df = df[
-    df["indicator_code"]
-    .str.lower()
-    .isin(headline_codes)
-].copy()
+st.markdown("## 📊 Headline indicators")
 
-st.markdown("## 📊 Macro headline indicators")
+cols = st.columns(len(HEADLINE_CONFIG))
 
-c1, c2, c3, c4 = st.columns(4)
-
-for col, code in zip([c1, c2, c3, c4], headline_codes):
+for col, cfg in zip(cols, HEADLINE_CONFIG):
     with col:
         with st.container(border=True):
 
@@ -253,10 +306,10 @@ for col, code in zip([c1, c2, c3, c4], headline_codes):
                 f"""
                 <div style="text-align:center; margin-bottom:6px;">
                     <div style="font-weight:600;">
-                        {code.upper()}
+                        {cfg["title"]}
                     </div>
                     <div style="font-size:12px; opacity:0.6;">
-                        Quarterly level
+                        {cfg["subtitle"]}
                     </div>
                 </div>
                 """,
@@ -265,13 +318,13 @@ for col, code in zip([c1, c2, c3, c4], headline_codes):
 
             plot_df = (
                 headline_df[
-                    headline_df["indicator_code"].str.lower() == code
+                    headline_df["indicator_code"].str.lower() == cfg["code"]
                 ]
                 .set_index("year_num")[["value"]]
                 .sort_index()
             )
 
-            st.line_chart(plot_df, height=180)
+            st.line_chart(plot_df, height=160)
 
 
 
