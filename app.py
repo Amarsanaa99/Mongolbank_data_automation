@@ -220,50 +220,49 @@ with left_col:
                         .properties(height=400)
                     )
                     st.altair_chart(chart, use_container_width=True)
+# ================= HEADLINE DATA =================
+headline_codes = [
+    "ngdp",
+    "rgdp_2005",
+    "rgdp_2010",
+    "rgdp_2015"
+]
+    
+headline_df = time_filtered_df[
+    time_filtered_df["indicator_code"]
+    .str.lower()
+    .isin(headline_codes)
+]
+# ================= HEADLINE DATA (FILTER-FREE) =================
+headline_codes = [
+    "ngdp",
+    "rgdp_2005",
+    "rgdp_2010",
+    "rgdp_2015"
+]
+    
+headline_df = df[
+    df["indicator_code"]
+    .str.lower()
+    .isin(headline_codes)
+].copy()
 
- # ================= HEADLINE DATA =================
-    headline_codes = [
-        "ngdp",
-        "rgdp_2005",
-        "rgdp_2010",
-        "rgdp_2015"
-    ]
+# 🔥 4 багана = 1 мөр
+c1, c2, c3, c4 = st.columns(4)
     
-    headline_df = time_filtered_df[
-        time_filtered_df["indicator_code"]
-        .str.lower()
-        .isin(headline_codes)
-    ]
-    # ================= HEADLINE DATA (FILTER-FREE) =================
-    headline_codes = [
-        "ngdp",
-        "rgdp_2005",
-        "rgdp_2010",
-        "rgdp_2015"
-    ]
+for col, code in zip([c1, c2, c3, c4], headline_codes):
+    with col:
+        st.caption(code.upper())
     
-    headline_df = df[
-        df["indicator_code"]
-        .str.lower()
-        .isin(headline_codes)
-    ].copy()
-
-    # 🔥 4 багана = 1 мөр
-    c1, c2, c3, c4 = st.columns(4)
+        plot_df = (
+            headline_df[
+                headline_df["indicator_code"].str.lower() == code
+            ]
+            .set_index("year_num")[["value"]]
+            .sort_index()
+        )
     
-    for col, code in zip([c1, c2, c3, c4], headline_codes):
-        with col:
-            st.caption(code.upper())
-    
-            plot_df = (
-                headline_df[
-                    headline_df["indicator_code"].str.lower() == code
-                ]
-                .set_index("year_num")[["value"]]
-                .sort_index()
-            )
-    
-            st.line_chart(plot_df, height=180)
+        st.line_chart(plot_df, height=180)
 
 
 # =====================================================
