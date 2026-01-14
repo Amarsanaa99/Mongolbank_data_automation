@@ -290,45 +290,45 @@ with left_col:
             (filtered_df["year_num"] <= end_num)
         ]
 
+
+    # ===== MONTHLY =====
+    elif freq == "Monthly":
+        options = sorted(filtered_df["year"].unique())
     
-        # ===== MONTHLY =====
-        elif freq == "Monthly":
-            options = sorted(filtered_df["year"].unique())
-    
-            col1, col2 = st.columns(2)
-            with col1:
-                start = st.selectbox(
-                    "Start month",
-                    options,
-                    index=0
-                )
-            with col2:
-                end = st.selectbox(
-                    "End month",
-                    options,
-                    index=len(options) - 1
-                )
-    
-            time_filtered_df = filtered_df[
-                (filtered_df["year"] >= start) &
-                (filtered_df["year"] <= end)
-            ]
-    
-        # ===== YEARLY =====
-        else:
-            years = sorted(filtered_df["year"].astype(int).unique())
-    
-            start_y, end_y = st.slider(
-                "Year range",
-                min(years),
-                max(years),
-                (min(years), max(years))
+        col1, col2 = st.columns(2)
+        with col1:
+            start = st.selectbox(
+                "Start month",
+                options,
+                index=0
+            )
+        with col2:
+            end = st.selectbox(
+                "End month",
+                options,
+                index=len(options) - 1
             )
     
-            time_filtered_df = filtered_df[
-                (filtered_df["year"].astype(int) >= start_y) &
-                (filtered_df["year"].astype(int) <= end_y)
-            ]
+        time_filtered_df = filtered_df[
+            (filtered_df["year"] >= start) &
+            (filtered_df["year"] <= end)
+        ]
+    
+    # ===== YEARLY =====
+    else:
+        years = sorted(filtered_df["year"].astype(int).unique())
+    
+        start_y, end_y = st.slider(
+            "Year range",
+            min(years),
+            max(years),
+            (min(years), max(years))
+        )
+    
+        time_filtered_df = filtered_df[
+            (filtered_df["year"].astype(int) >= start_y) &
+            (filtered_df["year"].astype(int) <= end_y)
+        ]
 
 
     # ---------- SERIES COLUMN (POPULATION) ----------
