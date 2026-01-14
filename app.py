@@ -290,8 +290,15 @@ with st.expander("📄 Raw data"):
     # ===================== GDP =====================
     if topic == "gdp":
     
+        # 🔑 GDP TYPE-д таарах prefix
+        raw_prefix = prefix_map[gdp_type]
+    
+        raw_df = df[
+            df["indicator_code"].str.lower().str.startswith(raw_prefix)
+        ].copy()
+    
         df_pivot = (
-            time_filtered_df
+            raw_df
             .pivot_table(
                 index="year",
                 columns="indicator_code",
@@ -300,9 +307,6 @@ with st.expander("📄 Raw data"):
             )
             .reset_index()
         )
-    
-        # 🔑 GDP TYPE-д таарсан prefix
-        raw_prefix = prefix_map[gdp_type]
     
         ordered_cols = (
             ["year"] +
@@ -314,9 +318,21 @@ with st.expander("📄 Raw data"):
         st.dataframe(df_pivot, use_container_width=True)
 
 
+
     # ===================== POPULATION =====================
     else:
-        df_pop = time_filtered_df.sort_values("year")[["year", "sex", "age_group", "value"]]
+    # 🔑 Зөвхөн sex filter
+    raw_pop = df[
+        df["sex"].isin(sex)
+    ].copy()
+
+    df_pop = (
+        raw_pop
+        .sort_values(["year", "sex", "age_group"])
+        [["year", "sex", "age_group", "value"]]
+    )
+
+    st.dataframe(df_pop, use_container_width=True)
 
 
         st.dataframe(df_pop, use_container_width=True)
