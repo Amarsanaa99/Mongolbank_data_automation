@@ -176,9 +176,41 @@ with left_col:
             + " | "
             + time_filtered_df["age_group"].astype(str)
         )
- 
-
-
+  # ================= HEADLINE DATA =================
+    headline_codes = [
+        "ngdp",
+        "rgdp_2005",
+        "rgdp_2010",
+        "rgdp_2015"
+    ]
+    
+    headline_df = time_filtered_df[
+        time_filtered_df["indicator_code"]
+        .str.lower()
+        .isin(headline_codes)
+    ]
+    # ================= HEADLINE SUMMARY =================
+    with st.container(border=True):
+        st.markdown("### 📉 Headline summary")
+    
+        col1, col2 = st.columns(2)
+    
+        for i, code in enumerate(headline_codes):
+    
+            target_col = col1 if i % 2 == 0 else col2
+    
+            with target_col:
+                st.caption(code.upper())
+    
+                plot_df = (
+                    headline_df[
+                        headline_df["indicator_code"].str.lower() == code
+                    ]
+                    .set_index("year_num")[["value"]]
+                    .sort_index()
+                )
+    
+                st.line_chart(plot_df, height=180)
     
 # ================= RIGHT COLUMN =================
 with right_col:
@@ -222,7 +254,8 @@ with right_col:
                     .properties(height=400)
                 )
                 st.altair_chart(chart, use_container_width=True)
-    # ================= HEADLINE DATA =================
+
+ # ================= HEADLINE DATA =================
     headline_codes = [
         "ngdp",
         "rgdp_2005",
