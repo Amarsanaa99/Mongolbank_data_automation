@@ -17,25 +17,48 @@ st.set_page_config(
 
 HEADLINE_CONFIG = [
     {
-        "code": "ngdp",
-        "title": "NGDP",
-        "subtitle": "Nominal GDP",
+        "type": "indicator",
+        "code": "rgdp_2005",
+        "title": "RGDP 2005",
+        "subtitle": "Real GDP (2005 prices)",
         "topic": "gdp"
     },
     {
+        "type": "indicator",
+        "code": "rgdp_2010",
+        "title": "RGDP 2010",
+        "subtitle": "Real GDP (2010 prices)",
+        "topic": "gdp"
+    },
+    {
+        "type": "indicator",
         "code": "rgdp_2015",
         "title": "RGDP 2015",
         "subtitle": "Real GDP (2015 prices)",
         "topic": "gdp"
     },
     {
-        "code": "population_total",
+        "type": "indicator",
+        "code": "ngdp",
+        "title": "NGDP",
+        "subtitle": "Nominal GDP",
+        "topic": "gdp"
+    },
+    {
+        "type": "indicator",
+        "code": "growth",
+        "title": "GDP Growth",
+        "subtitle": "YoY growth",
+        "topic": "gdp"
+    },
+    {
+        "type": "population_total",   # 🔥 indicator_code биш!
         "title": "Population",
         "subtitle": "Total population",
         "topic": "population"
     }
-    # 🔥 цаашдаа 12, 16 гээд нэмэгдэнэ
 ]
+
 
 
 # =====================================================
@@ -296,35 +319,52 @@ headline_df = load_headline_data()
 
 st.markdown("## 📊 Headline indicators")
 
-cols = st.columns(len(HEADLINE_CONFIG))
+headline_df = load_headline_data()
 
-for col, cfg in zip(cols, HEADLINE_CONFIG):
-    with col:
-        with st.container(border=True):
+N_COLS = 4
+rows = [
+    HEADLINE_CONFIG[i:i + N_COLS]
+    for i in range(0, len(HEADLINE_CONFIG), N_COLS)
+]
 
-            st.markdown(
-                f"""
-                <div style="text-align:center; margin-bottom:6px;">
-                    <div style="font-weight:600;">
-                        {cfg["title"]}
-                    </div>
-                    <div style="font-size:12px; opacity:0.6;">
-                        {cfg["subtitle"]}
-                    </div>
+for row in rows:
+    cols = st.columns(N_COLS)
+    for col, cfg in zip(cols, HEADLINE_CONFIG):
+        with col:
+            with st.container(border=True):
+    
+                st.markdown(f"""
+                <div style="text-align:center">
+                    <div style="font-weight:600">{cfg["title"]}</div>
+                    <div style="font-size:12px;opacity:0.6">{cfg["subtitle"]}</div>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+                """, unsafe_allow_html=True)
+    
+                # ===== GDP INDICATOR =====
+                if cfg["type"] == "indicator":
+                    plot_df = (
+                        headline_df[
+                            headline_df["indicator_code"].str.lower() == cfg["code"]
+                        ]
+                        .set_index("year_num")[["value"]]
+                        .sort_index()
+                    )
+    
+                # ===== POPULATION TOTAL =====
+                elif cfg["type"] == "population_total":
+                    plot_df = (
+                        headline_df[
+                            (headline_df["topic"] == "population")
+                            & (headline_df["sex"] == "Бүгд")
+                            & (headline_df["age_group"] == "Бүгд")
+                        ]
+                        .set_index("year_num")[["value"]]
+                        .sort_index()
+                    )
+    
+                st.line_chart(plot_df, height=160)
 
-            plot_df = (
-                headline_df[
-                    headline_df["indicator_code"].str.lower() == cfg["code"]
-                ]
-                .set_index("year_num")[["value"]]
-                .sort_index()
-            )
 
-            st.line_chart(plot_df, height=160)
 
 
 
