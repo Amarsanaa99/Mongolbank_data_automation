@@ -116,19 +116,23 @@ with left_col:
         sex = st.multiselect(
             "Sex",
             sorted(df["sex"].dropna().unique()),
-            default=sorted(df["sex"].dropna().unique())
+            default=[]
         )
         
         age_group = st.multiselect(
             "Age group",
             sorted(df["age_group"].dropna().unique()),
-            default=sorted(df["age_group"].dropna().unique())
+            default=[]
         )
-        
-        filtered_df = df[
-            df["sex"].isin(sex) &
-            df["age_group"].isin(age_group)
-        ]
+
+        if sex and age_group:
+            filtered_df = df[
+                df["sex"].isin(sex) &
+                df["age_group"].isin(age_group)
+            ]
+        else:
+            filtered_df = df.iloc[0:0]  # хоосон dataframe
+
      # ---------- TIME RANGE ----------
     with st.container(border=True):
         st.markdown("### ⏱ Time range")
@@ -220,41 +224,31 @@ with left_col:
                         .properties(height=400)
                     )
                     st.altair_chart(chart, use_container_width=True)
-# ================= HEADLINE DATA =================
+# =====================================================
+# HEADLINE (ALWAYS VISIBLE — FILTER INDEPENDENT)
+# =====================================================
+
 headline_codes = [
     "ngdp",
     "rgdp_2005",
     "rgdp_2010",
     "rgdp_2015"
 ]
-    
-headline_df = time_filtered_df[
-    time_filtered_df["indicator_code"]
-    .str.lower()
-    .isin(headline_codes)
-]
-# ================= HEADLINE DATA (FILTER-FREE) =================
-headline_codes = [
-    "ngdp",
-    "rgdp_2005",
-    "rgdp_2010",
-    "rgdp_2015"
-]
-    
+
 headline_df = df[
     df["indicator_code"]
     .str.lower()
     .isin(headline_codes)
 ].copy()
 
-# 🔥 4 багана = 1 мөр
+st.markdown("## 📊 Macro headline indicators")
+
 c1, c2, c3, c4 = st.columns(4)
-    
+
 for col, code in zip([c1, c2, c3, c4], headline_codes):
     with col:
         with st.container(border=True):
 
-            # 🔹 TITLE + SUBTITLE (ТӨВЛӨРСӨН)
             st.markdown(
                 f"""
                 <div style="text-align:center; margin-bottom:6px;">
@@ -278,6 +272,7 @@ for col, code in zip([c1, c2, c3, c4], headline_codes):
             )
 
             st.line_chart(plot_df, height=180)
+
 
 
 
