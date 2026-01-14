@@ -175,14 +175,15 @@ with left_col:
                 "indicator_code"
             ].unique()
         )
-
-
+        
+    with st.container(border=True):
+        st.markdown("### 📌 Indicators")
+        
         selected_indicators = st.multiselect(
             "Indicators",
             available_indicators,
             default=available_indicators[:1] if available_indicators else []
         )
-
 
         filtered_df = df[df["indicator_code"].isin(selected_indicators)]
     else:
