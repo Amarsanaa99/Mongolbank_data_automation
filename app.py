@@ -84,12 +84,6 @@ def load_headline_data():
         credentials=credentials,
         project=st.secrets["gcp_service_account"]["project_id"]
     )
-
-    codes = tuple(
-    h["code"]
-    for h in HEADLINE_CONFIG
-    if h.get("type") == "indicator"
-    )
     query = """
     SELECT
         topic,
@@ -210,59 +204,120 @@ with left_col:
                 df["age_group"].isin(age_group)
             ]
         else:
-            filtered_df = df.iloc[0:0]  # хоосон dataframe
-    freq = st.radio(
-    "Frequency",
-    ["Quarterly", "Monthly", "Yearly"],
-    horizontal=True
-    )
+            filtered_df = df.copy()   # хоосон dataframe
+    # =================================================
+    # FREQUENCY (DATA-DRIVEN, SAFE)
+    # =================================================
+    if not filtered_df.empty:
     
-    freq_map = {
-        "Monthly": "M",
-        "Quarterly": "Q",
-        "Yearly": "Y"
-    }
+        available_freqs = sorted(
+            filtered_df["time_freq"].dropna().unique()
+        )
     
-    filtered_df = filtered_df[
-    filtered_df["time_freq"] == freq_map[freq]
-    ]
-    if filtered_df.empty:
+        freq_label_map = {
+            "Q": "Quarterly",
+            "M": "Monthly",
+            "Y": "Yearly"
+        }
+    
+        freq_options = [
+            freq_label_map[f]
+            for f in available_freqs
+            if f in freq_label_map
+        ]
+    
+        if not freq_options:
+            st.warning("No frequency available for selected indicators")
+            st.stop()
+    
+        freq = st.radio(
+            "Frequency",
+            freq_options,
+            index=0,
+            horizontal=True
+        )
+    
+        freq_map_rev = {
+            "Quarterly": "Q",
+            "Monthly": "M",
+            "Yearly": "Y"
+        }
+    
+        filtered_df = filtered_df[
+            filtered_df["time_freq"] == freq_map_rev[freq]
+        ]
+    
+    else:
         st.warning("No data for selected filters")
         st.stop()
+
+
     #=====================================
     #Time filter
     #=====================================
     with st.container(border=True):
         st.markdown("### ⏱ Time range")
     
-        if freq == "Quarterly":
-            options = sorted(filtered_df["year"].unique())
-            col1, col2 = st.columns(2)
-            with col1:
-                start = st.selectbox("Start quarter", options, index=0)
-            with col2:
-                end = st.selectbox("End quarter", options, index=len(options)-1)
+    # ===== QUARTERLY =====
+    if freq == "Quarterly":
+        options = sorted(filtered_df["year"].unique())
     
-            time_filtered_df = filtered_df[
-                (filtered_df["year"] >= start) &
-                (filtered_df["year"] <= end)
-            ]
+        col1, col2 = st.columns(2)
+        with col1:
+            start = st.selectbox(
+                "Start quarter",
+                options,
+                index=0
+            )
+        with col2:
+            end = st.selectbox(
+                "End quarter",
+                options,
+                index=len(options) - 1
+            )
     
+        # 🔥 STRING COMPARE БИШ — year_num
+        start_num = filtered_df.loc[
+            filtered_df["year"] == start, "year_num"
+        ].iloc[0]
+    
+        end_num = filtered_df.loc[
+            filtered_df["year"] == end, "year_num"
+        ].iloc[0]
+    
+        time_filtered_df = filtered_df[
+            (filtered_df["year_num"] >= start_num) &
+            (filtered_df["year_num"] <= end_num)
+        ]
+
+    
+        # ===== MONTHLY =====
         elif freq == "Monthly":
             options = sorted(filtered_df["year"].unique())
+    
             col1, col2 = st.columns(2)
             with col1:
-                start = st.selectbox("Start month", options, index=0)
+                start = st.selectbox(
+                    "Start month",
+                    options,
+                    index=0
+                )
             with col2:
-                end = st.selectbox("End month", options, index=len(options)-1)
+                end = st.selectbox(
+                    "End month",
+                    options,
+                    index=len(options) - 1
+                )
     
             time_filtered_df = filtered_df[
                 (filtered_df["year"] >= start) &
                 (filtered_df["year"] <= end)
             ]
     
-        else:  # Yearly
+        # ===== YEARLY =====
+        else:
             years = sorted(filtered_df["year"].astype(int).unique())
+    
             start_y, end_y = st.slider(
                 "Year range",
                 min(years),
@@ -274,6 +329,7 @@ with left_col:
                 (filtered_df["year"].astype(int) >= start_y) &
                 (filtered_df["year"].astype(int) <= end_y)
             ]
+
 
     # ---------- SERIES COLUMN (POPULATION) ----------
     if topic == "population":
@@ -356,7 +412,10 @@ for row in rows:
                 if cfg["type"] == "indicator":
                     plot_df = (
                         headline_df[
-                            headline_df["indicator_code"].str.lower().str.startswith(cfg["code"])
+                            headline_df["indicator_code"]
+                            .fillna("")                              # 🔥 ЭНЭ ЧУХАЛ
+                            .str.lower()
+                            .str.startswith(cfg["code"])
                         ]
                         .set_index("year_num")[["value"]]
                         .sort_index()
