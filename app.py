@@ -150,15 +150,15 @@ with left_col:
 
     # ---------- GDP TYPE SELECTOR ----------
     if topic == "gdp":
+    
         with st.container(border=True):
             st.markdown("### 📊 GDP type")
-    
             gdp_type = st.radio(
                 "",
                 ["RGDP2005", "RGDP2010", "RGDP2015", "NGDP", "GROWTH"],
                 horizontal=True
             )
-    if topic == "gdp":
+    
         prefix_map = {
             "RGDP2005": "rgdp_2005",
             "RGDP2010": "rgdp_2010",
@@ -166,7 +166,7 @@ with left_col:
             "NGDP": "ngdp",
             "GROWTH": "growth"
         }
-
+    
         prefix = prefix_map[gdp_type]
     
         available_indicators = sorted(
@@ -175,37 +175,41 @@ with left_col:
                 "indicator_code"
             ].unique()
         )
-        
-    with st.container(border=True):
-        st.markdown("### 📌 Indicators")
-        
-        selected_indicators = st.multiselect(
-            "Indicators",
-            available_indicators,
-            default=available_indicators[:1] if available_indicators else []
-        )
-
+    
+        # ✅ Indicators container GDP-ийн ДООР
+        with st.container(border=True):
+            st.markdown("### 📌 Indicators")
+    
+            selected_indicators = st.multiselect(
+                "",
+                available_indicators,
+                default=available_indicators[:1] if available_indicators else []
+            )
+    
         filtered_df = df[df["indicator_code"].isin(selected_indicators)]
+    
+    # ---------- POPULATION ----------
     else:
         sex = st.multiselect(
             "Sex",
             sorted(df["sex"].dropna().unique()),
             default=[]
         )
-        
+    
         age_group = st.multiselect(
             "Age group",
             sorted(df["age_group"].dropna().unique()),
             default=[]
         )
-
+    
         if sex and age_group:
             filtered_df = df[
                 df["sex"].isin(sex) &
                 df["age_group"].isin(age_group)
             ]
         else:
-            filtered_df = df.copy()   # хоосон dataframe
+            filtered_df = df.copy()
+
     # =================================================
     # FREQUENCY (DATA-DRIVEN, SAFE)
     # =================================================
