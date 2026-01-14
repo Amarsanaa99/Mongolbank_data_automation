@@ -252,9 +252,16 @@ c1, c2, c3, c4 = st.columns(4)
     
 for col, code in zip([c1, c2, c3, c4], headline_codes):
     with col:
-        with st.container(border=True):   # ⬅️ ЭНД НЭМНЭ
-            st.caption(code.upper())
-        
+        with st.container(border=True):
+
+            # ⬇️ ТӨВЛӨРСӨН TITLE
+            st.markdown(
+                f"<div style='text-align:center; font-weight:600;'>"
+                f"{code.upper()}"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+
             plot_df = (
                 headline_df[
                     headline_df["indicator_code"].str.lower() == code
@@ -262,8 +269,9 @@ for col, code in zip([c1, c2, c3, c4], headline_codes):
                 .set_index("year_num")[["value"]]
                 .sort_index()
             )
-        
+
             st.line_chart(plot_df, height=180)
+
 
 
 # =====================================================
