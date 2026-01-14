@@ -92,12 +92,17 @@ def load_headline_data():
             topic,
             year,
             indicator_code,
-            value
+            value,
+            sex,
+            age_group
         FROM `mongol-bank-macro-data.Automation_data.fact_macro`
-        WHERE LOWER(indicator_code) IN {codes}
+        WHERE
+            (
+                LOWER(indicator_code) IN {codes}
+                OR topic = 'population'
+            )
         ORDER BY year
     """
-
     df = client.query(query).to_dataframe()
 
     if df["year"].str.contains("-").any():
@@ -329,7 +334,7 @@ rows = [
 
 for row in rows:
     cols = st.columns(N_COLS)
-    for col, cfg in zip(cols, HEADLINE_CONFIG):
+    for col, cfg in zip(cols, row):
         with col:
             with st.container(border=True):
     
@@ -351,25 +356,30 @@ for row in rows:
                     )
     
                 # ===== POPULATION TOTAL =====
-                elif cfg["type"] == "population_total":
+                # ===== GDP INDICATOR =====
+                if cfg["type"] == "indicator":
                     plot_df = (
                         headline_df[
-                            (headline_df["topic"] == "population")
-                            & (headline_df["sex"] == "Бүгд")
-                            & (headline_df["age_group"] == "Бүгд")
+                            headline_df["indicator_code"].str.lower() == cfg["code"]
                         ]
                         .set_index("year_num")[["value"]]
                         .sort_index()
                     )
-    
+
+                # ===== POPULATION TOTAL =====
+                elif cfg["type"] == "population_total":
+                    plot_df = (
+                        headline_df[
+                            (headline_df["topic"] == "population") &
+                            (headline_df["sex"] == "Бүгд") &
+                            (headline_df["age_group"] == "Бүгд")
+                        ]
+                        .set_index("year_num")[["value"]]
+                        .sort_index()
+                    )
+
                 st.line_chart(plot_df, height=160)
-
-
-
-
-
-
-
+                
 # =====================================================
 # RAW DATA Preview
 # =====================================================
