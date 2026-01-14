@@ -212,48 +212,48 @@ with left_col:
     
                 st.line_chart(plot_df, height=180)
     
-# ================= RIGHT COLUMN =================
-with right_col:
-    with st.container(border=True):
-        st.markdown("### 📈 Main chart")
-
-        if time_filtered_df.empty:
-            st.warning("No data for selected filters")
-
-        else:
-            # ===== GDP =====
-            if topic == "gdp":
-                chart_df = (
-                    time_filtered_df
-                    .pivot_table(
-                        index="year_num",
-                        columns="indicator_code",
-                        values="value",
-                        aggfunc="sum"
-                    )
-                    .sort_index()
-                )
-                st.line_chart(chart_df)
-
-            # ===== POPULATION =====
+    # ================= RIGHT COLUMN =================
+    with right_col:
+        with st.container(border=True):
+            st.markdown("### 📈 Main chart")
+    
+            if time_filtered_df.empty:
+                st.warning("No data for selected filters")
+    
             else:
-                plot_df = time_filtered_df.copy()
-
-                chart = (
-                    alt.Chart(plot_df)
-                    .mark_line()
-                    .encode(
-                        x=alt.X("year_num:Q", title="Year"),
-                        y=alt.Y("value:Q", title="Population"),
-                        color=alt.Color(
-                            "Series:N",
-                            legend=alt.Legend(orient="right")
-                        ),
-                        tooltip=["year", "sex", "age_group", "value"]
+                # ===== GDP =====
+                if topic == "gdp":
+                    chart_df = (
+                        time_filtered_df
+                        .pivot_table(
+                            index="year_num",
+                            columns="indicator_code",
+                            values="value",
+                            aggfunc="sum"
+                        )
+                        .sort_index()
                     )
-                    .properties(height=400)
-                )
-                st.altair_chart(chart, use_container_width=True)
+                    st.line_chart(chart_df)
+    
+                # ===== POPULATION =====
+                else:
+                    plot_df = time_filtered_df.copy()
+    
+                    chart = (
+                        alt.Chart(plot_df)
+                        .mark_line()
+                        .encode(
+                            x=alt.X("year_num:Q", title="Year"),
+                            y=alt.Y("value:Q", title="Population"),
+                            color=alt.Color(
+                                "Series:N",
+                                legend=alt.Legend(orient="right")
+                            ),
+                            tooltip=["year", "sex", "age_group", "value"]
+                        )
+                        .properties(height=400)
+                    )
+                    st.altair_chart(chart, use_container_width=True)
 
  # ================= HEADLINE DATA =================
     headline_codes = [
