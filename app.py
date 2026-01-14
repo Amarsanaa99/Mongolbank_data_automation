@@ -261,7 +261,32 @@ with left_col:
     #Time filter
     #=====================================
     with st.container(border=True):
-        st.markdown("### ⏱ Time range")
+        st.markdown("### ⏱ Frequency")
+    
+        freq = st.radio(
+            "",
+            ["Yearly", "Quarterly", "Monthly"],
+            horizontal=True
+        )
+    
+    freq_map_rev = {
+        "Quarterly": "Q",
+        "Monthly": "M",
+        "Yearly": "Y"
+    }
+    selected_freq_code = freq_map_rev[freq]
+    
+    if selected_freq_code not in filtered_df["time_freq"].unique():
+        st.warning(
+            f"⚠️ This dataset does not contain {freq.lower()} data."
+        )
+        time_filtered_df = pd.DataFrame()   # хоосон
+    else:
+        filtered_df = filtered_df[
+            filtered_df["time_freq"] == selected_freq_code
+        ]
+
+
     
         # ===== QUARTERLY =====
         if freq == "Quarterly":
