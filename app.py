@@ -331,30 +331,20 @@ with left_col:
                 st.warning("No data for selected filters")
     
             else:
-                # ===== GDP =====
+                # ===== GDP =====   👈👈👈 ЭНЭ ХЭСЭГ
                 if topic == "gdp":
-                
-                    # 🔑 aggregation logic
-                    if freq == "Quarterly":
-                        agg_func = "sum"
-                    else:
-                        agg_func = "mean"
-                
                     chart_df = (
                         time_filtered_df
-                        .drop_duplicates(
-                            subset=["year_num", "indicator_code", "time_freq"]
-                        )
                         .pivot_table(
                             index="year_num",
                             columns="indicator_code",
                             values="value",
-                            aggfunc=agg_func
+                            aggfunc="sum"   # ❌ ЯГ ЭНЭ МӨР
                         )
                         .sort_index()
                     )
-                
                     st.line_chart(chart_df)
+
 
     
                 # ===== POPULATION =====
