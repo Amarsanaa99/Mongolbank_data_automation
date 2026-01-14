@@ -229,36 +229,51 @@ with left_col:
     if filtered_df.empty:
         st.warning("No data for selected filters")
         st.stop()
-
+    #=====================================
     #Time filter
+    #=====================================
     with st.container(border=True):
         st.markdown("### ⏱ Time range")
     
-        min_t = float(filtered_df["year_num"].min())
-        max_t = float(filtered_df["year_num"].max())
-    
-        # Label-ийг frequency-ээс хамааруулна
         if freq == "Quarterly":
-            label = "Quarter range"
-            step = 0.25
+            options = sorted(filtered_df["year"].unique())
+            col1, col2 = st.columns(2)
+            with col1:
+                start = st.selectbox("Start quarter", options, index=0)
+            with col2:
+                end = st.selectbox("End quarter", options, index=len(options)-1)
+    
+            time_filtered_df = filtered_df[
+                (filtered_df["year"] >= start) &
+                (filtered_df["year"] <= end)
+            ]
+    
         elif freq == "Monthly":
-            label = "Month range"
-            step = 1 / 12
+            options = sorted(filtered_df["year"].unique())
+            col1, col2 = st.columns(2)
+            with col1:
+                start = st.selectbox("Start month", options, index=0)
+            with col2:
+                end = st.selectbox("End month", options, index=len(options)-1)
+    
+            time_filtered_df = filtered_df[
+                (filtered_df["year"] >= start) &
+                (filtered_df["year"] <= end)
+            ]
+    
         else:  # Yearly
-            label = "Year range"
-            step = 1.0
+            years = sorted(filtered_df["year"].astype(int).unique())
+            start_y, end_y = st.slider(
+                "Year range",
+                min(years),
+                max(years),
+                (min(years), max(years))
+            )
     
-        start, end = st.slider(
-            label,
-            min_t,
-            max_t,
-            (min_t, max_t),
-            step=step
-        )
-    
-    time_filtered_df = filtered_df[
-        (filtered_df["year_num"] >= start) &
-        (filtered_df["year_num"] <= end)
+            time_filtered_df = filtered_df[
+                (filtered_df["year"].astype(int) >= start_y) &
+                (filtered_df["year"].astype(int) <= end_y)
+            ]
     ]
 
 
