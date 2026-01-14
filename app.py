@@ -274,8 +274,6 @@ with left_col:
                 (filtered_df["year"].astype(int) >= start_y) &
                 (filtered_df["year"].astype(int) <= end_y)
             ]
-    ]
-
 
     # ---------- SERIES COLUMN (POPULATION) ----------
     if topic == "population":
