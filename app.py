@@ -254,11 +254,18 @@ for col, code in zip([c1, c2, c3, c4], headline_codes):
     with col:
         with st.container(border=True):
 
-            # ⬇️ ТӨВЛӨРСӨН TITLE
+            # 🔹 TITLE + SUBTITLE (ТӨВЛӨРСӨН)
             st.markdown(
-                f"<div style='text-align:center; font-weight:600;'>"
-                f"{code.upper()}"
-                f"</div>",
+                f"""
+                <div style="text-align:center; margin-bottom:6px;">
+                    <div style="font-weight:600;">
+                        {code.upper()}
+                    </div>
+                    <div style="font-size:12px; opacity:0.6;">
+                        Quarterly level
+                    </div>
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 
@@ -271,6 +278,7 @@ for col, code in zip([c1, c2, c3, c4], headline_codes):
             )
 
             st.line_chart(plot_df, height=180)
+
 
 
 
