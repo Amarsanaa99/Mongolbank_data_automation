@@ -333,17 +333,29 @@ with left_col:
             else:
                 # ===== GDP =====
                 if topic == "gdp":
+                
+                    # 🔑 aggregation logic
+                    if freq == "Quarterly":
+                        agg_func = "sum"
+                    else:
+                        agg_func = "mean"
+                
                     chart_df = (
                         time_filtered_df
+                        .drop_duplicates(
+                            subset=["year_num", "indicator_code", "time_freq"]
+                        )
                         .pivot_table(
                             index="year_num",
                             columns="indicator_code",
                             values="value",
-                            aggfunc="sum"
+                            aggfunc=agg_func
                         )
                         .sort_index()
                     )
+                
                     st.line_chart(chart_df)
+
     
                 # ===== POPULATION =====
                 else:
