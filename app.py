@@ -106,10 +106,6 @@ def load_headline_data():
     ORDER BY year_num
     """
     df = client.query(query).to_dataframe()
-    
-
-
-
 
 # ================= LEFT COLUMN =================
 with left_col:
@@ -141,13 +137,15 @@ with left_col:
         query = f"""
             SELECT
                 year,
+                year_num,
+                time_freq,
                 indicator_code,
                 value,
                 sex,
                 age_group
             FROM `mongol-bank-macro-data.Automation_data.fact_macro_clean`
             WHERE topic = '{topic}'
-            ORDER BY year
+            ORDER BY year_num
         """
         return client.query(query).to_dataframe()
 
@@ -228,8 +226,6 @@ with left_col:
     filtered_df["time_freq"] == freq_map[freq]
     ]
 
-
-
      # ---------- TIME RANGE ----------
     with st.container(border=True):
         st.markdown("### ⏱ Time range")
@@ -276,8 +272,6 @@ with left_col:
             + " | "
             + time_filtered_df["age_group"].astype(str)
         )
-
-    
     # ================= RIGHT COLUMN =================
     with right_col:
         with st.container(border=True):
@@ -405,8 +399,6 @@ with st.expander("📄 Raw data"):
         df_pivot = df_pivot[ordered_cols]
     
         st.dataframe(df_pivot, use_container_width=True)
-
-
 
     # ===================== POPULATION =====================
     else:
