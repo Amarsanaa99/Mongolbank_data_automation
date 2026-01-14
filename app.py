@@ -234,28 +234,37 @@ with left_col:
         .str.lower()
         .isin(headline_codes)
     ]
-    # ================= HEADLINE SUMMARY =================
-    with st.container(border=True):
-        st.markdown("### 📉 Headline summary")
+    # ================= HEADLINE DATA (FILTER-FREE) =================
+    headline_codes = [
+        "ngdp",
+        "rgdp_2005",
+        "rgdp_2010",
+        "rgdp_2015"
+    ]
     
-        col1, col2 = st.columns(2)
+    headline_df = df[
+        df["indicator_code"]
+        .str.lower()
+        .isin(headline_codes)
+    ].copy()
+
+    # 🔥 4 багана = 1 мөр
+    c1, c2, c3, c4 = st.columns(4)
     
-        for i, code in enumerate(headline_codes):
+    for col, code in zip([c1, c2, c3, c4], headline_codes):
+        with col:
+            st.caption(code.upper())
     
-            target_col = col1 if i % 2 == 0 else col2
+            plot_df = (
+                headline_df[
+                    headline_df["indicator_code"].str.lower() == code
+                ]
+                .set_index("year_num")[["value"]]
+                .sort_index()
+            )
     
-            with target_col:
-                st.caption(code.upper())
-    
-                plot_df = (
-                    headline_df[
-                        headline_df["indicator_code"].str.lower() == code
-                    ]
-                    .set_index("year_num")[["value"]]
-                    .sort_index()
-                )
-    
-                st.line_chart(plot_df, height=180)
+            st.line_chart(plot_df, height=180)
+
 
 # =====================================================
 # RAW DATA Preview
