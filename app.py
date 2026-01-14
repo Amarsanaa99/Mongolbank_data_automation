@@ -176,32 +176,7 @@ with left_col:
             + " | "
             + time_filtered_df["age_group"].astype(str)
         )
-    # ================= AGGREGATE (HEADLINE) DATA =================
-    
-    if topic == "gdp":
-    
-        aggregate_map = {
-            "RGDP2005": "rgdp_2005",
-            "RGDP2010": "rgdp_2010",
-            "RGDP2015": "rgdp_2015",
-            "NGDP": "ngdp",
-            "GROWTH": "growth"
-        }
-    
-        agg_prefix = aggregate_map[gdp_type]
-    
-        agg_df = time_filtered_df[
-            time_filtered_df["indicator_code"]
-            .str.fullmatch(agg_prefix, case=False)
-        ].sort_values("year_num")
-    
-    else:
-        # Population → TOTAL | TOTAL
-        agg_df = time_filtered_df[
-            (time_filtered_df["sex"].str.lower().isin(["all", "total", "both"])) &
-            (time_filtered_df["age_group"].str.lower().isin(["all", "total"]))
-        ].sort_values("year_num")
-
+ 
 
 
     
@@ -246,8 +221,45 @@ with right_col:
                     )
                     .properties(height=400)
                 )
+            st.altair_chart(chart, use_container_width=True)
 
-                st.altair_chart(chart, use_container_width=True)
+
+           
+
+            # ================= SMALL SUMMARY CHARTS =================
+            if topic == "gdp":
+            
+                with st.container(border=True):
+                    st.markdown("### 📉 Headline summary")
+            
+                    headline_codes = [
+                        "ngdp",
+                        "rgdp_2005",
+                        "rgdp_2010",
+                        "rgdp_2015"
+                    ]
+            
+                    summary_df = time_filtered_df[
+                        time_filtered_df["indicator_code"]
+                        .str.lower()
+                        .isin(headline_codes)
+                    ]
+            
+                    for code in headline_codes:
+            
+                        st.caption(code.upper())
+            
+                        plot_df = (
+                            summary_df[
+                                summary_df["indicator_code"].str.lower() == code
+                            ]
+                            .set_index("year_num")[["value"]]
+                            .sort_index()
+                        )
+            
+                        st.line_chart(plot_df)
+
+
 
 
 
