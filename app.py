@@ -413,8 +413,8 @@ with left_col:
                         .properties(height=400)
                     )
                     st.altair_chart(chart, use_container_width=True)
-                    
-            # ===== DOWNLOAD OVERLAY (BOTTOM-RIGHT, ULTRA MINIMAL) =====
+
+          # ===== DOWNLOAD OVERLAY (BOTTOM-RIGHT, ULTRA MINIMAL) =====
             st.markdown(
                 """
                 <style>
@@ -425,7 +425,7 @@ with left_col:
                 .chart-overlay button {
                     position: absolute;
                     bottom: 10px;
-                    right: 10px;                 /* ⬅️ БАРУУН ДООД */
+                    left: 10px;                 /* ⬅️ БАРУУН ДООД */
                     background-color: rgba(30, 41, 59, 0.45);  /* background-аас үл ялиг бараан */
                     color: rgba(203, 213, 225, 0.7);           /* сум маш даруухан */
                     border: none;                /* ⛔ хүрээ байхгүй */
