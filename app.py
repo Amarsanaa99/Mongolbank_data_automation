@@ -582,7 +582,14 @@ with st.expander("📄 Raw data"):
     
         # ✅ ЯГ ЭНД — FILTER ОРООГҮЙ ЭХ ӨГӨГДӨЛ
         raw_df = df.copy()
-    
+        
+        # ✅ CANONICAL TIME_LABEL (RAW-д ЗААВАЛ НЭГ УДАА)
+        raw_df["time_label"] = (
+            raw_df["year"].astype(str)
+            + "-Q"
+            + raw_df["period"].astype(str)
+        )
+        
         df_pivot = (
             raw_df
             .pivot_table(
@@ -592,7 +599,8 @@ with st.expander("📄 Raw data"):
                 aggfunc="mean"
             )
             .reset_index()
-        )
+)
+
     
         ordered_cols = (
             ["time_label"] +
