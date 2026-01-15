@@ -90,7 +90,7 @@ def load_headline_data():
         indicator_code,
         value,
         year,
-        period,
+        quarter,
         time_freq,
         year_num,
         sex,
@@ -132,13 +132,13 @@ with left_col:
         query = f"""
             SELECT
                 year,
-                year_num,
-                period,
+                quarter,
                 time_freq,
                 indicator_code,
                 value,
                 sex,
-                age_group
+                age_group,
+                topic
             FROM `mongol-bank-macro-data.Automation_data.fact_macro_final`
             WHERE topic = '{topic}'
             ORDER BY year_num
@@ -148,6 +148,19 @@ with left_col:
     # 3️⃣ DATA LOAD
     with st.spinner("⏳ Loading data from BigQuery..."):
         df = load_data(topic)
+    
+        # 🔑 backward compatibility (quarter → period)
+        df["period"] = (
+            df["quarter"]
+            .str.replace("Q", "", regex=False)
+            .astype("Int64")
+        )
+    
+        # 🔒 GDP-д sex / age_group байхгүйг canonical болгох
+        if topic == "gdp":
+            df["sex"] = None
+            df["age_group"] = None
+
 
     # ---------- GDP TYPE SELECTOR ----------
     if topic == "gdp":
@@ -511,7 +524,7 @@ for row in rows:
                     if cfg["code"] in ["rgdp_2005", "rgdp_2010", "rgdp_2015", "ngdp"]:
                         plot_df = (
                             base_df
-                            .groupby("year_num", as_index=True)["value"]
+                            .groupby("year", as_index=True)["value"]
                             .sum()
                             .to_frame()
                             .sort_index()
@@ -562,24 +575,26 @@ with st.expander("📄 Raw data"):
         # 🔑 GDP TYPE-д таарах prefix
         raw_prefix = prefix_map[gdp_type]
     
+        # ✅ RAW SOURCE — ЯГ ЭНД
+        raw_df = df.copy()
+    
         # 🔑 улирлын time label үүсгэнэ
         raw_df["time_label"] = (
             raw_df["year"].astype(str)
             + "-Q"
             + raw_df["period"].astype(str)
         )
-        
+    
         df_pivot = (
             raw_df
             .pivot_table(
                 index="time_label",            # ✅ YEAR БИШ
                 columns="indicator_code",
                 values="value",
-                aggfunc="mean"                 # ✅ улирал → sum БИШ
+                aggfunc="mean"                 # ✅ улирал → mean
             )
             .reset_index()
         )
-
     
         ordered_cols = (
             ["time_label"] +
@@ -589,6 +604,7 @@ with st.expander("📄 Raw data"):
         df_pivot = df_pivot[ordered_cols]
     
         st.dataframe(df_pivot, use_container_width=True)
+
 
     # ===================== POPULATION =====================
     else:
