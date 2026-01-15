@@ -419,6 +419,23 @@ with left_col:
                     )
 
                     st.altair_chart(chart, use_container_width=True)
+                    st.altair_chart(chart, use_container_width=True)
+
+                    # =============================
+                    # ⬇️ DOWNLOAD CSV (POPULATION)
+                    # =============================
+                    csv = plot_df[
+                        ["time_label", "sex", "age_group", "value"]
+                    ].to_csv(index=False).encode("utf-8")
+                    
+                    st.download_button(
+                        label="⬇️ Download chart data (CSV)",
+                        data=csv,
+                        file_name="main_chart_population.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+
 # =====================================================
 # HEADLINE INDICATORS (EXTENSIBLE, FILTER-INDEPENDENT)
 # =====================================================
