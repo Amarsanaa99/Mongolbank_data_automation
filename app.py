@@ -419,21 +419,18 @@ with left_col:
                     )
 
                     st.altair_chart(chart, use_container_width=True)
-                    st.altair_chart(chart, use_container_width=True)
 
-                    # =============================
-                    # ⬇️ DOWNLOAD CSV (POPULATION)
-                    # =============================
+                    # ⬇️ CSV DOWNLOAD (ICON ONLY)
                     csv = plot_df[
                         ["time_label", "sex", "age_group", "value"]
                     ].to_csv(index=False).encode("utf-8")
                     
                     st.download_button(
-                        label="⬇️ Download chart data (CSV)",
+                        label="⬇️",
                         data=csv,
                         file_name="main_chart_population.csv",
                         mime="text/csv",
-                        use_container_width=True
+                        help="Download chart data as CSV"
                     )
 
 # =====================================================
