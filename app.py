@@ -153,9 +153,16 @@ with left_col:
                 topic
             FROM `mongol-bank-macro-data.Automation_data.fact_macro_final`
             WHERE topic = '{topic}'
-            ORDER BY year_num
+            ORDER BY year, quarter
         """
-        return client.query(query).to_dataframe()
+        df = client.query(query).to_dataframe()
+    
+        # 🔒 CANONICAL RULES
+        if topic == "population":
+            df["quarter"] = None
+            df["time_freq"] = "Y"
+    
+        return df
 
     # 3️⃣ DATA LOAD
     with st.spinner("⏳ Loading data from BigQuery..."):
@@ -584,13 +591,11 @@ with st.expander("📄 Raw data"):
     # ===================== GDP =====================
     if topic == "gdp":
     
-        # 🔑 GDP TYPE-д таарах prefix
         raw_prefix = prefix_map[gdp_type]
     
-        # ✅ RAW SOURCE — ЯГ ЭНД
+        # ✅ ЯГ ЭНД — FILTER ОРООГҮЙ ЭХ ӨГӨГДӨЛ
         raw_df = df.copy()
     
-        # 🔑 улирлын time label үүсгэнэ
         raw_df["time_label"] = (
             raw_df["year"].astype(str)
             + "-Q"
@@ -600,35 +605,38 @@ with st.expander("📄 Raw data"):
         df_pivot = (
             raw_df
             .pivot_table(
-                index="time_label",            # ✅ YEAR БИШ
+                index="time_label",
                 columns="indicator_code",
                 values="value",
-                aggfunc="mean"                 # ✅ улирал → mean
+                aggfunc="mean"
             )
             .reset_index()
         )
     
         ordered_cols = (
             ["time_label"] +
-            sorted([c for c in df_pivot.columns if c.startswith(raw_prefix)])
+            sorted(c for c in df_pivot.columns if c.startswith(raw_prefix))
         )
     
-        df_pivot = df_pivot[ordered_cols]
-    
-        st.dataframe(df_pivot, use_container_width=True)
+        st.dataframe(df_pivot[ordered_cols], use_container_width=True)
+
 
 
     # ===================== POPULATION =====================
+    # ===================== POPULATION =====================
     else:
-    # 🔑 Зөвхөн sex filter
-        if sex:
-            raw_pop = df[df["sex"].isin(sex)].copy()
-        else:
-            raw_pop = df.copy()
-        df_pop = (
-            raw_pop
-            .sort_values(["year", "sex", "age_group"])
-            [["year", "sex", "age_group", "value"]]
+        raw_df = df.copy()
+    
+        df_pivot = (
+            raw_df
+            .pivot_table(
+                index=["sex", "age_group"],
+                columns="year",
+                values="value",
+                aggfunc="sum"
+            )
+            .reset_index()
         )
     
-        st.dataframe(df_pop, use_container_width=True)
+        st.dataframe(df_pivot, use_container_width=True)
+
