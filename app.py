@@ -64,7 +64,7 @@ HEADLINE_CONFIG = [
 # =====================================================
 # APP START (TEST RENDER)
 # =====================================================
-st.title("🏦 Mongolbank Macro Dashboard")
+st.title("🏦 Mongolbank Macro Data Dashboard")
 st.caption("Quarterly GDP indicators (2000–2025)")
 st.success("🔥 APP STARTED — UI rendering OK")
 # =====================================================
@@ -582,12 +582,6 @@ with st.expander("📄 Raw data"):
     
         # ✅ ЯГ ЭНД — FILTER ОРООГҮЙ ЭХ ӨГӨГДӨЛ
         raw_df = df.copy()
-    
-        raw_df["time_label"] = (
-            raw_df["year"].astype(str)
-            + "-Q"
-            + raw_df["period"].astype(str)
-        )
     
         df_pivot = (
             raw_df
