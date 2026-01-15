@@ -312,6 +312,23 @@ with left_col:
                 (filtered_df["year"].astype(int) >= start_y) &
                 (filtered_df["year"].astype(int) <= end_y)
             ]
+    # =============================
+    # CREATE TIME LABEL (GLOBAL)
+    # =============================
+    time_filtered_df = time_filtered_df.copy()
+    
+    if freq == "Yearly":
+        time_filtered_df["time_label"] = time_filtered_df["year"].astype(str)
+    
+    elif freq == "Quarterly":
+        time_filtered_df["time_label"] = time_filtered_df["year"].astype(str)
+        # ж: 2021-Q1
+    
+    elif freq == "Monthly":
+        time_filtered_df["time_label"] = time_filtered_df["year"].astype(str)
+        # ж: 2021-01
+
+
 
 
     # ---------- SERIES COLUMN (POPULATION) ----------
@@ -334,30 +351,27 @@ with left_col:
                 # ===== GDP (HEADLINE ONLY) =====
                 if topic == "gdp":
                 
-                    plot_df = time_filtered_df[
-                        time_filtered_df["indicator_code"]
-                        .str.lower()
-                        .isin([
-                            "rgdp_2005",
-                            "rgdp_2010",
-                            "rgdp_2015",
-                            "ngdp",
-                            "growth"
-                        ])
-                    ]
+                    plot_df = time_filtered_df.copy()
                 
-                    chart_df = (
-                        plot_df
-                        .pivot_table(
-                            index="year_num",
-                            columns="indicator_code",
-                            values="value",
-                            aggfunc="mean"   # 🔥 ЭНД Л ГОЛ ӨӨРЧЛӨЛТ
+                    # =============================
+                    # 🔒 DEFENSIVE CHECK — ЯГ ЭНД
+                    # =============================
+                    if "time_label" not in plot_df.columns:
+                        st.error("❌ time_label is missing — check frequency logic")
+                
+                    else:
+                        chart_df = (
+                            plot_df
+                            .pivot_table(
+                                index="time_label",
+                                columns="indicator_code",
+                                values="value",
+                                aggfunc="mean"
+                            )
                         )
-                        .sort_index()
-                    )
                 
-                    st.line_chart(chart_df)
+                        st.line_chart(chart_df)
+
 
 
 
@@ -371,16 +385,17 @@ with left_col:
                         alt.Chart(plot_df)
                         .mark_line()
                         .encode(
-                            x=alt.X("year_num:Q", title="Year"),
+                            x=alt.X("time_label:N", title="Time"),
                             y=alt.Y("value:Q", title="Population"),
                             color=alt.Color(
                                 "Series:N",
                                 legend=alt.Legend(orient="right")
                             ),
-                            tooltip=["year", "sex", "age_group", "value"]
+                            tooltip=["time_label", "sex", "age_group", "value"]
                         )
                         .properties(height=400)
                     )
+
                     st.altair_chart(chart, use_container_width=True)
 # =====================================================
 # HEADLINE INDICATORS (EXTENSIBLE, FILTER-INDEPENDENT)
