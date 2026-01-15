@@ -414,7 +414,7 @@ with left_col:
                     )
                     st.altair_chart(chart, use_container_width=True)
                     
-            # ===== DOWNLOAD OVERLAY (MINIMAL, SUBTLE) =====
+            # ===== DOWNLOAD OVERLAY (BOTTOM-RIGHT, ULTRA MINIMAL) =====
             st.markdown(
                 """
                 <style>
@@ -425,20 +425,21 @@ with left_col:
                 .chart-overlay button {
                     position: absolute;
                     bottom: 10px;
-                    left: 10px;                 /* ⬅️ ЭСРЭГ ТАЛ (зүүн доод) */
-                    background-color: rgba(15, 23, 42, 0.55);  /* маш үл ялиг бараан */
-                    color: rgba(226, 232, 240, 0.75);
-                    border: none;
-                    padding: 4px 6px;           /* ⬅️ хамгийн бага хэмжээ */
-                    border-radius: 5px;
+                    right: 10px;                 /* ⬅️ БАРУУН ДООД */
+                    background-color: rgba(30, 41, 59, 0.45);  /* background-аас үл ялиг бараан */
+                    color: rgba(203, 213, 225, 0.7);           /* сум маш даруухан */
+                    border: none;                /* ⛔ хүрээ байхгүй */
+                    padding: 3px 5px;            /* хамгийн бага */
+                    border-radius: 4px;
                     cursor: pointer;
-                    font-size: 11px;            /* ⬅️ жижиг */
+                    font-size: 11px;
                     line-height: 1;
+                    box-shadow: none;
                 }
             
                 .chart-overlay button:hover {
-                    background-color: rgba(15, 23, 42, 0.8);
-                    color: white;
+                    background-color: rgba(30, 41, 59, 0.7);
+                    color: rgba(248, 250, 252, 0.9);
                 }
                 </style>
             
@@ -448,7 +449,7 @@ with left_col:
             )
             
             st.download_button(
-                label="↓",                      # ⬅️ minimalist сум
+                label="↓",
                 data=plot_df.to_csv(index=False),
                 file_name="main_chart_data.csv",
                 mime="text/csv",
@@ -457,6 +458,7 @@ with left_col:
             )
             
             st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
