@@ -133,6 +133,7 @@ with left_col:
             SELECT
                 year,
                 year_num,
+                period,
                 time_freq,
                 indicator_code,
                 value,
@@ -209,9 +210,8 @@ with left_col:
             ]
         else:
             filtered_df = df.copy()
-
     #=====================================
-    #Time filter
+    # ⏱ Frequency (GLOBAL, SINGLE)
     #=====================================
     with st.container(border=True):
         st.markdown("### ⏱ Frequency")
@@ -222,114 +222,55 @@ with left_col:
             horizontal=True
         )
     
-    freq_map_rev = {
+    freq_map = {
+        "Yearly": "Y",
         "Quarterly": "Q",
-        "Monthly": "M",
-        "Yearly": "Y"
+        "Monthly": "M"
     }
-    selected_freq_code = freq_map_rev[freq]
+    selected_freq = freq_map[freq]
     
-    if selected_freq_code not in filtered_df["time_freq"].unique():
+    # ==============================
+    # 🔎 DATA-AWARE FILTER (SAFE)
+    # ==============================
+    if filtered_df.empty:
+        st.warning("⚠️ No data available for selected filters.")
+        time_filtered_df = pd.DataFrame()
+    
+    elif selected_freq not in filtered_df["time_freq"].unique():
         st.warning(
             f"⚠️ This dataset does not contain {freq.lower()} data."
         )
-        time_filtered_df = pd.DataFrame()   # хоосон
+        time_filtered_df = pd.DataFrame()
+    
     else:
-        filtered_df = filtered_df[
-            filtered_df["time_freq"] == selected_freq_code
-        ]
+        time_filtered_df = (
+            filtered_df
+            .loc[filtered_df["time_freq"] == selected_freq]
+            .copy()
+        )
 
 
+    # =============================
+    # CREATE TIME LABEL (STANDARD)
+    # =============================
+    if not time_filtered_df.empty:
     
-        # ===== QUARTERLY =====
-        if freq == "Quarterly":
-            options = sorted(filtered_df["year"].unique())
-        
-            col1, col2 = st.columns(2)
-            with col1:
-                start = st.selectbox(
-                    "Start quarter",
-                    options,
-                    index=0
-                )
-            with col2:
-                end = st.selectbox(
-                    "End quarter",
-                    options,
-                    index=len(options) - 1
-                )
-        
-            # 🔥 STRING COMPARE БИШ — year_num
-            start_num = filtered_df.loc[
-                filtered_df["year"] == start, "year_num"
-            ].iloc[0]
-        
-            end_num = filtered_df.loc[
-                filtered_df["year"] == end, "year_num"
-            ].iloc[0]
-        
-            time_filtered_df = filtered_df[
-                (filtered_df["year_num"] >= start_num) &
-                (filtered_df["year_num"] <= end_num)
-            ]
+        if selected_freq == "Y":
+            time_filtered_df["time_label"] = time_filtered_df["year"].astype(str)
     
-    
-        # ===== MONTHLY =====
-        elif freq == "Monthly":
-            options = sorted(filtered_df["year"].unique())
-        
-            col1, col2 = st.columns(2)
-            with col1:
-                start = st.selectbox(
-                    "Start month",
-                    options,
-                    index=0
-                )
-            with col2:
-                end = st.selectbox(
-                    "End month",
-                    options,
-                    index=len(options) - 1
-                )
-        
-            time_filtered_df = filtered_df[
-                (filtered_df["year"] >= start) &
-                (filtered_df["year"] <= end)
-            ]
-        
-        # ===== YEARLY =====
-        else:
-            years = sorted(filtered_df["year"].astype(int).unique())
-        
-            start_y, end_y = st.slider(
-                "Year range",
-                min(years),
-                max(years),
-                (min(years), max(years))
+        elif selected_freq == "Q":
+            time_filtered_df["time_label"] = (
+                time_filtered_df["year"].astype(str)
+                + "-Q"
+                + time_filtered_df["period"].astype(str)
             )
-        
-            time_filtered_df = filtered_df[
-                (filtered_df["year"].astype(int) >= start_y) &
-                (filtered_df["year"].astype(int) <= end_y)
-            ]
-    # =============================
-    # CREATE TIME LABEL (GLOBAL)
-    # =============================
-    time_filtered_df = time_filtered_df.copy()
     
-    if freq == "Yearly":
-        time_filtered_df["time_label"] = time_filtered_df["year"].astype(str)
-    
-    elif freq == "Quarterly":
-        time_filtered_df["time_label"] = time_filtered_df["year"].astype(str)
-        # ж: 2021-Q1
-    
-    elif freq == "Monthly":
-        time_filtered_df["time_label"] = time_filtered_df["year"].astype(str)
-        # ж: 2021-01
-
-
-
+        elif selected_freq == "M":
+            time_filtered_df["time_label"] = (
+                time_filtered_df["year"].astype(str)
+                + "-"
+                + time_filtered_df["period"].astype(str).str.zfill(2)
+            )
 
     # ---------- SERIES COLUMN (POPULATION) ----------
     if topic == "population":
