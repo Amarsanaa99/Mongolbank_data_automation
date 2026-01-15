@@ -415,52 +415,52 @@ with left_col:
                     st.altair_chart(chart, use_container_width=True)
 
           # ===== DOWNLOAD OVERLAY (BOTTOM-RIGHT, ULTRA MINIMAL) =====
-st.markdown(
-    """
-    <style>
-    /* Parent container must be relative */
-    div[data-testid="stVerticalBlock"] {
-        position: relative;
-    }
-
-    /* Target Streamlit download button wrapper */
-    div[data-testid="stDownloadButton"] {
-        position: absolute;
-        bottom: 14px;
-        right: 14px;          /* ⬅️ ЭСРЭГ ТАЛ = БАРУУН ДООД */
-        z-index: 10;
-    }
-
-    /* Actual button styling */
-    div[data-testid="stDownloadButton"] button {
-        background-color: rgba(30, 41, 59, 0.4);  /* background-тай бараг адил */
-        color: rgba(203, 213, 225, 0.7);
-        border: none;         /* ⛔ ХҮРЭЭ БҮРЭН АЛГА */
-        padding: 3px 5px;
-        font-size: 11px;
-        border-radius: 4px;
-        line-height: 1;
-        box-shadow: none;
-        cursor: pointer;
-    }
-
-    div[data-testid="stDownloadButton"] button:hover {
-        background-color: rgba(30, 41, 59, 0.7);
-        color: rgba(248, 250, 252, 0.95);
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-st.download_button(
-    label="↓",
-    data=plot_df.to_csv(index=False),
-    file_name="main_chart_data.csv",
-    mime="text/csv",
-    help="Download chart data",
-    key="main_chart_download"
-)
+            st.markdown(
+                """
+                <style>
+                /* Parent container must be relative */
+                div[data-testid="stVerticalBlock"] {
+                    position: relative;
+                }
+            
+                /* Target Streamlit download button wrapper */
+                div[data-testid="stDownloadButton"] {
+                    position: absolute;
+                    bottom: 14px;
+                    right: 14px;          /* ⬅️ ЭСРЭГ ТАЛ = БАРУУН ДООД */
+                    z-index: 10;
+                }
+            
+                /* Actual button styling */
+                div[data-testid="stDownloadButton"] button {
+                    background-color: rgba(30, 41, 59, 0.4);  /* background-тай бараг адил */
+                    color: rgba(203, 213, 225, 0.7);
+                    border: none;         /* ⛔ ХҮРЭЭ БҮРЭН АЛГА */
+                    padding: 3px 5px;
+                    font-size: 11px;
+                    border-radius: 4px;
+                    line-height: 1;
+                    box-shadow: none;
+                    cursor: pointer;
+                }
+            
+                div[data-testid="stDownloadButton"] button:hover {
+                    background-color: rgba(30, 41, 59, 0.7);
+                    color: rgba(248, 250, 252, 0.95);
+                }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            st.download_button(
+                label="↓",
+                data=plot_df.to_csv(index=False),
+                file_name="main_chart_data.csv",
+                mime="text/csv",
+                help="Download chart data",
+                key="main_chart_download"
+            )
 
 
 
