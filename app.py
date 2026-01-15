@@ -585,6 +585,7 @@ with st.expander("📄 Raw data"):
     
         raw_df["time_label"] = (
             raw_df["year"].astype(str)
+            + "-Q"
             + raw_df["period"].astype(str)
         )
     
