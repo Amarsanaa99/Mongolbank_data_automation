@@ -85,33 +85,26 @@ def load_headline_data():
     )
 
     query = """
-    SELECT
-        year,
-        indicator_code,
-        value,
-        topic,
-        sex,
-        age_group
-    FROM `mongol-bank-macro-data.Automation_data.fact_macro`
-    WHERE topic IN ('gdp', 'population')
-    ORDER BY year, quarter
-    """
+        SELECT
+            year,
+            indicator_code,
+            value,
+            topic,
+            sex,
+            age_group
+        FROM `mongol-bank-macro-data.Automation_data.fact_macro`
+        WHERE topic IN ('gdp', 'population')
+        ORDER BY year
+        """
 
     df = client.query(query).to_dataframe()
 
-    # 🔑 backward compatibility: quarter → period (UI-д хэрэгтэй)
-    # ⬇️⬇️⬇️ ЯГ ЭНД НЭМНЭ ⬇️⬇️⬇️
+    # ✅ Python дээр canonical time үүсгэнэ
     df["year_num"] = df["year"].str[:4].astype(int)
-    
-    df["period"] = (
-        df["year"]
-        .str.extract(r"-(\d)")
-        .astype("Int64")
-    )
-    
-    df.loc[df["topic"] == "gdp", ["sex", "age_group"]] = None
-    
+    df["period"] = df["year"].str.extract(r"-(\d)").astype("Int64")
+
     return df
+    
 
 
 
