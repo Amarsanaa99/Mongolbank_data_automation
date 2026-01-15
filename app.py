@@ -420,18 +420,29 @@ with left_col:
 
                     st.altair_chart(chart, use_container_width=True)
 
-                    # ⬇️ CSV DOWNLOAD (ICON ONLY)
-                    csv = plot_df[
-                        ["time_label", "sex", "age_group", "value"]
-                    ].to_csv(index=False).encode("utf-8")
+                    # =========================
+                    # MAIN CHART + DOWNLOAD
+                    # =========================
+                    col_chart, col_dl = st.columns([24, 1])
                     
-                    st.download_button(
-                        label="⬇️",
-                        data=csv,
-                        file_name="main_chart_population.csv",
-                        mime="text/csv",
-                        help="Download chart data as CSV"
-                    )
+                    with col_chart:
+                        st.altair_chart(chart, use_container_width=True)
+                    
+                    with col_dl:
+                        st.markdown("<div style='height:42px'></div>", unsafe_allow_html=True)
+                    
+                        csv = plot_df[
+                            ["time_label", "sex", "age_group", "value"]
+                        ].to_csv(index=False).encode("utf-8")
+                    
+                        st.download_button(
+                            label="⬇️",
+                            data=csv,
+                            file_name="main_chart_population.csv",
+                            mime="text/csv",
+                            help="Download chart data as CSV"
+                        )
+
 
 # =====================================================
 # HEADLINE INDICATORS (EXTENSIBLE, FILTER-INDEPENDENT)
