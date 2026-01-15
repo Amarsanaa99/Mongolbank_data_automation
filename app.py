@@ -248,6 +248,65 @@ with left_col:
             .loc[filtered_df["time_freq"] == selected_freq]
             .copy()
         )
+        # ==============================
+# ⏳ TIME RANGE (FREQUENCY-AWARE)
+# ==============================
+if not time_filtered_df.empty:
+
+    if selected_freq == "Y":
+        min_t = int(time_filtered_df["year"].min())
+        max_t = int(time_filtered_df["year"].max())
+
+        start_year, end_year = st.slider(
+            "Time range (Year)",
+            min_value=min_t,
+            max_value=max_t,
+            value=(min_t, max_t)
+        )
+
+        time_filtered_df = time_filtered_df[
+            (time_filtered_df["year"] >= start_year) &
+            (time_filtered_df["year"] <= end_year)
+        ]
+
+    elif selected_freq == "Q":
+        time_filtered_df["t"] = (
+            time_filtered_df["year"].astype(str)
+            + "-Q"
+            + time_filtered_df["period"].astype(str)
+        )
+
+        t_list = sorted(time_filtered_df["t"].unique())
+        start_t, end_t = st.select_slider(
+            "Time range (Quarter)",
+            options=t_list,
+            value=(t_list[0], t_list[-1])
+        )
+
+        time_filtered_df = time_filtered_df[
+            (time_filtered_df["t"] >= start_t) &
+            (time_filtered_df["t"] <= end_t)
+        ]
+
+    elif selected_freq == "M":
+        time_filtered_df["t"] = (
+            time_filtered_df["year"].astype(str)
+            + "-"
+            + time_filtered_df["period"].astype(str).str.zfill(2)
+        )
+
+        t_list = sorted(time_filtered_df["t"].unique())
+        start_t, end_t = st.select_slider(
+            "Time range (Month)",
+            options=t_list,
+            value=(t_list[0], t_list[-1])
+        )
+
+        time_filtered_df = time_filtered_df[
+            (time_filtered_df["t"] >= start_t) &
+            (time_filtered_df["t"] <= end_t)
+        ]
+
 
 
     # =============================
