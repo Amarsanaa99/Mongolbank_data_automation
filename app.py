@@ -427,7 +427,7 @@ with left_col:
                 div[data-testid="stDownloadButton"] {
                     position: absolute;
                     bottom: 14px;
-                    right: 14px;          /* ⬅️ ЭСРЭГ ТАЛ = БАРУУН ДООД */
+                    left: 14px;          /* ⬅️ ЭСРЭГ ТАЛ = БАРУУН ДООД */
                     z-index: 10;
                 }
             
