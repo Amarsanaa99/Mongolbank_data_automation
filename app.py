@@ -101,17 +101,17 @@ def load_headline_data():
 
     # 🔑 backward compatibility: quarter → period (UI-д хэрэгтэй)
     # ⬇️⬇️⬇️ ЯГ ЭНД НЭМНЭ ⬇️⬇️⬇️
-        df["year_num"] = df["year"].str[:4].astype(int)
+    df["year_num"] = df["year"].str[:4].astype(int)
     
-        df["period"] = (
-            df["year"]
-            .str.extract(r"-(\d)")
-            .astype("Int64")
-        )
+    df["period"] = (
+        df["year"]
+        .str.extract(r"-(\d)")
+        .astype("Int64")
+    )
     
-        df.loc[df["topic"] == "gdp", ["sex", "age_group"]] = None
+    df.loc[df["topic"] == "gdp", ["sex", "age_group"]] = None
     
-        return df
+    return df
 
 
 
