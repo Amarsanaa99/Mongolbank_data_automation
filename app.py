@@ -256,29 +256,30 @@ with left_col:
             st.markdown("### ⏳ Time range")
     
             if selected_freq == "Y":
-                min_y = int(time_filtered_df["year"].min())
-                max_y = int(time_filtered_df["year"].max())
-    
-                start_y = st.number_input(
+                year_list = sorted(time_filtered_df["year"].unique())
+            
+                start_y = st.selectbox(
                     "Start year",
-                    min_value=min_y,
-                    max_value=max_y,
-                    value=min_y,
-                    step=1
+                    year_list,
+                    index=0
                 )
-    
-                end_y = st.number_input(
+            
+                end_y = st.selectbox(
                     "End year",
-                    min_value=min_y,
-                    max_value=max_y,
-                    value=max_y,
-                    step=1
+                    year_list,
+                    index=len(year_list) - 1
                 )
-    
-                time_filtered_df = time_filtered_df[
-                    (time_filtered_df["year"] >= start_y) &
-                    (time_filtered_df["year"] <= end_y)
-                ]
+            
+                # 🔒 SAFETY CHECK
+                if start_y > end_y:
+                    st.error("❌ Start year must be before End year")
+                    time_filtered_df = pd.DataFrame()
+                else:
+                    time_filtered_df = time_filtered_df[
+                        (time_filtered_df["year"] >= start_y) &
+                        (time_filtered_df["year"] <= end_y)
+                    ]
+
             elif selected_freq == "Q":
                 time_filtered_df["t"] = (
                     time_filtered_df["year"].astype(str)
