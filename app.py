@@ -562,20 +562,24 @@ with st.expander("📄 Raw data"):
         # 🔑 GDP TYPE-д таарах prefix
         raw_prefix = prefix_map[gdp_type]
     
-        raw_df = df[
-            df["indicator_code"].str.lower().str.startswith(raw_prefix)
-        ].copy()
-    
+        # 🔑 улирлын time label үүсгэнэ
+        raw_df["time_label"] = (
+            raw_df["year"].astype(str)
+            + "-Q"
+            + raw_df["period"].astype(str)
+        )
+        
         df_pivot = (
             raw_df
             .pivot_table(
-                index="year",
+                index="time_label",            # ✅ YEAR БИШ
                 columns="indicator_code",
                 values="value",
-                aggfunc="sum"
+                aggfunc="mean"                 # ✅ улирал → sum БИШ
             )
             .reset_index()
         )
+
     
         ordered_cols = (
             ["year"] +
