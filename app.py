@@ -74,7 +74,6 @@ left_col, right_col = st.columns([1.4, 4.6], gap="large")
 # =====================================================
 # HEADLINE DATA LOADER (FILTER-INDEPENDENT)
 # =====================================================
-
 @st.cache_data(ttl=3600)
 def load_headline_data():
     credentials = service_account.Credentials.from_service_account_info(
@@ -84,23 +83,36 @@ def load_headline_data():
         credentials=credentials,
         project=st.secrets["gcp_service_account"]["project_id"]
     )
+
     query = """
     SELECT
-        topic,
-        indicator_code,
-        value,
         year,
         quarter,
         time_freq,
-        year_num,
+        indicator_code,
+        value,
+        topic,
         sex,
         age_group
     FROM `mongol-bank-macro-data.Automation_data.fact_macro_final`
-    WHERE topic IN ('gdp','population')
-    ORDER BY year_num
+    WHERE topic IN ('gdp', 'population')
+    ORDER BY year, quarter
     """
+
     df = client.query(query).to_dataframe()
+
+    # 🔑 backward compatibility: quarter → period (UI-д хэрэгтэй)
+    df["period"] = (
+        df["quarter"]
+        .str.replace("Q", "", regex=False)
+        .astype("Int64")
+    )
+
+    # 🔒 GDP-д population баганууд NULL байхаар canonical болгоно
+    df.loc[df["topic"] == "gdp", ["sex", "age_group"]] = None
+
     return df
+
 
 # ================= LEFT COLUMN =================
 with left_col:
