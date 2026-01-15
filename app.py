@@ -248,64 +248,85 @@ with left_col:
             .loc[filtered_df["time_freq"] == selected_freq]
             .copy()
         )
-        # ==============================
-# ⏳ TIME RANGE (FREQUENCY-AWARE)
-# ==============================
-if not time_filtered_df.empty:
+    # ⏳ TIME RANGE (FREQUENCY-AWARE)
+    # ==============================
+    if not time_filtered_df.empty:
+    
+        with st.container(border=True):
+            st.markdown("### ⏳ Time range")
+    
+            if selected_freq == "Y":
+                min_y = int(time_filtered_df["year"].min())
+                max_y = int(time_filtered_df["year"].max())
+    
+                start_y = st.number_input(
+                    "Start year",
+                    min_value=min_y,
+                    max_value=max_y,
+                    value=min_y,
+                    step=1
+                )
+    
+                end_y = st.number_input(
+                    "End year",
+                    min_value=min_y,
+                    max_value=max_y,
+                    value=max_y,
+                    step=1
+                )
+    
+                time_filtered_df = time_filtered_df[
+                    (time_filtered_df["year"] >= start_y) &
+                    (time_filtered_df["year"] <= end_y)
+                ]
+            elif selected_freq == "Q":
+                time_filtered_df["t"] = (
+                    time_filtered_df["year"].astype(str)
+                    + "-Q"
+                    + time_filtered_df["period"].astype(str)
+                )
+            
+                t_list = sorted(time_filtered_df["t"].unique())
+            
+                start_q = st.selectbox("Start quarter", t_list, index=0)
+                end_q = st.selectbox("End quarter", t_list, index=len(t_list)-1)
+            
+                if start_q > end_q:
+                    st.error("❌ Start quarter must be before End quarter")
+                    time_filtered_df = pd.DataFrame()
+                else:
+                    time_filtered_df = time_filtered_df[
+                        (time_filtered_df["t"] >= start_q) &
+                        (time_filtered_df["t"] <= end_q)
+                    ]
 
-    if selected_freq == "Y":
-        min_t = int(time_filtered_df["year"].min())
-        max_t = int(time_filtered_df["year"].max())
+            elif selected_freq == "M":
+                # 🧱 Temporary time key
+                time_filtered_df["t"] = (
+                    time_filtered_df["year"].astype(str)
+                    + "-"
+                    + time_filtered_df["period"].astype(str).str.zfill(2)
+                )
+            
+                t_list = sorted(time_filtered_df["t"].unique())
+            
+                start_m = st.selectbox("Start month", t_list, index=0)
+                end_m = st.selectbox("End month", t_list, index=len(t_list) - 1)
+            
+                # 🔒 SAFETY CHECK
+                if start_m > end_m:
+                    st.error("❌ Start month must be before End month")
+                    time_filtered_df = pd.DataFrame()
+                else:
+                    time_filtered_df = time_filtered_df[
+                        (time_filtered_df["t"] >= start_m) &
+                        (time_filtered_df["t"] <= end_m)
+                    ]
+                                # 🧹 REMOVE TEMP COLUMN
+    time_filtered_df = time_filtered_df.drop(columns=["t"], errors="ignore")
+    
 
-        start_year, end_year = st.slider(
-            "Time range (Year)",
-            min_value=min_t,
-            max_value=max_t,
-            value=(min_t, max_t)
-        )
 
-        time_filtered_df = time_filtered_df[
-            (time_filtered_df["year"] >= start_year) &
-            (time_filtered_df["year"] <= end_year)
-        ]
-
-    elif selected_freq == "Q":
-        time_filtered_df["t"] = (
-            time_filtered_df["year"].astype(str)
-            + "-Q"
-            + time_filtered_df["period"].astype(str)
-        )
-
-        t_list = sorted(time_filtered_df["t"].unique())
-        start_t, end_t = st.select_slider(
-            "Time range (Quarter)",
-            options=t_list,
-            value=(t_list[0], t_list[-1])
-        )
-
-        time_filtered_df = time_filtered_df[
-            (time_filtered_df["t"] >= start_t) &
-            (time_filtered_df["t"] <= end_t)
-        ]
-
-    elif selected_freq == "M":
-        time_filtered_df["t"] = (
-            time_filtered_df["year"].astype(str)
-            + "-"
-            + time_filtered_df["period"].astype(str).str.zfill(2)
-        )
-
-        t_list = sorted(time_filtered_df["t"].unique())
-        start_t, end_t = st.select_slider(
-            "Time range (Month)",
-            options=t_list,
-            value=(t_list[0], t_list[-1])
-        )
-
-        time_filtered_df = time_filtered_df[
-            (time_filtered_df["t"] >= start_t) &
-            (time_filtered_df["t"] <= end_t)
-        ]
 
 
 
