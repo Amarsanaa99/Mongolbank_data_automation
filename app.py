@@ -413,41 +413,51 @@ with left_col:
                         .properties(height=400)
                     )
                     st.altair_chart(chart, use_container_width=True)
-                    # ===== DOWNLOAD OVERLAY (NO LAYOUT CHANGE) =====
-                # ===== DOWNLOAD OVERLAY (TRUE OVERLAY) =====
-                st.markdown(
-                    """
-                    <style>
-                    .chart-overlay {
-                        position: relative;
-                    }
-                    .chart-overlay button {
-                        position: absolute;
-                        bottom: 12px;
-                        right: 12px;
-                        background-color: rgba(30, 41, 59, 0.75);
-                        border: none;
-                        padding: 6px 8px;
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-size: 14px;
-                    }
-                    </style>
-                    <div class="chart-overlay">
-                    """,
-                    unsafe_allow_html=True
-                )
-                
-                st.download_button(
-                    label="⬇",
-                    data=plot_df.to_csv(index=False),
-                    file_name="main_chart_data.csv",
-                    mime="text/csv",
-                    help="Download chart data (CSV)",
-                    key="main_chart_download"
-                )
-                
-                st.markdown("</div>", unsafe_allow_html=True)
+                    
+            # ===== DOWNLOAD OVERLAY (MINIMAL, SUBTLE) =====
+            st.markdown(
+                """
+                <style>
+                .chart-overlay {
+                    position: relative;
+                }
+            
+                .chart-overlay button {
+                    position: absolute;
+                    bottom: 10px;
+                    left: 10px;                 /* ⬅️ ЭСРЭГ ТАЛ (зүүн доод) */
+                    background-color: rgba(15, 23, 42, 0.55);  /* маш үл ялиг бараан */
+                    color: rgba(226, 232, 240, 0.75);
+                    border: none;
+                    padding: 4px 6px;           /* ⬅️ хамгийн бага хэмжээ */
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 11px;            /* ⬅️ жижиг */
+                    line-height: 1;
+                }
+            
+                .chart-overlay button:hover {
+                    background-color: rgba(15, 23, 42, 0.8);
+                    color: white;
+                }
+                </style>
+            
+                <div class="chart-overlay">
+                """,
+                unsafe_allow_html=True
+            )
+            
+            st.download_button(
+                label="↓",                      # ⬅️ minimalist сум
+                data=plot_df.to_csv(index=False),
+                file_name="main_chart_data.csv",
+                mime="text/csv",
+                help="Download chart data (CSV)",
+                key="main_chart_download"
+            )
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
