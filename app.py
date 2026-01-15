@@ -585,7 +585,6 @@ with st.expander("📄 Raw data"):
     
         raw_df["time_label"] = (
             raw_df["year"].astype(str)
-            + "-Q"
             + raw_df["period"].astype(str)
         )
     
@@ -608,8 +607,6 @@ with st.expander("📄 Raw data"):
         st.dataframe(df_pivot[ordered_cols], use_container_width=True)
 
 
-
-    # ===================== POPULATION =====================
     # ===================== POPULATION =====================
     else:
         raw_df = df.copy()
