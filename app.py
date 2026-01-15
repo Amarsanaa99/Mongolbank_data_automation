@@ -445,19 +445,46 @@ for row in rows:
                     <div style="font-size:12px;opacity:0.6">{cfg["subtitle"]}</div>
                 </div>
                 """, unsafe_allow_html=True)
-    
-                # ===== GDP INDICATOR =====
+
+                # ===== GDP INDICATOR (SMART HEADLINE) =====
                 if cfg["type"] == "indicator":
-                    plot_df = (
-                        headline_df[
-                            headline_df["indicator_code"]
-                            .fillna("")                              # 🔥 ЭНЭ ЧУХАЛ
-                            .str.lower()
-                            .str.startswith(cfg["code"])
-                        ]
-                        .set_index("year_num")[["value"]]
-                        .sort_index()
-                    )
+                
+                    base_df = headline_df[
+                        headline_df["indicator_code"]
+                        .fillna("")
+                        .str.lower()
+                        .str.startswith(cfg["code"])
+                    ].copy()
+                
+                    # 🔥 RGDP / NGDP → yearly SUM (4 улирал)
+                    if cfg["code"] in ["rgdp_2005", "rgdp_2010", "rgdp_2015", "ngdp"]:
+                        plot_df = (
+                            base_df
+                            .groupby("year_num", as_index=True)["value"]
+                            .sum()
+                            .to_frame()
+                            .sort_index()
+                        )
+                
+                    # 🔥 GROWTH → yearly MEAN
+                    elif cfg["code"] == "growth":
+                        plot_df = (
+                            base_df
+                            .groupby("year_num", as_index=True)["value"]
+                            .mean()
+                            .to_frame()
+                            .sort_index()
+                        )
+                
+                    # fallback (аюулгүй)
+                    else:
+                        plot_df = (
+                            base_df
+                            .drop_duplicates(subset=["year_num"])
+                            .set_index("year_num")[["value"]]
+                            .sort_index()
+                        )
+
 
                 # ===== POPULATION TOTAL =====
                 elif cfg["type"] == "population_total":
