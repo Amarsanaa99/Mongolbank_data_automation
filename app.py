@@ -101,7 +101,12 @@ def load_headline_data():
 
     # ✅ Python дээр canonical time үүсгэнэ
     df["year_num"] = df["year"].str[:4].astype(int)
-    df["period"] = df["year"].str.extract(r"-(\d)").astype("Int64")
+    df["period"] = (
+    df["year"]
+    .str.extract(r"Q(\d)")
+    .astype("Int64")
+    )
+
 
     return df
     
