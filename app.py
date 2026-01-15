@@ -139,7 +139,7 @@ with left_col:
                 value,
                 sex,
                 age_group
-            FROM `mongol-bank-macro-data.Automation_data.fact_macro_clean`
+            FROM `mongol-bank-macro-data.Automation_data.fact_macro_final`
             WHERE topic = '{topic}'
             ORDER BY year_num
         """
@@ -582,7 +582,7 @@ with st.expander("📄 Raw data"):
 
     
         ordered_cols = (
-            ["year"] +
+            ["time_label"] +
             sorted([c for c in df_pivot.columns if c.startswith(raw_prefix)])
         )
     
