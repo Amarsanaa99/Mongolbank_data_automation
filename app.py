@@ -599,9 +599,7 @@ with st.expander("📄 Raw data"):
                 aggfunc="mean"
             )
             .reset_index()
-)
-
-    
+        )
         ordered_cols = (
             ["time_label"] +
             sorted(c for c in df_pivot.columns if c.startswith(raw_prefix))
