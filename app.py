@@ -423,18 +423,11 @@ with left_col:
                     # =========================
                     # MAIN CHART + DOWNLOAD
                     # =========================
-                    col_chart, col_dl = st.columns([24, 1])
-                    
-                    with col_chart:
-                        st.altair_chart(chart, use_container_width=True)
-                    
                     with col_dl:
-                        st.markdown("<div style='height:42px'></div>", unsafe_allow_html=True)
-                    
-                        csv = plot_df[
-                            ["time_label", "sex", "age_group", "value"]
-                        ].to_csv(index=False).encode("utf-8")
-                    
+                        st.markdown(
+                            "<div style='display:flex; justify-content:center; margin-top:8px'>",
+                            unsafe_allow_html=True
+                        )
                         st.download_button(
                             label="⬇️",
                             data=csv,
@@ -442,6 +435,8 @@ with left_col:
                             mime="text/csv",
                             help="Download chart data as CSV"
                         )
+                        st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 # =====================================================
