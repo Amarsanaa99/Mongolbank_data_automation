@@ -152,13 +152,19 @@ with left_col:
                 topic
             FROM `mongol-bank-macro-data.Automation_data.fact_macro`
             WHERE topic = '{topic}'
-            ORDER BY year, quarter
+            ORDER BY year
         """
         df = client.query(query).to_dataframe()
-    
-        # 🔒 CANONICAL RULES
-        if topic == "population":
-            df["quarter"] = None
+        # ✅ TIME CANONICAL (ЭНД Л БҮГДИЙГ ШИЙДНЭ)
+        if topic == "gdp":
+            df["year_num"] = df["year"].str[:4].astype(int)
+            df["period"] = df["year"].str.extract(r"-(\d)").astype("Int64")
+            df["time_freq"] = "Q"
+            df["sex"] = None
+            df["age_group"] = None
+        else:  # population
+            df["year_num"] = df["year"].astype(int)
+            df["period"] = None
             df["time_freq"] = "Y"
     
         return df
@@ -166,18 +172,7 @@ with left_col:
     # 3️⃣ DATA LOAD
     with st.spinner("⏳ Loading data from BigQuery..."):
         df = load_data(topic)
-    
-        # 🔑 backward compatibility (quarter → period)
-        df["period"] = (
-            df["quarter"]
-            .str.replace("Q", "", regex=False)
-            .astype("Int64")
-        )
-    
-        # 🔒 GDP-д sex / age_group байхгүйг canonical болгох
-        if topic == "gdp":
-            df["sex"] = None
-            df["age_group"] = None
+
 
 
     # ---------- GDP TYPE SELECTOR ----------
