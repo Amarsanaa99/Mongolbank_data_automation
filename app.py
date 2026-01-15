@@ -87,8 +87,6 @@ def load_headline_data():
     query = """
     SELECT
         year,
-        quarter,
-        time_freq,
         indicator_code,
         value,
         topic,
@@ -102,16 +100,19 @@ def load_headline_data():
     df = client.query(query).to_dataframe()
 
     # 🔑 backward compatibility: quarter → period (UI-д хэрэгтэй)
-    df["period"] = (
-        df["quarter"]
-        .str.replace("Q", "", regex=False)
-        .astype("Int64")
-    )
+    # ⬇️⬇️⬇️ ЯГ ЭНД НЭМНЭ ⬇️⬇️⬇️
+        df["year_num"] = df["year"].str[:4].astype(int)
+    
+        df["period"] = (
+            df["year"]
+            .str.extract(r"-(\d)")
+            .astype("Int64")
+        )
+    
+        df.loc[df["topic"] == "gdp", ["sex", "age_group"]] = None
+    
+        return df
 
-    # 🔒 GDP-д population баганууд NULL байхаар canonical болгоно
-    df.loc[df["topic"] == "gdp", ["sex", "age_group"]] = None
-
-    return df
 
 
 # ================= LEFT COLUMN =================
@@ -144,8 +145,6 @@ with left_col:
         query = f"""
             SELECT
                 year,
-                quarter,
-                time_freq,
                 indicator_code,
                 value,
                 sex,
@@ -358,11 +357,6 @@ with left_col:
                                 # 🧹 REMOVE TEMP COLUMN
     time_filtered_df = time_filtered_df.drop(columns=["t"], errors="ignore")
     
-
-
-
-
-
     # =============================
     # CREATE TIME LABEL (STANDARD)
     # =============================
