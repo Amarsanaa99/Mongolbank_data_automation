@@ -482,6 +482,36 @@ with left_col:
                 help="Download chart data",
                 key="main_chart_download"
             )
+        # ========= KPI CONTAINER (SEPARATE) =========
+        if topic == "gdp" and gdp_type == "GROWTH" and not time_filtered_df.empty:
+    
+            with st.container(border=True):
+                st.markdown("### 📌 Key indicators")
+    
+                kpi_df = time_filtered_df.copy()
+    
+                growth_series = (
+                    kpi_df
+                    .groupby("time_label")["value"]
+                    .mean()
+                )
+    
+                latest = growth_series.iloc[-1]
+                avg = growth_series.mean()
+                max_v = growth_series.max()
+                min_v = growth_series.min()
+                vol = growth_series.std()
+                last_4q = growth_series.tail(4).mean()
+    
+                k1, k2, k3, k4, k5, k6 = st.columns(6)
+    
+                k1.metric("Latest", f"{latest:.1f}%")
+                k2.metric("Average", f"{avg:.1f}%")
+                k3.metric("Max", f"{max_v:.1f}%")
+                k4.metric("Min", f"{min_v:.1f}%")
+                k5.metric("Volatility", f"{vol:.1f}")
+                k6.metric("Last 4Q avg", f"{last_4q:.1f}%")
+
 
 
 
