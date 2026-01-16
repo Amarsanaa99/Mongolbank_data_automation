@@ -155,8 +155,10 @@ with left_col:
         df = client.query(query).to_dataframe()
         # ✅ TIME CANONICAL (ЭНД Л БҮГДИЙГ ШИЙДНЭ)
         if topic == "gdp":
-            df["year_num"] = df["year"].str[:4].astype(int)
-            df["period"] = df["year"].str.extract(r"-(\d)").astype("Int64")
+            # GDP quarterly canonical time
+            df["year_num"] = df["year"].str.split("-").str[0].astype(int)
+            df["period"] = df["year"].str.split("-").str[1].astype("Int64")
+            df["year"] = df["year_num"].astype(str)
             df["time_freq"] = "Q"
             df["sex"] = None
             df["age_group"] = None
@@ -585,11 +587,10 @@ with st.expander("📄 Raw data"):
         
         # ✅ CANONICAL TIME_LABEL (RAW-д ЗААВАЛ НЭГ УДАА)
         raw_df["time_label"] = (
-            raw_df["year"].astype(str)
+            raw_df["year"]
             + "-Q"
             + raw_df["period"].astype(str)
         )
-        
         df_pivot = (
             raw_df
             .pivot_table(
