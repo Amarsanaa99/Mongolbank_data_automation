@@ -127,6 +127,11 @@ elif "Quarter" in series.columns:
 else:
     st.error("❌ Time columns not found (Month / Quarter)")
     st.stop()
+plot = (
+    series
+    .set_index("time")[selected]
+    .sort_index()
+)
 
 
     
