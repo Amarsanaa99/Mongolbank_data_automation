@@ -98,7 +98,15 @@ series = pd.concat(
     + [df_data[(group, i)].reset_index(drop=True) for i in selected],
     axis=1
 )
-series = series.dropna(subset=["Year"], how="all")
+
+# ======================
+# ROBUST TIME BUILDER (SAFE)
+# ======================
+if "Year" in series.columns:
+    series = series.dropna(subset=["Year"], how="all")
+else:
+    st.error("❌ 'Year' column missing in series")
+    st.stop()
 
 if "Month" in series.columns:
     series = series.dropna(subset=["Month"], how="all")
@@ -117,8 +125,9 @@ elif "Quarter" in series.columns:
     )
 
 else:
-    st.error("❌ Time columns not found (Year + Month / Quarter)")
+    st.error("❌ Time columns not found (Month / Quarter)")
     st.stop()
+
 
     
 # ======================
