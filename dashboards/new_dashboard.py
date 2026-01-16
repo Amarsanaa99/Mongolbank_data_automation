@@ -1,231 +1,125 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-
-# =====================================================
-# PAGE CONFIG
-# =====================================================
-st.set_page_config(
-    page_title="Macro Policy Dashboard (Excel)",
-    layout="wide"
-)
-
-st.title("🏦 Macro Policy Dashboard (Excel-based)")
 from pathlib import Path
+
+# ======================
+# PAGE
+# ======================
+st.set_page_config("Macro Policy Dashboard", layout="wide")
+st.title("🏦 Macro Policy Dashboard")
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 EXCEL_PATH = BASE_DIR / "20251218_Result.xlsx"
 
-# ✅ Sheet names (NO cache)
-all_sheets = pd.ExcelFile(EXCEL_PATH).sheet_names
-
-sheet_names = [
-    s for s in all_sheets
-    if s.lower() in ["month", "monthly", "quarter", "quarterly"]
-]
-
 @st.cache_data
 def read_sheet(sheet):
-    return pd.read_excel(
-        EXCEL_PATH,
-        sheet_name=sheet,
-        header=[0, 1]
-    )
+    return pd.read_excel(EXCEL_PATH, sheet_name=sheet, header=[0, 1])
 
-left_col, right_col = st.columns([1.4, 4.6], gap="large")
-time_cols = [
-    c for c in df_raw.columns
-    if c[0] in ["Year", "Month", "Quarter", ""]
-]
-df_time = df_raw[time_cols]
-# 🧭 Time columns-д нэр өгнө
-df_time.columns = ["Year", "Month"] if len(df_time.columns) == 2 else ["Year", "Quarter"]
-df_data = df_raw.drop(columns=time_cols)
+# ======================
+# DATASET SELECT
+# ======================
+sheets = [s for s in pd.ExcelFile(EXCEL_PATH).sheet_names
+          if s.lower() in ["month","monthly","quarter","quarterly"]]
 
-# =====================================
-# 🧹 CLEAN MULTIINDEX HEADERS (ЗӨВ ГАЗАР)
-# =====================================
+left, right = st.columns([1.4, 4.6], gap="large")
+
+with left:
+    dataset = st.radio("📦 Dataset", sheets, horizontal=True)
+
+# ======================
+# LOAD + CLEAN DATA
+# ======================
+df = read_sheet(dataset)
+
+time_cols = [c for c in df.columns if c[0] in ["Year","Month","Quarter",""]]
+df_time = df[time_cols]
+df_time.columns = ["Year","Month"] if len(df_time.columns)==2 else ["Year","Quarter"]
+
+df_data = df.drop(columns=time_cols)
 df_data.columns = pd.MultiIndex.from_tuples(
-    [(str(a).strip(), str(b).strip()) for a, b in df_data.columns]
+    [(a if not str(a).startswith("Unnamed") else prev, b)
+     for (a,b), prev in zip(
+         df_data.columns,
+         pd.Series([c[0] for c in df_data.columns]).ffill()
+     )]
 )
+df_data = df_data.loc[:, ~df_data.columns.get_level_values(0).str.startswith("Unnamed")]
 
-df_data.columns = pd.MultiIndex.from_tuples(
-    [
-        (
-            a if not str(a).startswith("Unnamed") else prev,
-            b
-        )
-        for (a, b), prev in zip(
-            df_data.columns,
-            pd.Series([c[0] for c in df_data.columns]).ffill()
-        )
-    ]
-)
+freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
 
-# ❌ Unnamed group-уудыг бүр мөсөн хасна
-df_data = df_data.loc[
-    :,
-    ~df_data.columns.get_level_values(0).str.startswith("Unnamed")
-]
+# ======================
+# SELECTORS
+# ======================
+with left:
+    group = st.radio("🧭 Indicator group", sorted(df_data.columns.levels[0]))
+    inds = sorted(c[1] for c in df_data.columns if c[0]==group)
+    selected = st.multiselect("📌 Indicators", inds, inds[:1])
+    st.info(f"Frequency: {freq}")
 
-
-with left_col:
-    with st.container(border=True):
-        st.markdown("### 📦 Dataset")
-        dataset = st.radio("", sheet_names, horizontal=True)
-
-# ================================
-# 🧭 Indicator Group (АЛХАМ B)
-# ================================
-with left_col:
-    with st.container(border=True):
-        st.markdown("### 🧭 Indicator group")
-
-        indicator_group = st.radio(
-            "",
-            sorted(df_data.columns.levels[0])
-        )
-# ================================
-# 📌 Indicators (АЛХАМ C)
-# ================================
-with left_col:
-    with st.container(border=True):
-        st.markdown("### 📌 Indicators")
-
-        indicators = sorted(
-            c[1] for c in df_data.columns if c[0] == indicator_group
-        )
-        selected_indicators = st.multiselect(
-            "",
-            indicators,
-            default=indicators[:1]
-        )
-        if "Month" in df_time.columns.get_level_values(0):
-            freq = "Monthly"
-        else:
-            freq = "Quarterly"
-        st.info(frequency := f"Frequency: {freq}")
-series_df = pd.concat(
-    [df_time] + [df_data[(indicator_group, ind)] for ind in selected_indicators],
+# ======================
+# SERIES BUILD
+# ======================
+series = pd.concat(
+    [df_time] + [df_data[(group,i)] for i in selected],
     axis=1
+).dropna(how="all")
+
+series["time"] = (
+    series["Year"].astype(str) + (
+        "-" + series["Month"].astype(int).astype(str).str.zfill(2)
+        if freq=="Monthly" else "-Q"+series["Quarter"].astype(str)
+    )
 )
-series_df = series_df.dropna(how="all")
-if freq == "Monthly":
-    series_df["time_label"] = (
-        series_df["Year"].astype(str)
-        + "-"
-        + series_df["Month"].astype(int).astype(str).str.zfill(2)
+
+plot = series.set_index("time")[selected]
+
+# ======================
+# MAIN CHART
+# ======================
+with right:
+    st.subheader("📈 Main chart")
+    st.line_chart(plot)
+
+# ======================
+# KPI
+# ======================
+with right:
+    cols = st.columns(len(selected))
+    for c,i in zip(cols, selected):
+        v = plot[i].dropna()
+        c.metric(i, f"{v.iloc[-1]:.2f}" if not v.empty else "n/a")
+
+# ======================
+# BUSINESS CYCLE
+# ======================
+with right:
+    cycle = plot.mean(axis=1).reset_index()
+    cycle["date"] = pd.to_datetime(
+        cycle["time"].str.replace("-Q","-"),
+        errors="coerce"
     )
-else:
-    series_df["time_label"] = (
-        series_df["Year"].astype(str)
-        + "-Q"
-        + series_df["Quarter"].astype(str)
+
+    chart = alt.Chart(cycle).mark_area(opacity=0.3).encode(
+        x="date:T", y="0:Q",
+        color=alt.condition("datum['0']>=0", alt.value("green"), alt.value("red"))
+    )
+    st.altair_chart(chart, use_container_width=True)
+
+# ======================
+# CONTRIBUTION
+# ======================
+with right:
+    last = plot.dropna(how="all").iloc[-1]
+    wf = pd.DataFrame({"Indicator":last.index,"Value":last.values})
+    st.altair_chart(
+        alt.Chart(wf).mark_bar().encode(x="Indicator",y="Value"),
+        use_container_width=True
     )
 
-series_df = series_df.dropna(subset=["time_label"])
-with right_col:
-    with st.container(border=True):
-        st.markdown("### 📈 Main chart")
-
-        plot_df = (
-            series_df
-            .set_index("time_label")[selected_indicators]
-        )
-
-        st.line_chart(plot_df)
-with right_col:
-    with st.container(border=True):
-        st.markdown("### 📊 Latest values")
-
-        kpi_cols = st.columns(len(selected_indicators))
-
-        for col, ind in zip(kpi_cols, selected_indicators):
-            values = plot_df[ind].dropna()
-            latest = values.iloc[-1] if not values.empty else None
-        
-            if latest is not None:
-                col.metric(ind, f"{latest:.2f}")
-            else:
-                col.metric(ind, "n/a")
-
-with right_col:
-    with st.container(border=True):
-        st.markdown("### 🔄 Business cycle")
-
-        cycle = plot_df.copy()
-        cycle["phase"] = cycle.mean(axis=1)
-
-        # 1️⃣ index → column болгоно
-        cycle = cycle.reset_index().rename(columns={"index": "time_label"})
-
-        # 2️⃣ 🆕 REAL TIME INDEX (professional fix)
-        if freq == "Monthly":
-            cycle["time_index"] = pd.to_datetime(
-                cycle["time_label"],
-                format="%Y-%m",
-                errors="coerce"
-            )
-        else:
-            cycle["time_index"] = pd.to_datetime(
-                cycle["time_label"].str.replace("-Q", "-"),
-                errors="coerce"
-            )
-
-        # 3️⃣ Altair chart
-        chart = (
-            alt.Chart(cycle)
-            .mark_area(opacity=0.3)
-            .encode(
-                x=alt.X("time_index:T", title="Time"),
-                y=alt.Y("phase:Q", title="Business cycle"),
-                color=alt.condition(
-                    "datum.phase >= 0",
-                    alt.value("green"),
-                    alt.value("red")
-                )
-            )
-        )
-
-        st.altair_chart(chart, use_container_width=True)
-
-with right_col:
-    with st.container(border=True):
-        st.markdown("### 🧱 Contribution (Waterfall)")
-
-        if plot_df.dropna(how="all").empty:
-            st.warning("No data available for selected indicators.")
-            st.stop()
-        
-        last = plot_df.dropna(how="all").iloc[-1]
-
-
-        wf = pd.DataFrame({
-            "Indicator": last.index,
-            "Value": last.values
-        })
-
-        wf_chart = (
-            alt.Chart(wf)
-            .mark_bar()
-            .encode(
-                x="Indicator",
-                y="Value"
-            )
-        )
-
-        st.altair_chart(wf_chart, use_container_width=True)
-with right_col:
-    with st.container(border=True):
-        st.markdown("### 📝 Insight")
-
-        st.write(
-            f"""
-            **{indicator_group}** shows that  
-            latest movements are driven mainly by  
-            **{last.idxmax()}**.
-            """
-        )
-with right_col:
+# ======================
+# RAW
+# ======================
+with right:
     with st.expander("📄 Raw data"):
-        st.dataframe(series_df, use_container_width=True)
+        st.dataframe(series, use_container_width=True)
