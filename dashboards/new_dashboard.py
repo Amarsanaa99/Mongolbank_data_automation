@@ -31,6 +31,15 @@ with left:
 # LOAD + CLEAN DATA  (FIXED)
 # ======================
 df = read_sheet(dataset)
+# ======================
+# FIX HEADER (CRITICAL)
+# ======================
+if isinstance(df.columns, pd.MultiIndex):
+    df.columns = [
+        c[0] if c[0] in ["Year", "Month", "Quarter"] else c
+        for c in df.columns
+    ]
+
 
 # --- detect time columns from LEVEL 1 (FIX)
 time_cols = [c for c in df.columns if c[1] in ["Year", "Month", "Quarter"]]
