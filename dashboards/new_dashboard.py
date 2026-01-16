@@ -41,16 +41,16 @@ df_time = df[time_cols]
 df_time.columns = [c[1] for c in time_cols]
 
 
-time_names = []
-if any(c[0]=="Year" for c in time_cols):
-    time_names.append("Year")
-if any(c[0]=="Month" for c in time_cols):
-    time_names.append("Month")
-if any(c[0]=="Quarter" for c in time_cols):
-    time_names.append("Quarter")
+# --- detect time columns from LEVEL 1 (FINAL)
+time_cols = [c for c in df.columns if c[1] in ["Year", "Month", "Quarter"]]
 
-df_time = df_time.iloc[:, :len(time_names)]
-df_time.columns = time_names
+df_time = df[time_cols].copy()
+
+# rename using level 1 only
+df_time.columns = [c[1] for c in time_cols]
+
+# drop rows without Year
+df_time = df_time.dropna(subset=["Year"], how="all")
 
 df_data = df.drop(columns=time_cols)
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
