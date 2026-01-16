@@ -1,36 +1,26 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 
 # =====================================================
 # PAGE CONFIG
 # =====================================================
 st.set_page_config(
-    page_title="Macro Dashboard (Excel)",
+    page_title="Macro Policy Dashboard (Excel)",
     layout="wide"
 )
 
-st.title("📊 Macro Dashboard (Excel-based)")
+st.title("🏦 Macro Policy Dashboard (Excel-based)")
 
-EXCEL_PATH = "20251218_Result.xlsx"
+EXCEL_PATH = "data/20251218_Result.xlsx"
 
-# =====================================================
-# LOAD EXCEL
-# =====================================================
 @st.cache_data
 def load_excel():
     return pd.ExcelFile(EXCEL_PATH)
 
 xls = load_excel()
-
-# =====================================================
-# MAIN LAYOUT
-# =====================================================
 left_col, right_col = st.columns([1.4, 4.6], gap="large")
-
-# ================= LEFT COLUMN =================
 with left_col:
-
-    # ================= DATASET =================
     with st.container(border=True):
         st.markdown("### 📦 Dataset")
         dataset = st.radio(
@@ -38,69 +28,60 @@ with left_col:
             xls.sheet_names,
             horizontal=True
         )
-
-    # ================= READ SHEET =================
-    @st.cache_data
-    def read_sheet(sheet):
-        return pd.read_excel(
-            EXCEL_PATH,
-            sheet_name=sheet,
-            header=[0, 1]
-        )
-
-    df_raw = read_sheet(dataset)
-
-    # ================= TIME COLUMNS =================
-    time_cols = [
-        c for c in df_raw.columns
-        if c[0] in ["Year", "Month", "Quarter", ""]
-    ]
-
-    df_time = df_raw[time_cols]
-    df_data = df_raw.drop(columns=time_cols)
-
-    df_data.columns = pd.MultiIndex.from_tuples(
-        [(str(a).strip(), str(b).strip()) for a, b in df_data.columns]
+@st.cache_data
+def read_sheet(sheet):
+    return pd.read_excel(
+        EXCEL_PATH,
+        sheet_name=sheet,
+        header=[0, 1]
     )
 
-    # ================= GDP TYPE =================
+df_raw = read_sheet(dataset)
+time_cols = [
+    c for c in df_raw.columns
+    if c[0] in ["Year", "Month", "Quarter", ""]
+]
+
+df_time = df_raw[time_cols]
+df_data = df_raw.drop(columns=time_cols)
+
+df_data.columns = pd.MultiIndex.from_tuples(
+    [(str(a).strip(), str(b).strip()) for a, b in df_data.columns]
+)
+with left_col:
     with st.container(border=True):
         st.markdown("### 📐 GDP type")
         gdp_types = sorted(df_data.columns.levels[0])
         gdp_type = st.radio("", gdp_types)
-
-    # ================= INDICATORS =================
+with left_col:
     with st.container(border=True):
         st.markdown("### 📌 Indicators")
+
         indicators = sorted(
             c[1] for c in df_data.columns if c[0] == gdp_type
         )
+
         selected_indicators = st.multiselect(
             "",
             indicators,
             default=indicators[:1]
         )
-
-    # ================= FREQUENCY =================
+with left_col:
     with st.container(border=True):
         st.markdown("### ⏱ Frequency")
 
-        freq = "Monthly" if dataset.lower().startswith("month") else "Quarterly"
-        st.info(f"Frequency: {freq}")
+        if "Month" in df_time.columns.get_level_values(0):
+            freq = "Monthly"
+        else:
+            freq = "Quarterly"
 
-# ================= PREPARE DATA =================
+        st.info(frequency := f"Frequency: {freq}")
 series_df = pd.concat(
-    [
-        df_time,
-        df_data[(gdp_type, ind)]
-        for ind in selected_indicators
-    ],
+    [df_time] + [df_data[(gdp_type, ind)] for ind in selected_indicators],
     axis=1
 )
 
 series_df = series_df.dropna(how="all")
-
-# ================= CREATE TIME LABEL =================
 if freq == "Monthly":
     series_df["time_label"] = (
         series_df["Year"].astype(str)
@@ -115,22 +96,79 @@ else:
     )
 
 series_df = series_df.dropna(subset=["time_label"])
-
-# ================= RIGHT COLUMN =================
 with right_col:
-
     with st.container(border=True):
         st.markdown("### 📈 Main chart")
 
-        if series_df.empty:
-            st.warning("No data available")
-        else:
-            plot_df = (
-                series_df
-                .set_index("time_label")[selected_indicators]
-            )
-            st.line_chart(plot_df)
+        plot_df = (
+            series_df
+            .set_index("time_label")[selected_indicators]
+        )
 
-    # ================= RAW DATA =================
+        st.line_chart(plot_df)
+with right_col:
+    with st.container(border=True):
+        st.markdown("### 📊 Latest values")
+
+        kpi_cols = st.columns(len(selected_indicators))
+
+        for col, ind in zip(kpi_cols, selected_indicators):
+            latest = plot_df[ind].dropna().iloc[-1]
+            col.metric(ind, f"{latest:.2f}")
+with right_col:
+    with st.container(border=True):
+        st.markdown("### 🔄 Business cycle")
+
+        cycle = plot_df.copy()
+        cycle["phase"] = cycle.mean(axis=1)
+
+        chart = (
+            alt.Chart(cycle.reset_index())
+            .mark_area(opacity=0.3)
+            .encode(
+                x="time_label",
+                y="phase",
+                color=alt.condition(
+                    "datum.phase >= 0",
+                    alt.value("green"),
+                    alt.value("red")
+                )
+            )
+        )
+
+        st.altair_chart(chart, use_container_width=True)
+with right_col:
+    with st.container(border=True):
+        st.markdown("### 🧱 Contribution (Waterfall)")
+
+        last = plot_df.iloc[-1]
+
+        wf = pd.DataFrame({
+            "Indicator": last.index,
+            "Value": last.values
+        })
+
+        wf_chart = (
+            alt.Chart(wf)
+            .mark_bar()
+            .encode(
+                x="Indicator",
+                y="Value"
+            )
+        )
+
+        st.altair_chart(wf_chart, use_container_width=True)
+with right_col:
+    with st.container(border=True):
+        st.markdown("### 📝 Insight")
+
+        st.write(
+            f"""
+            **{gdp_type}** shows that  
+            latest movements are driven mainly by  
+            **{last.idxmax()}**.
+            """
+        )
+with right_col:
     with st.expander("📄 Raw data"):
         st.dataframe(series_df, use_container_width=True)
