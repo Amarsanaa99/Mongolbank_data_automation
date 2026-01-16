@@ -123,6 +123,31 @@ if not selected:
 
 # Өгөгдлийг цуваа болгон нэгтгэх
 series = df_time.copy()
+# ======================
+# FIX: Year / Month / Quarter block structure
+# ======================
+for col in ["Year", "Month", "Quarter"]:
+    if col in series.columns:
+        series[col] = series[col].ffill()
+if set(["Year", "Month"]).issubset(series.columns):
+    series = series.dropna(subset=["Year", "Month"])
+    series["time"] = (
+        series["Year"].astype(int).astype(str) + "-" +
+        series["Month"].astype(int).astype(str).str.zfill(2)
+    )
+
+elif set(["Year", "Quarter"]).issubset(series.columns):
+    series = series.dropna(subset=["Year", "Quarter"])
+    series["time"] = (
+        series["Year"].astype(int).astype(str) + "-Q" +
+        series["Quarter"].astype(int).astype(str)
+    )
+
+elif "Year" in series.columns:
+    series = series.dropna(subset=["Year"])
+    series["time"] = series["Year"].astype(int).astype(str)
+
+
 
 # Time багануудыг тоон утга болгох
 for col in ["Year", "Month", "Quarter"]:
