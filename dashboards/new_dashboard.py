@@ -11,8 +11,11 @@ st.set_page_config(
 )
 
 st.title("🏦 Macro Policy Dashboard (Excel-based)")
+from pathlib import Path
 
-EXCEL_PATH = "20251218_Result.xlsx"
+BASE_DIR = Path(__file__).resolve().parents[1]   # ROOT руу гарна
+EXCEL_PATH = BASE_DIR / "20251218_Result.xlsx"
+
 
 @st.cache_data
 def load_excel():
