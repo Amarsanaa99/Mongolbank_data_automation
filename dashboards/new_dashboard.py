@@ -2,16 +2,16 @@ import streamlit as st
 import pandas as pd
 
 # =====================================================
-# CONFIG
+# PAGE CONFIG
 # =====================================================
-EXCEL_PATH = "20251218_Result.xlsx"
-
 st.set_page_config(
-    page_title="Macro Dashboard",
+    page_title="Macro Dashboard (Excel)",
     layout="wide"
 )
 
-st.title("📊 Macro Economic Dashboard")
+st.title("📊 Macro Dashboard (Excel-based)")
+
+EXCEL_PATH = "20251218_Result.xlsx"
 
 # =====================================================
 # LOAD EXCEL
@@ -23,96 +23,114 @@ def load_excel():
 xls = load_excel()
 
 # =====================================================
-# SIDEBAR – DATASET (SHEET)
+# MAIN LAYOUT
 # =====================================================
-st.sidebar.header("📂 Dataset")
+left_col, right_col = st.columns([1.4, 4.6], gap="large")
 
-dataset = st.sidebar.selectbox(
-    "Select dataset",
-    options=xls.sheet_names
-)
+# ================= LEFT COLUMN =================
+with left_col:
 
-# =====================================================
-# READ SHEET WITH MULTIHEADER
-# =====================================================
-@st.cache_data
-def read_sheet(sheet_name):
-    df = pd.read_excel(
-        EXCEL_PATH,
-        sheet_name=sheet_name,
-        header=[0, 1]  # GDP type / Indicator
+    # ================= DATASET =================
+    with st.container(border=True):
+        st.markdown("### 📦 Dataset")
+        dataset = st.radio(
+            "",
+            xls.sheet_names,
+            horizontal=True
+        )
+
+    # ================= READ SHEET =================
+    @st.cache_data
+    def read_sheet(sheet):
+        return pd.read_excel(
+            EXCEL_PATH,
+            sheet_name=sheet,
+            header=[0, 1]
+        )
+
+    df_raw = read_sheet(dataset)
+
+    # ================= TIME COLUMNS =================
+    time_cols = [
+        c for c in df_raw.columns
+        if c[0] in ["Year", "Month", "Quarter", ""]
+    ]
+
+    df_time = df_raw[time_cols]
+    df_data = df_raw.drop(columns=time_cols)
+
+    df_data.columns = pd.MultiIndex.from_tuples(
+        [(str(a).strip(), str(b).strip()) for a, b in df_data.columns]
     )
-    return df
 
-df_raw = read_sheet(dataset)
+    # ================= GDP TYPE =================
+    with st.container(border=True):
+        st.markdown("### 📐 GDP type")
+        gdp_types = sorted(df_data.columns.levels[0])
+        gdp_type = st.radio("", gdp_types)
 
-# =====================================================
-# IDENTIFY TIME COLUMNS
-# =====================================================
-time_cols = []
-for col in df_raw.columns:
-    if "Year" in str(col[0]) or col[0] == "":
-        time_cols.append(col)
+    # ================= INDICATORS =================
+    with st.container(border=True):
+        st.markdown("### 📌 Indicators")
+        indicators = sorted(
+            c[1] for c in df_data.columns if c[0] == gdp_type
+        )
+        selected_indicators = st.multiselect(
+            "",
+            indicators,
+            default=indicators[:1]
+        )
 
-df_time = df_raw[time_cols]
-df_data = df_raw.drop(columns=time_cols)
+    # ================= FREQUENCY =================
+    with st.container(border=True):
+        st.markdown("### ⏱ Frequency")
 
-# Clean column names
-df_data.columns = pd.MultiIndex.from_tuples([
-    (str(c[0]).strip(), str(c[1]).strip()) for c in df_data.columns
-])
+        freq = "Monthly" if dataset.lower().startswith("month") else "Quarterly"
+        st.info(f"Frequency: {freq}")
 
-# =====================================================
-# SIDEBAR – GDP TYPE
-# =====================================================
-st.sidebar.header("📐 GDP Type")
-
-gdp_types = sorted(set([c[0] for c in df_data.columns]))
-
-gdp_type = st.sidebar.selectbox(
-    "Select GDP type",
-    gdp_types
+# ================= PREPARE DATA =================
+series_df = pd.concat(
+    [
+        df_time,
+        df_data[(gdp_type, ind)]
+        for ind in selected_indicators
+    ],
+    axis=1
 )
 
-# =====================================================
-# SIDEBAR – INDICATOR
-# =====================================================
-indicators = sorted([
-    c[1] for c in df_data.columns if c[0] == gdp_type
-])
+series_df = series_df.dropna(how="all")
 
-indicator = st.sidebar.selectbox(
-    "Select indicator",
-    indicators
-)
+# ================= CREATE TIME LABEL =================
+if freq == "Monthly":
+    series_df["time_label"] = (
+        series_df["Year"].astype(str)
+        + "-"
+        + series_df["Month"].astype(int).astype(str).str.zfill(2)
+    )
+else:
+    series_df["time_label"] = (
+        series_df["Year"].astype(str)
+        + "-Q"
+        + series_df["Quarter"].astype(str)
+    )
 
-# =====================================================
-# FILTER DATA
-# =====================================================
-series = df_data[(gdp_type, indicator)]
+series_df = series_df.dropna(subset=["time_label"])
 
-df_plot = pd.concat([df_time, series], axis=1)
-df_plot.columns = ["Year", "Period", "Value"]
+# ================= RIGHT COLUMN =================
+with right_col:
 
-df_plot = df_plot.dropna(subset=["Value"])
+    with st.container(border=True):
+        st.markdown("### 📈 Main chart")
 
-# =====================================================
-# AUTO START DATE (NO FORCED RANGE)
-# =====================================================
-df_plot = df_plot.loc[df_plot["Value"].first_valid_index():]
+        if series_df.empty:
+            st.warning("No data available")
+        else:
+            plot_df = (
+                series_df
+                .set_index("time_label")[selected_indicators]
+            )
+            st.line_chart(plot_df)
 
-# =====================================================
-# MAIN VIEW
-# =====================================================
-st.subheader(f"{gdp_type} – {indicator}")
-
-st.line_chart(
-    df_plot.set_index(df_plot.index)["Value"]
-)
-
-# =====================================================
-# RAW DATA (OPTIONAL)
-# =====================================================
-with st.expander("📄 Raw data"):
-    st.dataframe(df_plot)
-
+    # ================= RAW DATA =================
+    with st.expander("📄 Raw data"):
+        st.dataframe(series_df, use_container_width=True)
