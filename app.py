@@ -562,23 +562,33 @@ with left_col:
             # ---------------------------
             # 📊 DATA PREP (LATEST PERIOD)
             # ---------------------------
-            latest_q = time_filtered_df["time_label"].max()
-        
+            # 🔥 TRUE latest quarter (numeric sort)
+            latest_row = (
+                time_filtered_df
+                .dropna(subset=["year_num", "period"])
+                .sort_values(["year_num", "period"])
+                .iloc[-1]
+            )
+            
+            latest_q = f"{latest_row['year_num']}-Q{int(latest_row['period'])}"
             wf_df = (
                 time_filtered_df[
                     time_filtered_df["time_label"] == latest_q
-                ]
-                .set_index("indicator_code")["value"]
-                .filter(like="growth_")
-                .reset_index()
+                ][["indicator_code", "value"]]
+                .dropna()
             )
-        
             if not wf_df.empty:
         
                 wf_df["sector"] = (
                     wf_df["indicator_code"]
                     .str.replace("growth_", "", regex=False)
+                    .str.replace("_", " ")
+                    .str.title()
                 )
+                if wf_df.empty:
+                    st.warning("⚠️ No sectoral growth data for latest quarter")
+
+
         
                 # ---------------------------
                 # 📉 WATERFALL CHART
