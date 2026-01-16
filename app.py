@@ -109,7 +109,62 @@ def load_headline_data():
 
 
     return df
-    
+# =====================================================
+# KPI RENDER FUNCTIONS
+# =====================================================
+
+def render_gdp_kpi(df, gdp_type):
+
+    if gdp_type == "GROWTH":
+        series = df.groupby("time_label")["value"].mean()
+    else:
+        series = df.groupby("time_label")["value"].sum()
+
+    if len(series) < 2:
+        st.info("Not enough data for KPI calculation")
+        return
+
+    latest = series.iloc[-1]
+
+    if gdp_type == "GROWTH":
+        k1, k2, k3, k4 = st.columns(4)
+        k1.metric("Latest growth", f"{latest:.1f}%")
+        k2.metric("Average", f"{series.mean():.1f}%")
+        k3.metric("Peak", f"{series.max():.1f}%")
+        k4.metric("Volatility", f"{series.std():.1f}")
+    else:
+        prev = series.iloc[-2]
+        yoy = (latest / prev - 1) * 100
+
+        k1, k2, k3 = st.columns(3)
+        k1.metric("Latest level", f"{latest:,.0f}")
+        k2.metric("Δ YoY", f"{yoy:.1f}%")
+        k3.metric("Period average", f"{series.mean():,.0f}")
+
+
+def render_pop_kpi(df):
+    latest_period = df["time_label"].max()
+    latest_df = df[df["time_label"] == latest_period]
+
+    if latest_df.empty:
+        st.info("No population data")
+        return
+
+    total = latest_df["value"].sum()
+
+    gender = latest_df.groupby("sex")["value"].sum()
+    male = gender.get("Эр", gender.get("Male", 0))
+    female = gender.get("Эм", gender.get("Female", 0))
+    age = latest_df.groupby("age_group")["value"].sum().sort_index()
+    working_age = age.iloc[3:13].sum() if len(age) >= 13 else 0
+    dependency = (total - working_age) / working_age * 100 if working_age else 0
+
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Total population", f"{total:,.0f}")
+    k2.metric("Male", f"{male/total*100:.1f}%")
+    k3.metric("Female", f"{female/total*100:.1f}%")
+    k4.metric("Dependency ratio", f"{dependency:.1f}%")
+
 
 
 
@@ -386,7 +441,7 @@ with left_col:
     with right_col:
         with st.container(border=True):
             st.markdown("### 📈 Main chart")
-    
+        
             if time_filtered_df.empty:
                 st.warning("No data for selected filters")
     
@@ -482,35 +537,24 @@ with left_col:
                 help="Download chart data",
                 key="main_chart_download"
             )
-        # ========= KPI CONTAINER (SEPARATE) =========
-        if topic == "gdp" and gdp_type == "GROWTH" and not time_filtered_df.empty:
+        # =====================================================
+        # KPI CONTAINER (BELOW MAIN CHART)
+        # =====================================================
+        if not time_filtered_df.empty:
     
             with st.container(border=True):
                 st.markdown("### 📌 Key indicators")
     
-                kpi_df = time_filtered_df.copy()
+                if topic == "gdp":
+                    render_gdp_kpi(time_filtered_df, gdp_type)
     
-                growth_series = (
-                    kpi_df
-                    .groupby("time_label")["value"]
-                    .mean()
-                )
-    
-                latest = growth_series.iloc[-1]
-                avg = growth_series.mean()
-                max_v = growth_series.max()
-                min_v = growth_series.min()
-                vol = growth_series.std()
-                last_4q = growth_series.tail(4).mean()
-    
-                k1, k2, k3, k4, k5, k6 = st.columns(6)
-    
-                k1.metric("Latest", f"{latest:.1f}%")
-                k2.metric("Average", f"{avg:.1f}%")
-                k3.metric("Max", f"{max_v:.1f}%")
-                k4.metric("Min", f"{min_v:.1f}%")
-                k5.metric("Volatility", f"{vol:.1f}")
-                k6.metric("Last 4Q avg", f"{last_4q:.1f}%")
+                elif topic == "population":
+                    render_pop_kpi(time_filtered_df)
+
+
+
+
+
 
 
 
