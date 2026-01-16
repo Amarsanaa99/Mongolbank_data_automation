@@ -40,30 +40,6 @@ if isinstance(df.columns, pd.MultiIndex):
         for c in df.columns
     ]
 
-
-# --- detect time columns from LEVEL 1 (FIX)
-time_cols = [c for c in df.columns if c[1] in ["Year", "Month", "Quarter"]]
-
-df_time = df[time_cols]
-
-# rename time columns properly
-df_time.columns = [c[1] for c in time_cols]
-
-
-# --- detect time columns from LEVEL 1 (FINAL)
-time_cols = [c for c in df.columns if c[1] in ["Year", "Month", "Quarter"]]
-
-df_time = df[time_cols].copy()
-# normalize ONLY level=1 of MultiIndex
-df_time.columns = (
-    df_time.columns
-    .get_level_values(1)
-    .astype(str)
-    .str.strip()
-    .str.capitalize()
-)
-
-
 # --- ensure Year exists safely
 if "Year" not in df_time.columns:
     st.error("❌ 'Year' column not detected in this sheet")
