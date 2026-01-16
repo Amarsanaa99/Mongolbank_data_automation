@@ -93,6 +93,11 @@ with left:
 # ======================
 # ROBUST TIME BUILDER
 # ======================
+series = pd.concat(
+    [df_time.reset_index(drop=True)]
+    + [df_data[(group, i)].reset_index(drop=True) for i in selected],
+    axis=1
+)
 series = series.dropna(subset=["Year"], how="all")
 
 if "Month" in series.columns:
