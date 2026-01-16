@@ -52,20 +52,34 @@ df_data = df_raw.drop(columns=time_cols)
 df_data.columns = pd.MultiIndex.from_tuples(
     [(str(a).strip(), str(b).strip()) for a, b in df_data.columns]
 )
+df_data.columns = pd.MultiIndex.from_tuples(
+    [
+        (
+            a if not str(a).startswith("Unnamed") else prev,
+            b
+        )
+        for (a, b), prev in zip(
+            df_data.columns,
+            pd.Series([c[0] for c in df_data.columns]).ffill()
+        )
+    ]
+)
+
 # ================================
-# 🧭 Indicator Group selector
+# 🧭 Indicator Group (АЛХАМ B)
 # ================================
 with left_col:
     with st.container(border=True):
         st.markdown("### 🧭 Indicator group")
 
-        indicator_groups = sorted(df_data.columns.levels[0])
-
         indicator_group = st.radio(
             "",
-            indicator_groups
+            sorted(df_data.columns.levels[0])
         )
 
+# ================================
+# 📌 Indicators (АЛХАМ C)
+# ================================
 with left_col:
     with st.container(border=True):
         st.markdown("### 📌 Indicators")
@@ -80,9 +94,15 @@ with left_col:
             default=indicators[:1]
         )
 
+
 with left_col:
     with st.container(border=True):
-        st.markdown("### ⏱ Frequency")
+        st.markdown("### 🧭 Indicator group")
+
+        indicator_group = st.radio(
+            "",
+            sorted(df_data.columns.levels[0])
+        )
 
         if "Month" in df_time.columns.get_level_values(0):
             freq = "Monthly"
@@ -91,7 +111,7 @@ with left_col:
 
         st.info(frequency := f"Frequency: {freq}")
 series_df = pd.concat(
-    [df_time] + [df_data[(gdp_type, ind)] for ind in selected_indicators],
+    [df_time] + [df_data[(indicator_group, ind)] for ind in selected_indicators],
     axis=1
 )
 
