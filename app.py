@@ -550,6 +550,97 @@ with left_col:
     
                 elif topic == "population":
                     render_pop_kpi(time_filtered_df)
+        # =====================================================
+        # WATERFALL + INSIGHT (GDP GROWTH ONLY)
+        # =====================================================
+        if (
+            not time_filtered_df.empty
+            and topic == "gdp"
+            and gdp_type == "GROWTH"
+        ):
+        
+            # ---------------------------
+            # 📊 DATA PREP (LATEST PERIOD)
+            # ---------------------------
+            latest_q = time_filtered_df["time_label"].max()
+        
+            wf_df = (
+                time_filtered_df[
+                    time_filtered_df["time_label"] == latest_q
+                ]
+                .set_index("indicator_code")["value"]
+                .filter(like="growth_")
+                .reset_index()
+            )
+        
+            if not wf_df.empty:
+        
+                wf_df["sector"] = (
+                    wf_df["indicator_code"]
+                    .str.replace("growth_", "", regex=False)
+                )
+        
+                # ---------------------------
+                # 📉 WATERFALL CHART
+                # ---------------------------
+                waterfall = (
+                    alt.Chart(wf_df)
+                    .mark_bar()
+                    .encode(
+                        x=alt.X("sector:N", title="Sector"),
+                        y=alt.Y("value:Q", title="Contribution (pp)"),
+                        color=alt.condition(
+                            alt.datum.value > 0,
+                            alt.value("#4ade80"),
+                            alt.value("#f87171")
+                        ),
+                        tooltip=["sector", "value"]
+                    )
+                    .properties(
+                        height=300,
+                        title=f"Contribution to GDP growth ({latest_q})"
+                    )
+                )
+        
+                # ---------------------------
+                # 🧠 AUTO INSIGHT (IF–THEN)
+                # ---------------------------
+                top_pos = wf_df.loc[wf_df["value"].idxmax()]
+                top_neg = wf_df.loc[wf_df["value"].idxmin()]
+                total = wf_df["value"].sum()
+        
+                # Policy-style logic
+                if total > 5:
+                    stance = "strongly accelerated"
+                elif total > 0:
+                    stance = "moderately expanded"
+                elif total > -2:
+                    stance = "slightly contracted"
+                else:
+                    stance = "sharply contracted"
+        
+                # ---------------------------
+                # 🧩 FINAL LAYOUT
+                # ---------------------------
+                st.markdown("---")
+        
+                c1, c2 = st.columns([2.5, 1.5])
+        
+                with c1:
+                    st.altair_chart(waterfall, use_container_width=True)
+        
+                with c2:
+                    st.markdown("### 🧠 Key insights")
+                    st.markdown(f"""
+                    • **Total GDP growth:** **{total:.1f}%**  
+                    • **Main driver:** {top_pos["sector"].title()} (**{top_pos["value"]:.1f} pp**)  
+                    • **Main drag:** {top_neg["sector"].title()} (**{top_neg["value"]:.1f} pp**)  
+        
+                    📌 In the latest quarter, GDP growth **{stance}**.
+                    Expansion was mainly driven by **{top_pos["sector"]}**,
+                    while **{top_neg["sector"]}** exerted downward pressure.
+                    """)
+
 
 
 
