@@ -45,13 +45,15 @@ df_time.columns = [c[1] for c in time_cols]
 time_cols = [c for c in df.columns if c[1] in ["Year", "Month", "Quarter"]]
 
 df_time = df[time_cols].copy()
-# --- normalize time column names (CRITICAL FIX)
+# normalize ONLY level=1 of MultiIndex
 df_time.columns = (
-    pd.Series(df_time.columns)
-      .astype(str)
-      .str.strip()
-      .str.capitalize()
+    df_time.columns
+    .get_level_values(1)
+    .astype(str)
+    .str.strip()
+    .str.capitalize()
 )
+
 
 # assume FIRST column is Year
 year_col = df_time.columns[0]
