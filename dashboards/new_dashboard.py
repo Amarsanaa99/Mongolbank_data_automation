@@ -33,8 +33,6 @@ def read_sheet(sheet):
     )
 
 left_col, right_col = st.columns([1.4, 4.6], gap="large")
-
-df_raw = read_sheet(dataset)
 time_cols = [
     c for c in df_raw.columns
     if c[0] in ["Year", "Month", "Quarter", ""]
