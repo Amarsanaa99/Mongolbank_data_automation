@@ -142,24 +142,32 @@ for indicator in selected:
         st.warning(f"Indicator '{indicator}' not found in data")
 
 # Time цуваа үүсгэх
-if "Month" in series.columns:
+# Time цуваа үүсгэх (SAFE VERSION)
+if set(["Year", "Month"]).issubset(series.columns):
     # Сарын өгөгдөл
     series = series.dropna(subset=["Year", "Month"])
     series["time"] = (
-        series["Year"].astype(int).astype(str) + "-" + 
+        series["Year"].astype(int).astype(str) + "-" +
         series["Month"].astype(int).astype(str).str.zfill(2)
     )
-elif "Quarter" in series.columns:
+
+elif set(["Year", "Quarter"]).issubset(series.columns):
     # Улирлын өгөгдөл
     series = series.dropna(subset=["Year", "Quarter"])
     series["time"] = (
-        series["Year"].astype(int).astype(str) + "-Q" + 
+        series["Year"].astype(int).astype(str) + "-Q" +
         series["Quarter"].astype(int).astype(str)
     )
-else:
+
+elif "Year" in series.columns:
     # Зөвхөн жилийн өгөгдөл
     series = series.dropna(subset=["Year"])
     series["time"] = series["Year"].astype(int).astype(str)
+
+else:
+    st.error("❌ No valid time columns found after processing")
+    st.stop()
+
 
 # Графикийн өгөгдөл бэлтгэх
 plot_data = series.set_index("time")[selected].sort_index()
