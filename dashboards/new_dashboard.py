@@ -125,13 +125,14 @@ if not selected:
 series = df_time.copy()
 
 # Time багануудыг тоон утга болгох
-for col in series.columns:
-    if col in ["Year", "Month", "Quarter"]:
-        # Баганыг Series болгох (хэрэв scalar байвал)
-        if not isinstance(series[col], pd.Series):
-            series[col] = pd.Series(series[col])
-        # Дараа нь тоон болгох
-        series[col] = pd.to_numeric(series[col], errors='coerce')
+for col in ["Year", "Month", "Quarter"]:
+    if col in series.columns:
+        # Баганын утгуудыг list болгон авах, дараа нь Series болгох
+        values = series[col].values.tolist() if hasattr(series[col], 'values') else series[col]
+        # Хэрэв nested list байвал задлах
+        if isinstance(values, list) and values and isinstance(values[0], list):
+            values = [v[0] if isinstance(v, list) else v for v in values]
+        series[col] = pd.to_numeric(pd.Series(values), errors='coerce')
 
 # Сонгосон үзүүлэлтүүдийг нэмэх
 for indicator in selected:
