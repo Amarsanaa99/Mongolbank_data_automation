@@ -541,7 +541,7 @@ with left_col:
         # KPI CONTAINER (BELOW MAIN CHART)
         # =====================================================
         if not time_filtered_df.empty:
-    
+        
             with st.container(border=True):
                 st.markdown("### 📌 Key indicators")
     
@@ -551,106 +551,92 @@ with left_col:
                 elif topic == "population":
                     render_pop_kpi(time_filtered_df)
         # =====================================================
-        # WATERFALL + INSIGHT (GDP GROWTH ONLY)
+        # TOP 4 BREAKDOWN + INSIGHT
         # =====================================================
-        if (
-            not time_filtered_df.empty
-            and topic == "gdp"
-            and gdp_type == "GROWTH"
-        ):
+        if not time_filtered_df.empty:
         
-            # ---------------------------
-            # 📊 DATA PREP (LATEST PERIOD)
-            # ---------------------------
-            # 🔥 TRUE latest quarter (numeric sort)
             latest_row = (
                 time_filtered_df
                 .dropna(subset=["year_num", "period"])
                 .sort_values(["year_num", "period"])
                 .iloc[-1]
             )
-            
-            latest_q = f"{latest_row['year_num']}-Q{int(latest_row['period'])}"
-            wf_df = (
-                time_filtered_df[
-                    time_filtered_df["time_label"] == latest_q
-                ][["indicator_code", "value"]]
-                .dropna()
-            )
-            if not wf_df.empty:
         
-                wf_df["sector"] = (
-                    wf_df["indicator_code"]
+            latest_label = f"{latest_row['year_num']}-Q{int(latest_row['period'])}"
+        
+            if topic == "gdp":
+                sector_df = (
+                    time_filtered_df[
+                        (time_filtered_df["time_label"] == latest_label) &
+                        (time_filtered_df["indicator_code"].str.startswith("growth_"))
+                    ][["indicator_code", "value"]]
+                    .dropna()
+                )
+        
+                sector_df["sector"] = (
+                    sector_df["indicator_code"]
                     .str.replace("growth_", "", regex=False)
                     .str.replace("_", " ")
                     .str.title()
                 )
-                if wf_df.empty:
-                    st.warning("⚠️ No sectoral growth data for latest quarter")
-
-
         
-                # ---------------------------
-                # 📉 WATERFALL CHART
-                # ---------------------------
-                waterfall = (
-                    alt.Chart(wf_df)
+                top4 = (
+                    sector_df
+                    .assign(abs_val=lambda d: d["value"].abs())
+                    .sort_values("abs_val", ascending=False)
+                    .head(4)
+                )
+        
+            else:
+                pop_df = (
+                    time_filtered_df[
+                        time_filtered_df["time_label"] == latest_label
+                    ]
+                    .groupby("Series")["value"]
+                    .sum()
+                    .reset_index()
+                )
+        
+                top4 = pop_df.sort_values("value", ascending=False).head(4)
+        
+            # 👉 ЗААВАЛ ЭНЭ
+            c1, c2 = st.columns([2.5, 1.5])
+        
+            with c1:
+                bar = (
+                    alt.Chart(top4)
                     .mark_bar()
                     .encode(
-                        x=alt.X("sector:N", title="Sector"),
-                        y=alt.Y("value:Q", title="Contribution (pp)"),
+                        x=alt.X("sector:N" if topic=="gdp" else "Series:N", sort="-y", title=""),
+                        y=alt.Y("value:Q", title="Contribution"),
                         color=alt.condition(
                             alt.datum.value > 0,
                             alt.value("#4ade80"),
                             alt.value("#f87171")
                         ),
-                        tooltip=["sector", "value"]
+                        tooltip=["value"]
                     )
-                    .properties(
-                        height=300,
-                        title=f"Contribution to GDP growth ({latest_q})"
-                    )
+                    .properties(height=300, title=f"Top 4 ({latest_label})")
                 )
+                st.altair_chart(bar, use_container_width=True)
         
-                # ---------------------------
-                # 🧠 AUTO INSIGHT (IF–THEN)
-                # ---------------------------
-                top_pos = wf_df.loc[wf_df["value"].idxmax()]
-                top_neg = wf_df.loc[wf_df["value"].idxmin()]
-                total = wf_df["value"].sum()
+            with c2:
+                if topic == "gdp":
+                    top_pos = top4.loc[top4["value"].idxmax()]
+                    top_neg = top4.loc[top4["value"].idxmin()]
+                    total = sector_df["value"].sum()
         
-                # Policy-style logic
-                if total > 5:
-                    stance = "strongly accelerated"
-                elif total > 0:
-                    stance = "moderately expanded"
-                elif total > -2:
-                    stance = "slightly contracted"
-                else:
-                    stance = "sharply contracted"
-        
-                # ---------------------------
-                # 🧩 FINAL LAYOUT
-                # ---------------------------
-                st.markdown("---")
-        
-                c1, c2 = st.columns([2.5, 1.5])
-        
-                with c1:
-                    st.altair_chart(waterfall, use_container_width=True)
-        
-                with c2:
                     st.markdown("### 🧠 Key insights")
                     st.markdown(f"""
                     • **Total GDP growth:** **{total:.1f}%**  
-                    • **Main driver:** {top_pos["sector"].title()} (**{top_pos["value"]:.1f} pp**)  
-                    • **Main drag:** {top_neg["sector"].title()} (**{top_neg["value"]:.1f} pp**)  
-        
-                    📌 In the latest quarter, GDP growth **{stance}**.
-                    Expansion was mainly driven by **{top_pos["sector"]}**,
-                    while **{top_neg["sector"]}** exerted downward pressure.
+                    • **Main driver:** {top_pos["sector"]} (**{top_pos["value"]:.1f} pp**)  
+                    • **Main drag:** {top_neg["sector"]} (**{top_neg["value"]:.1f} pp**)  
                     """)
-
+                else:
+                    st.markdown("### 👥 Population structure")
+                    for _, r in top4.iterrows():
+                        arrow = "🟢 ↑" if r["value"] > 0 else "🔴 ↓"
+                        st.markdown(f"{arrow} **{r['Series']}** — {r['value']:,.0f}")
 
 
 
