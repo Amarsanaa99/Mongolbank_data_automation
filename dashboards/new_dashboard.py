@@ -50,21 +50,30 @@ df_time.columns = time_names
 df_data = df.drop(columns=time_cols)
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
 # ======================
-# FIX MULTIINDEX HEADERS (FINAL)
+# FIX MULTIINDEX HEADERS (FINAL - SAFE)
 # ======================
 lvl0 = pd.Series(df_data.columns.get_level_values(0))
 lvl1 = pd.Series(df_data.columns.get_level_values(1))
 
-# forward fill group names
-lvl0 = lvl0.where(~lvl0.str.contains("Unnamed"), None).ffill()
+# force string + clean Unnamed
+lvl0 = (
+    lvl0.astype(str)
+        .where(~lvl0.astype(str).str.contains("Unnamed"), None)
+        .ffill()
+)
 
 df_data.columns = pd.MultiIndex.from_arrays([lvl0, lvl1])
 
-# drop still-unnamed garbage
-df_data = df_data.loc[
-    :,
-    ~df_data.columns.get_level_values(0).str.contains("Unnamed")
-]
+# SAFE drop unnamed groups
+mask = (
+    df_data.columns
+           .get_level_values(0)
+           .astype(str)
+           .str.contains("Unnamed", na=False)
+)
+
+df_data = df_data.loc[:, ~mask]
+
 
 
 # ======================
