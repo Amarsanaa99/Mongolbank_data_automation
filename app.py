@@ -153,8 +153,8 @@ def render_pop_kpi(df):
     total = latest_df["value"].sum()
 
     gender = latest_df.groupby("sex")["value"].sum()
-    male = gender.get("Эр", gender.get("Male", 0))
-    female = gender.get("Эм", gender.get("Female", 0))
+    male = gender.get("Эрэгтэй", gender.get("Male", 0))
+    female = gender.get("Эмэгтэй", gender.get("Female", 0))
     age = latest_df.groupby("age_group")["value"].sum().sort_index()
     working_age = age.iloc[3:13].sum() if len(age) >= 13 else 0
     dependency = (total - working_age) / working_age * 100 if working_age else 0
