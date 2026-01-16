@@ -50,30 +50,22 @@ df_time.columns = time_names
 df_data = df.drop(columns=time_cols)
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
 # ======================
-# CLEAN MULTIINDEX HEADERS (VERY IMPORTANT)
+# FIX MULTIINDEX HEADERS (FINAL)
 # ======================
-df_data.columns = pd.MultiIndex.from_tuples(
-    [(str(a).strip(), str(b).strip()) for a, b in df_data.columns]
-)
+lvl0 = pd.Series(df_data.columns.get_level_values(0))
+lvl1 = pd.Series(df_data.columns.get_level_values(1))
 
-df_data.columns = pd.MultiIndex.from_tuples(
-    [
-        (
-            a if not a.startswith("Unnamed") else prev,
-            b
-        )
-        for (a, b), prev in zip(
-            df_data.columns,
-            pd.Series([c[0] for c in df_data.columns]).ffill()
-        )
-    ]
-)
+# forward fill group names
+lvl0 = lvl0.where(~lvl0.str.contains("Unnamed"), None).ffill()
 
-# remove garbage columns completely
+df_data.columns = pd.MultiIndex.from_arrays([lvl0, lvl1])
+
+# drop still-unnamed garbage
 df_data = df_data.loc[
     :,
-    ~df_data.columns.get_level_values(0).str.startswith("Unnamed")
+    ~df_data.columns.get_level_values(0).str.contains("Unnamed")
 ]
+
 
 # ======================
 # SELECTORS
@@ -85,22 +77,31 @@ with left:
     st.info(f"Frequency: {freq}")
 
 # ======================
-# SERIES BUILD
+# SERIES BUILD (SAFE)
 # ======================
 series = pd.concat(
-    [df_time] + [df_data[(group,i)] for i in selected],
+    [df_time.reset_index(drop=True)]
+    + [df_data[(group, i)].reset_index(drop=True) for i in selected],
     axis=1
-).dropna(how="all")
-
-series["time"] = (
-    series["Year"].astype(str) + (
-        "-" + series["Month"].astype(int).astype(str).str.zfill(2)
-        if freq=="Monthly" else "-Q"+series["Quarter"].astype(str)
-    )
 )
 
-plot = series.set_index("time")[selected]
-
+# ---- SAFE time builder
+if "Year" in series.columns and "Month" in series.columns:
+    series["time"] = (
+        series["Year"].astype(int).astype(str)
+        + "-"
+        + series["Month"].astype(int).astype(str).str.zfill(2)
+    )
+elif "Year" in series.columns and "Quarter" in series.columns:
+    series["time"] = (
+        series["Year"].astype(int).astype(str)
+        + "-Q"
+        + series["Quarter"].astype(int).astype(str)
+    )
+else:
+    st.error("❌ Year / Month / Quarter columns not detected correctly")
+    st.stop()
+    
 # ======================
 # MAIN CHART
 # ======================
