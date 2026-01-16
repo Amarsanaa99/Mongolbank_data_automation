@@ -127,6 +127,10 @@ series = df_time.copy()
 # Time багануудыг тоон утга болгох
 for col in series.columns:
     if col in ["Year", "Month", "Quarter"]:
+        # Баганыг Series болгох (хэрэв scalar байвал)
+        if not isinstance(series[col], pd.Series):
+            series[col] = pd.Series(series[col])
+        # Дараа нь тоон болгох
         series[col] = pd.to_numeric(series[col], errors='coerce')
 
 # Сонгосон үзүүлэлтүүдийг нэмэх
