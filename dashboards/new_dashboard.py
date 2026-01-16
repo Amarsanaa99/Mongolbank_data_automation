@@ -28,24 +28,26 @@ with left:
     dataset = st.radio("📦 Dataset", sheets, horizontal=True)
 
 # ======================
-# LOAD + CLEAN DATA
+# LOAD + CLEAN DATA  (FIXED)
 # ======================
 df = read_sheet(dataset)
 
-time_cols = [c for c in df.columns if c[0] in ["Year","Month","Quarter",""]]
+# --- detect real time columns safely
+time_cols = [c for c in df.columns if c[0] in ["Year","Month","Quarter"]]
 df_time = df[time_cols]
-df_time.columns = ["Year","Month"] if len(df_time.columns)==2 else ["Year","Quarter"]
+
+time_names = []
+if any(c[0]=="Year" for c in time_cols):
+    time_names.append("Year")
+if any(c[0]=="Month" for c in time_cols):
+    time_names.append("Month")
+if any(c[0]=="Quarter" for c in time_cols):
+    time_names.append("Quarter")
+
+df_time = df_time.iloc[:, :len(time_names)]
+df_time.columns = time_names
 
 df_data = df.drop(columns=time_cols)
-df_data.columns = pd.MultiIndex.from_tuples(
-    [(a if not str(a).startswith("Unnamed") else prev, b)
-     for (a,b), prev in zip(
-         df_data.columns,
-         pd.Series([c[0] for c in df_data.columns]).ffill()
-     )]
-)
-df_data = df_data.loc[:, ~df_data.columns.get_level_values(0).str.startswith("Unnamed")]
-
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
 
 # ======================
