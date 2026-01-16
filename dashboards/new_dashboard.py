@@ -45,7 +45,6 @@ df_time.columns = [c[1] for c in time_cols]
 time_cols = [c for c in df.columns if c[1] in ["Year", "Month", "Quarter"]]
 
 df_time = df[time_cols].copy()
-
 # --- normalize time column names (CRITICAL FIX)
 df_time.columns = (
     pd.Series(df_time.columns)
