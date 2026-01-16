@@ -10,7 +10,7 @@ st.set_page_config("Macro Policy Dashboard", layout="wide")
 st.title("🏦 Macro Policy Dashboard")
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-EXCEL_PATH = BASE_DIR / "New_Dashboard_named.xlsx"
+EXCEL_PATH = BASE_DIR / "Dashboard_cleaned_data.xlsx"
 
 @st.cache_data
 def read_sheet(sheet):
