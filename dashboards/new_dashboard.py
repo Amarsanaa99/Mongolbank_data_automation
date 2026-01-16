@@ -117,28 +117,40 @@ with right_col:
 
         for col, ind in zip(kpi_cols, selected_indicators):
             values = plot_df[ind].dropna()
-            latest = values.iloc[-1] if not values.empty else None
+            if latest is not None:
+                col.metric(ind, f"{latest:.2f}")
+            else:
+                col.metric(ind, "n/a")
 
-            col.metric(ind, f"{latest:.2f}")
 with right_col:
     with st.container(border=True):
         st.markdown("### 🔄 Business cycle")
 
         cycle = plot_df.copy()
         cycle["phase"] = cycle.mean(axis=1)
-        
-        cycle = (
-            cycle
-            .reset_index()
-            .rename(columns={"index": "time_label"})
-        )
 
+        # 1️⃣ index → column болгоно
+        cycle = cycle.reset_index().rename(columns={"index": "time_label"})
 
+        # 2️⃣ 🆕 REAL TIME INDEX (professional fix)
+        if freq == "Monthly":
+            cycle["time_index"] = pd.to_datetime(
+                cycle["time_label"],
+                format="%Y-%m",
+                errors="coerce"
+            )
+        else:
+            cycle["time_index"] = pd.to_datetime(
+                cycle["time_label"].str.replace("-Q", "-"),
+                errors="coerce"
+            )
+
+        # 3️⃣ Altair chart
         chart = (
             alt.Chart(cycle)
             .mark_area(opacity=0.3)
             .encode(
-                x=alt.X("time_label:N", title="Time"),
+                x=alt.X("time_index:T", title="Time"),
                 y=alt.Y("phase:Q", title="Business cycle"),
                 color=alt.condition(
                     "datum.phase >= 0",
@@ -148,13 +160,18 @@ with right_col:
             )
         )
 
-
         st.altair_chart(chart, use_container_width=True)
+
 with right_col:
     with st.container(border=True):
         st.markdown("### 🧱 Contribution (Waterfall)")
 
-        last = plot_df.iloc[-1]
+        if plot_df.dropna(how="all").empty:
+            st.warning("No data available for selected indicators.")
+            st.stop()
+        
+        last = plot_df.dropna(how="all").iloc[-1]
+
 
         wf = pd.DataFrame({
             "Indicator": last.index,
