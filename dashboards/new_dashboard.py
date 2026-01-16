@@ -35,17 +35,13 @@ def read_sheet(sheet):
 left_col, right_col = st.columns([1.4, 4.6], gap="large")
 
 df_raw = read_sheet(dataset)
-
 time_cols = [
     c for c in df_raw.columns
     if c[0] in ["Year", "Month", "Quarter", ""]
 ]
-
 df_time = df_raw[time_cols]
-
 # 🧭 Time columns-д нэр өгнө
 df_time.columns = ["Year", "Month"] if len(df_time.columns) == 2 else ["Year", "Quarter"]
-
 df_data = df_raw.drop(columns=time_cols)
 
 # =====================================
@@ -80,34 +76,6 @@ with left_col:
         st.markdown("### 📦 Dataset")
         dataset = st.radio("", sheet_names, horizontal=True)
 
-df_raw = read_sheet(dataset)
-
-time_cols = [
-    c for c in df_raw.columns
-    if c[0] in ["Year", "Month", "Quarter", ""]
-]
-
-df_time = df_raw[time_cols]
-# 🧭 Time columns-д нэр өгнө (Excel чинь titleгүй байгаа тул)
-df_time.columns = ["Year", "Month"] if len(df_time.columns) == 2 else ["Year", "Quarter"]
-df_data = df_raw.drop(columns=time_cols)
-
-df_data.columns = pd.MultiIndex.from_tuples(
-    [(str(a).strip(), str(b).strip()) for a, b in df_data.columns]
-)
-df_data.columns = pd.MultiIndex.from_tuples(
-    [
-        (
-            a if not str(a).startswith("Unnamed") else prev,
-            b
-        )
-        for (a, b), prev in zip(
-            df_data.columns,
-            pd.Series([c[0] for c in df_data.columns]).ffill()
-        )
-    ]
-)
-
 # ================================
 # 🧭 Indicator Group (АЛХАМ B)
 # ================================
@@ -119,7 +87,6 @@ with left_col:
             "",
             sorted(df_data.columns.levels[0])
         )
-
 # ================================
 # 📌 Indicators (АЛХАМ C)
 # ================================
@@ -130,24 +97,20 @@ with left_col:
         indicators = sorted(
             c[1] for c in df_data.columns if c[0] == indicator_group
         )
-
         selected_indicators = st.multiselect(
             "",
             indicators,
             default=indicators[:1]
         )
-
         if "Month" in df_time.columns.get_level_values(0):
             freq = "Monthly"
         else:
             freq = "Quarterly"
-
         st.info(frequency := f"Frequency: {freq}")
 series_df = pd.concat(
     [df_time] + [df_data[(indicator_group, ind)] for ind in selected_indicators],
     axis=1
 )
-
 series_df = series_df.dropna(how="all")
 if freq == "Monthly":
     series_df["time_label"] = (
