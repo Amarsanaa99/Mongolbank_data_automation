@@ -551,126 +551,93 @@ with left_col:
                 elif topic == "population":
                     render_pop_kpi(time_filtered_df)
         # =====================================================
-        # TOP 4 BREAKDOWN + INSIGHT
+        # TOP 4 SECTOR BREAKDOWN — GDP ONLY
         # =====================================================
-        if not time_filtered_df.empty:
         
-            # =====================================================
-            # 🔍 FIND LATEST NON-ZERO PERIOD
-            # =====================================================
-            non_zero_df = time_filtered_df.copy()
+        if (
+            topic == "gdp"
+            and gdp_type == "GROWTH"
+            and not time_filtered_df.empty
+        ):
         
-            non_zero_df["value"] = pd.to_numeric(non_zero_df["value"], errors="coerce")
-            non_zero_df = non_zero_df[non_zero_df["value"].notna() & (non_zero_df["value"] != 0)]
+            df_nz = time_filtered_df.copy()
+            df_nz["value"] = pd.to_numeric(df_nz["value"], errors="coerce")
         
-            if non_zero_df.empty:
-                st.info("No non-zero data available for calculation.")
-                latest_label = None
+            df_nz = df_nz[
+                df_nz["indicator_code"].str.startswith("growth_")
+                & df_nz["value"].notna()
+                & (df_nz["value"] != 0)
+            ]
+        
+            if df_nz.empty:
+                st.info("No non-zero GDP growth data.")
             else:
                 latest_row = (
-                    non_zero_df
-                    .dropna(subset=["year_num", "period"])
+                    df_nz
                     .sort_values(["year_num", "period"])
                     .iloc[-1]
                 )
-                latest_label = f"{latest_row['year_num']}-Q{int(latest_row['period'])}"
         
-            # =====================================================
-            # GDP
-            # =====================================================
-            if latest_label and topic == "gdp" and gdp_type == "GROWTH":
+                latest_label = f"{latest_row['year_num']}-Q{int(latest_row['period'])}"
         
                 sector_df = (
                     time_filtered_df[
-                        (time_filtered_df["time_label"] == latest_label) &
-                        (time_filtered_df["indicator_code"].str.startswith("growth_"))
+                        (time_filtered_df["time_label"] == latest_label)
+                        & time_filtered_df["indicator_code"].str.startswith("growth_")
                     ][["indicator_code", "value"]]
                     .copy()
                 )
         
                 sector_df["value"] = pd.to_numeric(sector_df["value"], errors="coerce")
-                sector_df = sector_df.dropna(subset=["value"])
+                sector_df = sector_df.dropna()
                 sector_df = sector_df[sector_df["value"] != 0]
         
-                if sector_df.empty:
-                    st.info("No non-zero GDP sector data for latest period.")
-                    top4 = None
-                else:
-                    sector_df["sector"] = (
-                        sector_df["indicator_code"]
-                        .str.replace("growth_", "", regex=False)
-                        .str.replace("_", " ")
-                        .str.title()
-                    )
-        
-                    top4 = (
-                        sector_df
-                        .assign(abs_val=lambda d: d["value"].abs())
-                        .sort_values("abs_val", ascending=False)
-                        .head(4)
-                    )
-        
-            # =====================================================
-            # POPULATION
-            # =====================================================
-            elif latest_label and topic == "population":
-        
-                pop_df = (
-                    time_filtered_df[
-                        time_filtered_df["time_label"] == latest_label
-                    ]
-                    .groupby("Series")["value"]
-                    .sum()
-                    .reset_index()
+                sector_df["sector"] = (
+                    sector_df["indicator_code"]
+                    .str.replace("growth_", "", regex=False)
+                    .str.replace("_", " ")
+                    .str.title()
                 )
         
-                top4 = pop_df.sort_values("value", ascending=False).head(4)
+                top_pos = sector_df.sort_values("value", ascending=False).head(2)
+                top_neg = sector_df.sort_values("value").head(2)
         
-            else:
-                top4 = None
+                st.markdown(f"### 📊 Sector contribution ({latest_label})")
         
-            # =====================================================
-            # RENDER
-            # =====================================================
-            if top4 is not None:
-        
-                c1, c2 = st.columns([2.5, 1.5])
+                c1, c2 = st.columns(2)
         
                 with c1:
-                    bar = (
-                        alt.Chart(top4)
-                        .mark_bar()
-                        .encode(
-                            x=alt.X("sector:N" if topic=="gdp" else "Series:N", sort="-y", title=""),
-                            y=alt.Y("value:Q", title="Contribution"),
-                            color=alt.condition(
-                                alt.datum.value > 0,
-                                alt.value("#4ade80"),
-                                alt.value("#f87171")
-                            ),
-                            tooltip=["value"]
-                        )
-                        .properties(height=300, title=f"Top 4 ({latest_label})")
-                    )
-                    st.altair_chart(bar, use_container_width=True)
+                    st.markdown("#### 🚀 Highest growth")
+                    for _, r in top_pos.iterrows():
+                        st.metric(r["sector"], f"{r['value']:.1f} pp")
         
                 with c2:
-                    if topic == "gdp":
-                        top_pos = top4.loc[top4["value"].idxmax()]
-                        top_neg = top4.loc[top4["value"].idxmin()]
-                        total = sector_df["value"].sum()
+                    st.markdown("#### ⚠️ Largest decline")
+                    for _, r in top_neg.iterrows():
+                        st.metric(r["sector"], f"{r['value']:.1f} pp")
+        # =====================================================
+        # TOP 4 POPULATION STRUCTURE
+        # =====================================================
+        elif topic == "population" and not time_filtered_df.empty:
         
-                        st.markdown("### 🧠 Key insights")
-                        st.markdown(f"""
-                        • **Total GDP growth:** **{total:.1f}%**  
-                        • **Main driver:** {top_pos["sector"]} (**{top_pos["value"]:.1f} pp**)  
-                        • **Main drag:** {top_neg["sector"]} (**{top_neg["value"]:.1f} pp**)  
-                        """)
-                    else:
-                        st.markdown("### 👥 Population structure")
-                        for _, r in top4.iterrows():
-                            arrow = "🟢 ↑" if r["value"] > 0 else "🔴 ↓"
-                            st.markdown(f"{arrow} **{r['Series']}** — {r['value']:,.0f}")
+            latest_label = time_filtered_df["time_label"].max()
+        
+            pop_df = (
+                time_filtered_df[
+                    time_filtered_df["time_label"] == latest_label
+                ]
+                .groupby("Series")["value"]
+                .sum()
+                .reset_index()
+                .sort_values("value", ascending=False)
+                .head(4)
+            )
+        
+            st.markdown(f"### 👥 Population structure ({latest_label})")
+        
+            for _, r in pop_df.iterrows():
+                st.metric(r["Series"], f"{r['value']:,.0f}")
+
 
 
 
