@@ -49,14 +49,6 @@ df_data.columns = pd.MultiIndex.from_tuples(
 )
 with left_col:
     with st.container(border=True):
-        st.markdown("### 📦 Dataset")
-        dataset = st.radio(
-            "",
-            sheet_names,
-            horizontal=True
-        )
-with left_col:
-    with st.container(border=True):
         st.markdown("### 📌 Indicators")
 
         indicators = sorted(
