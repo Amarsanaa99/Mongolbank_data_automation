@@ -13,26 +13,12 @@ st.set_page_config(
 st.title("🏦 Macro Policy Dashboard (Excel-based)")
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[1]   # ROOT руу гарна
+BASE_DIR = Path(__file__).resolve().parents[1]
 EXCEL_PATH = BASE_DIR / "20251218_Result.xlsx"
 
+# ✅ Sheet names (NO cache)
+sheet_names = pd.ExcelFile(EXCEL_PATH).sheet_names
 
-@st.cache_data
-def read_sheet(path, sheet):
-    return pd.read_excel(
-        path,
-        sheet_name=sheet,
-        header=[0, 1]
-    )
-left_col, right_col = st.columns([1.4, 4.6], gap="large")
-with left_col:
-    with st.container(border=True):
-        st.markdown("### 📦 Dataset")
-        dataset = st.radio(
-            "",
-            xls.sheet_names,
-            horizontal=True
-        )
 @st.cache_data
 def read_sheet(sheet):
     return pd.read_excel(
@@ -41,7 +27,15 @@ def read_sheet(sheet):
         header=[0, 1]
     )
 
+left_col, right_col = st.columns([1.4, 4.6], gap="large")
+
+with left_col:
+    with st.container(border=True):
+        st.markdown("### 📦 Dataset")
+        dataset = st.radio("", sheet_names, horizontal=True)
+
 df_raw = read_sheet(dataset)
+
 time_cols = [
     c for c in df_raw.columns
     if c[0] in ["Year", "Month", "Quarter", ""]
