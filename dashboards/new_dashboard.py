@@ -133,8 +133,9 @@ if set(["Year", "Month"]).issubset(series.columns):
     series = series.dropna(subset=["Year", "Month"])
     series["time"] = (
         series["Year"].astype(int).astype(str) + "-" +
-        series["Month"].astype(int).astype(str).str.zfill(2)
+        series["Month"].iloc[:, 0].astype(int).astype(str).str.zfill(2)
     )
+
 
 elif set(["Year", "Quarter"]).issubset(series.columns):
     series = series.dropna(subset=["Year", "Quarter"])
