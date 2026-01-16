@@ -18,10 +18,12 @@ EXCEL_PATH = BASE_DIR / "20251218_Result.xlsx"
 
 
 @st.cache_data
-def load_excel():
-    return pd.ExcelFile(EXCEL_PATH)
-
-xls = load_excel()
+def read_sheet(path, sheet):
+    return pd.read_excel(
+        path,
+        sheet_name=sheet,
+        header=[0, 1]
+    )
 left_col, right_col = st.columns([1.4, 4.6], gap="large")
 with left_col:
     with st.container(border=True):
@@ -53,9 +55,12 @@ df_data.columns = pd.MultiIndex.from_tuples(
 )
 with left_col:
     with st.container(border=True):
-        st.markdown("### 📐 GDP type")
-        gdp_types = sorted(df_data.columns.levels[0])
-        gdp_type = st.radio("", gdp_types)
+        st.markdown("### 📦 Dataset")
+        dataset = st.radio(
+            "",
+            sheet_names,
+            horizontal=True
+        )
 with left_col:
     with st.container(border=True):
         st.markdown("### 📌 Indicators")
