@@ -113,7 +113,9 @@ with right_col:
         kpi_cols = st.columns(len(selected_indicators))
 
         for col, ind in zip(kpi_cols, selected_indicators):
-            latest = plot_df[ind].dropna().iloc[-1]
+            values = plot_df[ind].dropna()
+            latest = values.iloc[-1] if not values.empty else None
+
             col.metric(ind, f"{latest:.2f}")
 with right_col:
     with st.container(border=True):
@@ -121,13 +123,20 @@ with right_col:
 
         cycle = plot_df.copy()
         cycle["phase"] = cycle.mean(axis=1)
+        
+        cycle = (
+            cycle
+            .reset_index()
+            .rename(columns={"index": "time_label"})
+        )
+
 
         chart = (
-            alt.Chart(cycle.reset_index())
+            alt.Chart(cycle)
             .mark_area(opacity=0.3)
             .encode(
-                x="time_label",
-                y="phase",
+                x=alt.X("time_label:N", title="Time"),
+                y=alt.Y("phase:Q", title="Business cycle"),
                 color=alt.condition(
                     "datum.phase >= 0",
                     alt.value("green"),
@@ -135,6 +144,7 @@ with right_col:
                 )
             )
         )
+
 
         st.altair_chart(chart, use_container_width=True)
 with right_col:
