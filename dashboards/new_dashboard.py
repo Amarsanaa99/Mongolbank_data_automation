@@ -94,16 +94,6 @@ with left_col:
             default=indicators[:1]
         )
 
-
-with left_col:
-    with st.container(border=True):
-        st.markdown("### 🧭 Indicator group")
-
-        indicator_group = st.radio(
-            "",
-            sorted(df_data.columns.levels[0])
-        )
-
         if "Month" in df_time.columns.get_level_values(0):
             freq = "Monthly"
         else:
@@ -148,6 +138,8 @@ with right_col:
 
         for col, ind in zip(kpi_cols, selected_indicators):
             values = plot_df[ind].dropna()
+            latest = values.iloc[-1] if not values.empty else None
+        
             if latest is not None:
                 col.metric(ind, f"{latest:.2f}")
             else:
@@ -225,7 +217,7 @@ with right_col:
 
         st.write(
             f"""
-            **{gdp_type}** shows that  
+            **{indicator_group}** shows that  
             latest movements are driven mainly by  
             **{last.idxmax()}**.
             """
