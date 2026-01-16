@@ -34,6 +34,13 @@ def read_sheet(sheet):
 
 left_col, right_col = st.columns([1.4, 4.6], gap="large")
 
+# 🧹 Remove Unnamed column groups
+df_data.columns = pd.MultiIndex.from_tuples([
+    (g, i) for g, i in df_data.columns
+    if g and not str(g).startswith("Unnamed")
+])
+
+
 with left_col:
     with st.container(border=True):
         st.markdown("### 📦 Dataset")
@@ -47,6 +54,8 @@ time_cols = [
 ]
 
 df_time = df_raw[time_cols]
+# 🧭 Time columns-д нэр өгнө (Excel чинь titleгүй байгаа тул)
+df_time.columns = ["Year", "Month"] if len(df_time.columns) == 2 else ["Year", "Quarter"]
 df_data = df_raw.drop(columns=time_cols)
 
 df_data.columns = pd.MultiIndex.from_tuples(
