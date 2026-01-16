@@ -49,6 +49,31 @@ df_time.columns = time_names
 
 df_data = df.drop(columns=time_cols)
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
+# ======================
+# CLEAN MULTIINDEX HEADERS (VERY IMPORTANT)
+# ======================
+df_data.columns = pd.MultiIndex.from_tuples(
+    [(str(a).strip(), str(b).strip()) for a, b in df_data.columns]
+)
+
+df_data.columns = pd.MultiIndex.from_tuples(
+    [
+        (
+            a if not a.startswith("Unnamed") else prev,
+            b
+        )
+        for (a, b), prev in zip(
+            df_data.columns,
+            pd.Series([c[0] for c in df_data.columns]).ffill()
+        )
+    ]
+)
+
+# remove garbage columns completely
+df_data = df_data.loc[
+    :,
+    ~df_data.columns.get_level_values(0).str.startswith("Unnamed")
+]
 
 # ======================
 # SELECTORS
