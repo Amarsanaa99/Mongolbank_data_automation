@@ -32,9 +32,14 @@ with left:
 # ======================
 df = read_sheet(dataset)
 
-# --- detect real time columns safely
-time_cols = [c for c in df.columns if c[0] in ["Year","Month","Quarter"]]
+# --- detect time columns from LEVEL 1 (FIX)
+time_cols = [c for c in df.columns if c[1] in ["Year", "Month", "Quarter"]]
+
 df_time = df[time_cols]
+
+# rename time columns properly
+df_time.columns = [c[1] for c in time_cols]
+
 
 time_names = []
 if any(c[0]=="Year" for c in time_cols):
@@ -86,30 +91,30 @@ with left:
     st.info(f"Frequency: {freq}")
 
 # ======================
-# SERIES BUILD (SAFE)
+# ROBUST TIME BUILDER
 # ======================
-series = pd.concat(
-    [df_time.reset_index(drop=True)]
-    + [df_data[(group, i)].reset_index(drop=True) for i in selected],
-    axis=1
-)
+series = series.dropna(subset=["Year"], how="all")
 
-# ---- SAFE time builder
-if "Year" in series.columns and "Month" in series.columns:
+if "Month" in series.columns:
+    series = series.dropna(subset=["Month"], how="all")
     series["time"] = (
         series["Year"].astype(int).astype(str)
         + "-"
         + series["Month"].astype(int).astype(str).str.zfill(2)
     )
-elif "Year" in series.columns and "Quarter" in series.columns:
+
+elif "Quarter" in series.columns:
+    series = series.dropna(subset=["Quarter"], how="all")
     series["time"] = (
         series["Year"].astype(int).astype(str)
         + "-Q"
         + series["Quarter"].astype(int).astype(str)
     )
+
 else:
-    st.error("❌ Year / Month / Quarter columns not detected correctly")
+    st.error("❌ Time columns not found (Year + Month / Quarter)")
     st.stop()
+
     
 # ======================
 # MAIN CHART
