@@ -12,7 +12,7 @@ st.set_page_config(
 
 st.title("🏦 Macro Policy Dashboard (Excel-based)")
 
-EXCEL_PATH = "data/20251218_Result.xlsx"
+EXCEL_PATH = "20251218_Result.xlsx"
 
 @st.cache_data
 def load_excel():
