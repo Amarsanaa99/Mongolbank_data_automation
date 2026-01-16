@@ -158,41 +158,6 @@ with right:
     st.subheader("📈 Main chart")
     st.line_chart(plot)
 
-# ======================
-# KPI
-# ======================
-with right:
-    cols = st.columns(len(selected))
-    for c,i in zip(cols, selected):
-        v = plot[i].dropna()
-        c.metric(i, f"{v.iloc[-1]:.2f}" if not v.empty else "n/a")
-
-# ======================
-# BUSINESS CYCLE
-# ======================
-with right:
-    cycle = plot.mean(axis=1).reset_index()
-    cycle["date"] = pd.to_datetime(
-        cycle["time"].str.replace("-Q","-"),
-        errors="coerce"
-    )
-
-    chart = alt.Chart(cycle).mark_area(opacity=0.3).encode(
-        x="date:T", y="0:Q",
-        color=alt.condition("datum['0']>=0", alt.value("green"), alt.value("red"))
-    )
-    st.altair_chart(chart, use_container_width=True)
-
-# ======================
-# CONTRIBUTION
-# ======================
-with right:
-    last = plot.dropna(how="all").iloc[-1]
-    wf = pd.DataFrame({"Indicator":last.index,"Value":last.values})
-    st.altair_chart(
-        alt.Chart(wf).mark_bar().encode(x="Indicator",y="Value"),
-        use_container_width=True
-    )
 
 # ======================
 # RAW
