@@ -124,31 +124,19 @@ if not selected:
 # Өгөгдлийг цуваа болгон нэгтгэх
 series = df_time.copy()
 # ======================
+# HELPER: DataFrame → Series болгох
+# ======================
+def as_series(col):
+    if isinstance(col, pd.DataFrame):
+        return col.iloc[:, 0]
+    return col
+
+# ======================
 # FIX: Year / Month / Quarter block structure
 # ======================
 for col in ["Year", "Month", "Quarter"]:
     if col in series.columns:
         series[col] = series[col].ffill()
-if set(["Year", "Month"]).issubset(series.columns):
-    series = series.dropna(subset=["Year", "Month"])
-    series["time"] = (
-        series["Year"].astype(int).astype(str) + "-" +
-        series["Month"].iloc[:, 0].astype(int).astype(str).str.zfill(2)
-    )
-
-
-elif set(["Year", "Quarter"]).issubset(series.columns):
-    series = series.dropna(subset=["Year", "Quarter"])
-    series["time"] = (
-        series["Year"].astype(int).astype(str) + "-Q" +
-        series["Quarter"].astype(int).astype(str)
-    )
-
-elif "Year" in series.columns:
-    series = series.dropna(subset=["Year"])
-    series["time"] = series["Year"].astype(int).astype(str)
-
-
 
 # Time багануудыг тоон утга болгох
 for col in ["Year", "Month", "Quarter"]:
@@ -159,6 +147,32 @@ for col in ["Year", "Month", "Quarter"]:
         if isinstance(values, list) and values and isinstance(values[0], list):
             values = [v[0] if isinstance(v, list) else v for v in values]
         series[col] = pd.to_numeric(pd.Series(values), errors='coerce')
+# ======================
+# CREATE TIME INDEX (FINAL, SAFE)
+# ======================
+year = as_series(series["Year"]) if "Year" in series.columns else None
+month = as_series(series["Month"]) if "Month" in series.columns else None
+quarter = as_series(series["Quarter"]) if "Quarter" in series.columns else None
+
+if year is not None and month is not None:
+    series["time"] = (
+        year.astype(int).astype(str) + "-" +
+        month.astype(int).astype(str).str.zfill(2)
+    )
+
+elif year is not None and quarter is not None:
+    series["time"] = (
+        year.astype(int).astype(str) + "-Q" +
+        quarter.astype(int).astype(str)
+    )
+
+elif year is not None:
+    series["time"] = year.astype(int).astype(str)
+
+else:
+    st.error("❌ No valid time columns found")
+    st.stop()
+
 
 # Сонгосон үзүүлэлтүүдийг нэмэх
 for indicator in selected:
@@ -166,34 +180,6 @@ for indicator in selected:
         series[indicator] = df_data[(group, indicator)].values
     else:
         st.warning(f"Indicator '{indicator}' not found in data")
-
-# Time цуваа үүсгэх
-# Time цуваа үүсгэх (SAFE VERSION)
-if set(["Year", "Month"]).issubset(series.columns):
-    # Сарын өгөгдөл
-    series = series.dropna(subset=["Year", "Month"])
-    series["time"] = (
-        series["Year"].astype(int).astype(str) + "-" +
-        series["Month"].astype(int).astype(str).str.zfill(2)
-    )
-
-elif set(["Year", "Quarter"]).issubset(series.columns):
-    # Улирлын өгөгдөл
-    series = series.dropna(subset=["Year", "Quarter"])
-    series["time"] = (
-        series["Year"].astype(int).astype(str) + "-Q" +
-        series["Quarter"].astype(int).astype(str)
-    )
-
-elif "Year" in series.columns:
-    # Зөвхөн жилийн өгөгдөл
-    series = series.dropna(subset=["Year"])
-    series["time"] = series["Year"].astype(int).astype(str)
-
-else:
-    st.error("❌ No valid time columns found after processing")
-    st.stop()
-
 
 # Графикийн өгөгдөл бэлтгэх
 plot_data = series.set_index("time")[selected].sort_index()
