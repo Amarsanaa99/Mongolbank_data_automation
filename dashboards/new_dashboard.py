@@ -55,12 +55,12 @@ df_time.columns = (
 )
 
 
-# assume FIRST column is Year
-year_col = df_time.columns[0]
+# --- ensure Year exists safely
+if "Year" not in df_time.columns:
+    st.error("❌ 'Year' column not detected in this sheet")
+    st.stop()
 
-df_time = df_time.dropna(subset=[year_col], how="all")
-df_time = df_time.rename(columns={year_col: "Year"})
-
+df_time = df_time.dropna(subset=["Year"], how="all")
 
 df_data = df.drop(columns=time_cols)
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
@@ -105,9 +105,15 @@ with left:
 # ======================
 series = pd.concat(
     [df_time.reset_index(drop=True)]
-    + [df_data[(group, i)].reset_index(drop=True) for i in selected],
+    + [
+        df_data[(group, i)]
+        .reset_index(drop=True)
+        .rename(i)
+        for i in selected
+    ],
     axis=1
 )
+
 
 # ======================
 # ROBUST TIME BUILDER (SAFE)
