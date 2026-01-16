@@ -555,39 +555,66 @@ with left_col:
         # =====================================================
         if not time_filtered_df.empty:
         
-            latest_row = (
-                time_filtered_df
-                .dropna(subset=["year_num", "period"])
-                .sort_values(["year_num", "period"])
-                .iloc[-1]
-            )
+            # =====================================================
+            # 🔍 FIND LATEST NON-ZERO PERIOD
+            # =====================================================
+            non_zero_df = time_filtered_df.copy()
         
-            latest_label = f"{latest_row['year_num']}-Q{int(latest_row['period'])}"
+            non_zero_df["value"] = pd.to_numeric(non_zero_df["value"], errors="coerce")
+            non_zero_df = non_zero_df[non_zero_df["value"].notna() & (non_zero_df["value"] != 0)]
         
-            if topic == "gdp":
+            if non_zero_df.empty:
+                st.info("No non-zero data available for calculation.")
+                latest_label = None
+            else:
+                latest_row = (
+                    non_zero_df
+                    .dropna(subset=["year_num", "period"])
+                    .sort_values(["year_num", "period"])
+                    .iloc[-1]
+                )
+                latest_label = f"{latest_row['year_num']}-Q{int(latest_row['period'])}"
+        
+            # =====================================================
+            # GDP
+            # =====================================================
+            if latest_label and topic == "gdp" and gdp_type == "GROWTH":
+        
                 sector_df = (
                     time_filtered_df[
                         (time_filtered_df["time_label"] == latest_label) &
                         (time_filtered_df["indicator_code"].str.startswith("growth_"))
                     ][["indicator_code", "value"]]
-                    .dropna()
+                    .copy()
                 )
         
-                sector_df["sector"] = (
-                    sector_df["indicator_code"]
-                    .str.replace("growth_", "", regex=False)
-                    .str.replace("_", " ")
-                    .str.title()
-                )
+                sector_df["value"] = pd.to_numeric(sector_df["value"], errors="coerce")
+                sector_df = sector_df.dropna(subset=["value"])
+                sector_df = sector_df[sector_df["value"] != 0]
         
-                top4 = (
-                    sector_df
-                    .assign(abs_val=lambda d: d["value"].abs())
-                    .sort_values("abs_val", ascending=False)
-                    .head(4)
-                )
+                if sector_df.empty:
+                    st.info("No non-zero GDP sector data for latest period.")
+                    top4 = None
+                else:
+                    sector_df["sector"] = (
+                        sector_df["indicator_code"]
+                        .str.replace("growth_", "", regex=False)
+                        .str.replace("_", " ")
+                        .str.title()
+                    )
         
-            else:
+                    top4 = (
+                        sector_df
+                        .assign(abs_val=lambda d: d["value"].abs())
+                        .sort_values("abs_val", ascending=False)
+                        .head(4)
+                    )
+        
+            # =====================================================
+            # POPULATION
+            # =====================================================
+            elif latest_label and topic == "population":
+        
                 pop_df = (
                     time_filtered_df[
                         time_filtered_df["time_label"] == latest_label
@@ -599,44 +626,52 @@ with left_col:
         
                 top4 = pop_df.sort_values("value", ascending=False).head(4)
         
-            # 👉 ЗААВАЛ ЭНЭ
-            c1, c2 = st.columns([2.5, 1.5])
+            else:
+                top4 = None
         
-            with c1:
-                bar = (
-                    alt.Chart(top4)
-                    .mark_bar()
-                    .encode(
-                        x=alt.X("sector:N" if topic=="gdp" else "Series:N", sort="-y", title=""),
-                        y=alt.Y("value:Q", title="Contribution"),
-                        color=alt.condition(
-                            alt.datum.value > 0,
-                            alt.value("#4ade80"),
-                            alt.value("#f87171")
-                        ),
-                        tooltip=["value"]
+            # =====================================================
+            # RENDER
+            # =====================================================
+            if top4 is not None:
+        
+                c1, c2 = st.columns([2.5, 1.5])
+        
+                with c1:
+                    bar = (
+                        alt.Chart(top4)
+                        .mark_bar()
+                        .encode(
+                            x=alt.X("sector:N" if topic=="gdp" else "Series:N", sort="-y", title=""),
+                            y=alt.Y("value:Q", title="Contribution"),
+                            color=alt.condition(
+                                alt.datum.value > 0,
+                                alt.value("#4ade80"),
+                                alt.value("#f87171")
+                            ),
+                            tooltip=["value"]
+                        )
+                        .properties(height=300, title=f"Top 4 ({latest_label})")
                     )
-                    .properties(height=300, title=f"Top 4 ({latest_label})")
-                )
-                st.altair_chart(bar, use_container_width=True)
+                    st.altair_chart(bar, use_container_width=True)
         
-            with c2:
-                if topic == "gdp":
-                    top_pos = top4.loc[top4["value"].idxmax()]
-                    top_neg = top4.loc[top4["value"].idxmin()]
-                    total = sector_df["value"].sum()
+                with c2:
+                    if topic == "gdp":
+                        top_pos = top4.loc[top4["value"].idxmax()]
+                        top_neg = top4.loc[top4["value"].idxmin()]
+                        total = sector_df["value"].sum()
         
-                    st.markdown("### 🧠 Key insights")
-                    st.markdown(f"""
-                    • **Total GDP growth:** **{total:.1f}%**  
-                    • **Main driver:** {top_pos["sector"]} (**{top_pos["value"]:.1f} pp**)  
-                    • **Main drag:** {top_neg["sector"]} (**{top_neg["value"]:.1f} pp**)  
-                    """)
-                else:
-                    st.markdown("### 👥 Population structure")
-                    for _, r in top4.iterrows():
-                        arrow = "🟢 ↑" if r["value"] > 0 else "🔴 ↓"
-                        st.markdown(f"{arrow} **{r['Series']}** — {r['value']:,.0f}")
+                        st.markdown("### 🧠 Key insights")
+                        st.markdown(f"""
+                        • **Total GDP growth:** **{total:.1f}%**  
+                        • **Main driver:** {top_pos["sector"]} (**{top_pos["value"]:.1f} pp**)  
+                        • **Main drag:** {top_neg["sector"]} (**{top_neg["value"]:.1f} pp**)  
+                        """)
+                    else:
+                        st.markdown("### 👥 Population structure")
+                        for _, r in top4.iterrows():
+                            arrow = "🟢 ↑" if r["value"] > 0 else "🔴 ↓"
+                            st.markdown(f"{arrow} **{r['Series']}** — {r['value']:,.0f}")
+
 
 
 
