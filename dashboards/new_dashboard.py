@@ -17,7 +17,12 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 EXCEL_PATH = BASE_DIR / "20251218_Result.xlsx"
 
 # ✅ Sheet names (NO cache)
-sheet_names = pd.ExcelFile(EXCEL_PATH).sheet_names
+all_sheets = pd.ExcelFile(EXCEL_PATH).sheet_names
+
+sheet_names = [
+    s for s in all_sheets
+    if s.lower() in ["month", "monthly", "quarter", "quarterly"]
+]
 
 @st.cache_data
 def read_sheet(sheet):
