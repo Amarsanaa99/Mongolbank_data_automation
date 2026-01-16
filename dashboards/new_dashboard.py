@@ -46,11 +46,20 @@ time_cols = [c for c in df.columns if c[1] in ["Year", "Month", "Quarter"]]
 
 df_time = df[time_cols].copy()
 
-# rename using level 1 only
-df_time.columns = [c[1] for c in time_cols]
+# --- normalize time column names (CRITICAL FIX)
+df_time.columns = (
+    pd.Series(df_time.columns)
+      .astype(str)
+      .str.strip()
+      .str.capitalize()
+)
 
-# drop rows without Year
-df_time = df_time.dropna(subset=["Year"], how="all")
+# assume FIRST column is Year
+year_col = df_time.columns[0]
+
+df_time = df_time.dropna(subset=[year_col], how="all")
+df_time = df_time.rename(columns={year_col: "Year"})
+
 
 df_data = df.drop(columns=time_cols)
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
