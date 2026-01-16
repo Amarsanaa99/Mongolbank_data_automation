@@ -52,12 +52,26 @@ df_data = df_raw.drop(columns=time_cols)
 df_data.columns = pd.MultiIndex.from_tuples(
     [(str(a).strip(), str(b).strip()) for a, b in df_data.columns]
 )
+# ================================
+# 🧭 Indicator Group selector
+# ================================
+with left_col:
+    with st.container(border=True):
+        st.markdown("### 🧭 Indicator group")
+
+        indicator_groups = sorted(df_data.columns.levels[0])
+
+        indicator_group = st.radio(
+            "",
+            indicator_groups
+        )
+
 with left_col:
     with st.container(border=True):
         st.markdown("### 📌 Indicators")
 
         indicators = sorted(
-            c[1] for c in df_data.columns if c[0] == gdp_type
+            c[1] for c in df_data.columns if c[0] == indicator_group
         )
 
         selected_indicators = st.multiselect(
@@ -65,6 +79,7 @@ with left_col:
             indicators,
             default=indicators[:1]
         )
+
 with left_col:
     with st.container(border=True):
         st.markdown("### ⏱ Frequency")
