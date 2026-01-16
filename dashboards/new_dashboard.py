@@ -184,21 +184,35 @@ for indicator in selected:
 # Графикийн өгөгдөл бэлтгэх
 plot_data = series.set_index("time")[selected].sort_index()
 
+# 🔍 Safety check
+plot_data = plot_data.dropna(how="all")
+
+
 # ======================
 # MAIN CHART
 # ======================
 with right:
     st.subheader("📈 Main chart")
-    
-    if not plot_data.empty:
-        # Streamlit chart
-        st.line_chart(plot_data)
-        
-        # Өөр өөр масштабтай үзүүлэлтүүд байвал
-        if len(selected) > 1:
-            st.caption("📊 Multiple indicators shown - check scale differences")
-    else:
-        st.warning("No data to display")
+
+    # ===== 3️⃣ CHART SAFETY CHECK =====
+    if plot_data is None or plot_data.empty:
+        st.warning("⚠️ Plot data is empty or invalid")
+        st.write("plot_data columns:", None if plot_data is None else plot_data.columns.tolist())
+        st.write("Requested indicators:", selected)
+        st.stop()
+
+    missing = [c for c in selected if c not in plot_data.columns]
+    if missing:
+        st.error(f"❌ Missing columns in plot_data: {missing}")
+        st.write("plot_data columns:", plot_data.columns.tolist())
+        st.stop()
+
+    # ===== SAFE CHART =====
+    st.line_chart(plot_data)
+
+    if len(selected) > 1:
+        st.caption("📊 Multiple indicators shown - check scale differences")
+
 
 # ======================
 # RAW DATA
