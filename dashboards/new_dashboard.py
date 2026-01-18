@@ -434,7 +434,9 @@ rows = [
 ]
 
 def group_chart(group_name):
-    # тухайн group-ийн бүх indicator
+    import altair as alt
+
+    # 1️⃣ тухайн group-ийн бүх indicator
     inds = [
         col[1] for col in df_data.columns
         if col[0] == group_name and not pd.isna(col[1])
@@ -443,10 +445,16 @@ def group_chart(group_name):
     if not inds:
         return None
 
-    # time + indicators
-    gdf = series[["time"] + inds].copy()
+    # 2️⃣ series-ээс ХАМААРАХГҮЙ шинэ dataframe
+    gdf = df_time.copy()
+    gdf["time"] = series["time"].values
 
-    # өгөгдөлгүйг хасна
+    # 3️⃣ group-ийн бүх indicator-ийг нэмнэ
+    for ind in inds:
+        if (group_name, ind) in df_data.columns:
+            gdf[ind] = df_data[(group_name, ind)].values
+
+    # 4️⃣ өгөгдөлтэй indicator л үлдээнэ
     valid_inds = [
         c for c in inds
         if c in gdf.columns and not gdf[c].isna().all()
@@ -455,6 +463,7 @@ def group_chart(group_name):
     if not valid_inds:
         return None
 
+    # 5️⃣ Altair chart
     base = alt.Chart(gdf).encode(
         x=alt.X(
             "time:N",
@@ -467,7 +476,7 @@ def group_chart(group_name):
         background="transparent"
     )
 
-    return (
+    chart = (
         base
         .transform_fold(
             valid_inds,
@@ -484,10 +493,7 @@ def group_chart(group_name):
                     domain=False
                 )
             ),
-            color=alt.Color(
-                "Indicator:N",
-                legend=None
-            ),
+            color=alt.Color("Indicator:N", legend=None),
             tooltip=[
                 alt.Tooltip("time:N", title="Date"),
                 alt.Tooltip("Indicator:N"),
@@ -495,6 +501,9 @@ def group_chart(group_name):
             ]
         )
     )
+
+    return chart
+
 
 for row in rows:
     cols = st.columns(NUM_COLS)
