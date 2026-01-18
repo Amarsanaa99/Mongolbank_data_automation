@@ -322,9 +322,7 @@ with right:
                 axis=alt.Axis(
                     labelAngle=-45,
                     labelFontSize=11,
-                    grid=True,
-                    gridColor="#e0e0e0",
-                    gridOpacity=0.6
+                    grid=False
                 )
             )
         ).properties(
