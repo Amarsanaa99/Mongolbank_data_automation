@@ -25,7 +25,36 @@ sheets = [s for s in pd.ExcelFile(EXCEL_PATH).sheet_names
 left, right = st.columns([1.4, 4.6], gap="large")
 
 with left:
-    dataset = st.radio("📦 Dataset", sheets, horizontal=True)
+    with st.container(border=True):
+        st.subheader("📦 Dataset")
+
+        dataset = st.radio(
+            "Dataset",
+            sheets,
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+
+        st.divider()
+
+        st.subheader("🧭 Indicator group")
+
+        available_groups = sorted(df_data.columns.get_level_values(0).unique())
+        group = st.radio("Indicator group", available_groups, label_visibility="collapsed")
+
+        indicators = sorted([
+            col[1] for col in df_data.columns
+            if col[0] == group and not pd.isna(col[1])
+        ])
+
+        selected = st.multiselect(
+            "📌 Indicators",
+            indicators,
+            default=[indicators[0]] if indicators else []
+        )
+
+        st.info(f"Frequency: {freq}")
+
 
 # ======================
 # LOAD DATA
