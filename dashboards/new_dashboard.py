@@ -417,24 +417,93 @@ def small_multiple_chart(df, indicator):
         )
     )
 # ======================
-# SMALL MULTIPLES GRID
+# 📊 ALL INDICATOR GROUPS — SMALL MULTIPLES (FULL WIDTH)
 # ======================
-with right:
-    st.markdown("### 📊 Indicators")
 
-    NUM_COLS = 4
-    indicators_grid = valid_indicators
+st.markdown("### 📊 All indicator groups")
 
-    for i in range(0, len(indicators_grid), NUM_COLS):
-        cols = st.columns(NUM_COLS, gap="large")
+import altair as alt
 
-        for col, ind in zip(cols, indicators_grid[i:i + NUM_COLS]):
-            with col:
-                with st.container(border=True):
-                    st.altair_chart(
-                        small_multiple_chart(chart_df, ind),
-                        use_container_width=True
-                    )
+# бүх group-ууд
+all_groups = df_data.columns.get_level_values(0).unique()
+
+NUM_COLS = 4
+rows = [
+    all_groups[i:i + NUM_COLS]
+    for i in range(0, len(all_groups), NUM_COLS)
+]
+
+def group_chart(group_name):
+    # тухайн group-ийн бүх indicator
+    inds = [
+        col[1] for col in df_data.columns
+        if col[0] == group_name and not pd.isna(col[1])
+    ]
+
+    if not inds:
+        return None
+
+    # time + indicators
+    gdf = series[["time"] + inds].copy()
+
+    # өгөгдөлгүйг хасна
+    valid_inds = [
+        c for c in inds
+        if c in gdf.columns and not gdf[c].isna().all()
+    ]
+
+    if not valid_inds:
+        return None
+
+    base = alt.Chart(gdf).encode(
+        x=alt.X(
+            "time:N",
+            title=None,
+            axis=alt.Axis(labelAngle=-45, grid=False)
+        )
+    ).properties(
+        height=260,
+        title=group_name,
+        background="transparent"
+    )
+
+    return (
+        base
+        .transform_fold(
+            valid_inds,
+            as_=["Indicator", "Value"]
+        )
+        .mark_line(strokeWidth=2)
+        .encode(
+            y=alt.Y(
+                "Value:Q",
+                title=None,
+                axis=alt.Axis(
+                    grid=True,
+                    gridOpacity=0.25,
+                    domain=False
+                )
+            ),
+            color=alt.Color(
+                "Indicator:N",
+                legend=None
+            ),
+            tooltip=[
+                alt.Tooltip("time:N", title="Date"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
+        )
+    )
+
+for row in rows:
+    cols = st.columns(NUM_COLS)
+    for col, grp in zip(cols, row):
+        with col:
+            chart = group_chart(grp)
+            if chart is not None:
+                st.altair_chart(chart, use_container_width=True)
+
 
 
 # ======================
