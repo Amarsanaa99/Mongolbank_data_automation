@@ -442,28 +442,23 @@ def group_chart(group_name):
         if col[0] == group_name and not pd.isna(col[1])
     ]
 
-    if not inds:
-        return None
+    # 2️⃣ суурь dataframe (time л заавал байна)
+    gdf = pd.DataFrame({
+        "time": series["time"].values
+    })
 
-    # 2️⃣ series-ээс ХАМААРАХГҮЙ шинэ dataframe
-    gdf = df_time.copy()
-    gdf["time"] = series["time"].values
-
-    # 3️⃣ group-ийн бүх indicator-ийг нэмнэ
+    # 3️⃣ indicator-уудыг нэмэх
     for ind in inds:
         if (group_name, ind) in df_data.columns:
             gdf[ind] = df_data[(group_name, ind)].values
 
-    # 4️⃣ өгөгдөлтэй indicator л үлдээнэ
+    # 4️⃣ өгөгдөлтэй indicator
     valid_inds = [
         c for c in inds
         if c in gdf.columns and not gdf[c].isna().all()
     ]
 
-    if not valid_inds:
-        return None
-
-    # 5️⃣ Altair chart
+    # 5️⃣ BASE CHART (ямар ч үед гарна)
     base = alt.Chart(gdf).encode(
         x=alt.X(
             "time:N",
@@ -471,12 +466,33 @@ def group_chart(group_name):
             axis=alt.Axis(labelAngle=-45, grid=False)
         )
     ).properties(
-        height=260,
-        title=group_name,
+        height=240,
+        title=alt.TitleParams(
+            text=group_name,
+            anchor="start",
+            fontSize=14,
+            offset=8
+        ),
         background="transparent"
     )
 
-    chart = (
+    # 6️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ
+    if not valid_inds:
+_attach = alt.Chart(
+            pd.DataFrame({"text": ["No data yet"]})
+        ).mark_text(
+            align="center",
+            baseline="middle",
+            fontSize=13,
+            color="#94a3b8"
+        ).encode(
+            text="text:N"
+        ).properties(height=240)
+
+        return base + _attach
+
+    # 7️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
+    lines = (
         base
         .transform_fold(
             valid_inds,
@@ -502,16 +518,18 @@ def group_chart(group_name):
         )
     )
 
-    return chart
+    return lines
 
 
 for row in rows:
-    cols = st.columns(NUM_COLS)
+    cols = st.columns(NUM_COLS, gap="large")
     for col, grp in zip(cols, row):
         with col:
-            chart = group_chart(grp)
-            if chart is not None:
-                st.altair_chart(chart, use_container_width=True)
+            with st.container(border=True):
+                chart = group_chart(grp)
+                if chart is not None:
+                    st.altair_chart(chart, use_container_width=True)
+
 
 
 
