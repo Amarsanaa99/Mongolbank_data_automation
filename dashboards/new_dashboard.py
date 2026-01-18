@@ -228,21 +228,36 @@ with right:
 
     # ===== 1️⃣ X-axis (Year / Month / Quarter)
     if "Month" in df_time.columns:
-        x_col = "Month"
         chart_df = series[["Year", "Month"] + selected].copy()
+    
+        year = chart_df["Year"]
+        month = chart_df["Month"]
+    
+        # 🔥 ЭНЭ МӨР Л ЧУХАЛ
+        if isinstance(month, pd.DataFrame):
+            month = month.iloc[:, 0]
+    
         chart_df["x"] = (
-            chart_df["Year"].astype(int).astype(str)
+            year.astype(int).astype(str)
             + "-"
-            + chart_df["Month"].iloc[:, 0].astype(int).astype(str).str.zfill(2)
+            + month.astype(int).astype(str).str.zfill(2)
         )
-
+    
     elif "Quarter" in df_time.columns:
         chart_df = series[["Year", "Quarter"] + selected].copy()
+    
+        year = chart_df["Year"]
+        quarter = chart_df["Quarter"]
+    
+        if isinstance(quarter, pd.DataFrame):
+            quarter = quarter.iloc[:, 0]
+    
         chart_df["x"] = (
-            chart_df["Year"].astype(int).astype(str)
+            year.astype(int).astype(str)
             + "-Q"
-            + chart_df["Quarter"].astype(int).astype(str)
+            + quarter.astype(int).astype(str)
         )
+
 
     else:
         chart_df = series[["Year"] + selected].copy()
