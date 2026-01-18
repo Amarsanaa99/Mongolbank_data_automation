@@ -33,12 +33,6 @@ with left:
             horizontal=True,
             label_visibility="collapsed"
         )
-freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
-with left:
-    with st.container(border=True):
-        st.caption(f"Frequency: {freq}")
-
-
 # ======================
 # LOAD DATA
 # ======================
@@ -66,6 +60,11 @@ if isinstance(df.columns, pd.MultiIndex):
     df_time = df[time_cols].copy()
     df_data = df.drop(columns=time_cols)
     
+    freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
+    
+    with left:
+        st.caption(f"Frequency: {freq}")
+        
     # TIME багануудыг хялбарчилна
     for i, col in enumerate(df_time.columns):
         if isinstance(col, tuple):
@@ -90,11 +89,7 @@ else:
     # Хэрэв MultiIndex биш бол (баталгаажуулалт)
     st.error("❌ Unexpected data format - expected MultiIndex columns")
     st.stop()
-# ======================
-# FREQUENCY тодорхойлох (ЗӨВ ГАЗАР)
-# ======================
-freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
-
+    
 with left:
     # ======================
     # 🧭 INDICATOR GROUP (ТУСДАА ХҮРЭЭ)
