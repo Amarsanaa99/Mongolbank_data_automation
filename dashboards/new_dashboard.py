@@ -257,112 +257,36 @@ if series["time"].isna().all():
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
+# ======================
+# MAIN CHART (WITH ALTAIR BUT SIMPLER)
+# ======================
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-        # ===== 1️⃣ X-axis (Year / Month / Quarter)
-        if "Month" in df_time.columns:
-            chart_df = series[["Year", "Month"] + selected].copy()    
-            year = chart_df["Year"]
-            month = chart_df["Month"]
         
-            # 🔒 ХОЁУЛАНГ НЬ ЗААВАЛ SERIES БОЛГОНО
-            if isinstance(year, pd.DataFrame):
-                year = year.iloc[:, 0]
+        # ... (дээрх plot_df бэлтгэх код ижил) ...
         
-            if isinstance(month, pd.DataFrame):
-                month = month.iloc[:, 0]
-        
-            chart_df["x"] = (
-                year.astype(int).astype(str)
-                + "-"
-                + month.astype(int).astype(str).str.zfill(2)
+        if not plot_df.empty and len(plot_df.columns) > 1:
+            import altair as alt
+            
+            # Өгөгдлийг урт формат руу хувиргах (melt)
+            melted_df = plot_df.melt(
+                id_vars=["Date"],
+                var_name="Indicator",
+                value_name="Value"
             )
-    
-        
-        elif "Quarter" in df_time.columns:
-            chart_df = series[["Year", "Quarter"] + selected].copy()
-        
-            year = chart_df["Year"]
-            quarter = chart_df["Quarter"]
-        
-            if isinstance(year, pd.DataFrame):
-                year = year.iloc[:, 0]
-        
-            if isinstance(quarter, pd.DataFrame):
-                quarter = quarter.iloc[:, 0]
-        
-            chart_df["x"] = (
-                year.astype(int).astype(str)
-                + "-Q"
-                + quarter.astype(int).astype(str)
-            )
-    
-        else:
-            chart_df = series[["Year"] + selected].copy()
-            chart_df["x"] = chart_df["Year"].astype(int).astype(str)
-    
-        # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
-        valid_indicators = [
-            col for col in selected
-            if col in chart_df.columns and not chart_df[col].isna().all()
-        ]
-    
-        if not valid_indicators:
-            st.warning("⚠️ No data available for selected indicator(s)")
-            st.stop()
-    
-        # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
-        import altair as alt
-    
-        base = alt.Chart(chart_df).encode(
-            x=alt.X(
-                "x:N",
-                title="Date",
-                axis=alt.Axis(
-                    labelAngle=-45,
-                    labelFontSize=11,
-                    grid=False
-                )
-            )
-        ).properties(
-            background="transparent"   # ✅ CARD-НЫ BACKGROUND-ТАЙ НИЙЦНЭ
-        )
-        
-        lines = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_line(
-            strokeWidth=2.2,
-            interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
-        ).encode(
-            y=alt.Y(
-                "Value:Q",
-                title="Value",
-                axis=alt.Axis(
-                    labelFontSize=11,
-                    grid=True,
-                    gridColor="#e0e0e0",
-                    gridOpacity=0.6
-                )
-            ),
-            color=alt.Color(
-                "Indicator:N",
-                legend=alt.Legend(
-                    title=None,
-                    orient="right"
-                )
-            ),
-            tooltip=[
-                alt.Tooltip("x:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
-        )
-        st.altair_chart(
-            lines.properties(height=420).interactive(),
-            use_container_width=True
-        )
+            
+            # График үүсгэх
+            chart = alt.Chart(melted_df).mark_line().encode(
+                x=alt.X("Date:N", title="Date", axis=alt.Axis(labelAngle=-45)),
+                y=alt.Y("Value:Q", title="Value"),
+                color="Indicator:N",
+                tooltip=["Date", "Indicator", "Value"]
+            ).properties(
+                height=400
+            ).interactive()
+            
+            st.altair_chart(chart, use_container_width=True)
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
 # ======================
