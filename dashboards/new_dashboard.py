@@ -233,7 +233,10 @@ with right:
         year = chart_df["Year"]
         month = chart_df["Month"]
     
-        # 🔥 ЭНЭ МӨР Л ЧУХАЛ
+        # 🔒 ХОЁУЛАНГ НЬ ЗААВАЛ SERIES БОЛГОНО
+        if isinstance(year, pd.DataFrame):
+            year = year.iloc[:, 0]
+    
         if isinstance(month, pd.DataFrame):
             month = month.iloc[:, 0]
     
@@ -242,12 +245,16 @@ with right:
             + "-"
             + month.astype(int).astype(str).str.zfill(2)
         )
+
     
     elif "Quarter" in df_time.columns:
         chart_df = series[["Year", "Quarter"] + selected].copy()
     
         year = chart_df["Year"]
         quarter = chart_df["Quarter"]
+    
+        if isinstance(year, pd.DataFrame):
+            year = year.iloc[:, 0]
     
         if isinstance(quarter, pd.DataFrame):
             quarter = quarter.iloc[:, 0]
@@ -257,7 +264,6 @@ with right:
             + "-Q"
             + quarter.astype(int).astype(str)
         )
-
 
     else:
         chart_df = series[["Year"] + selected].copy()
