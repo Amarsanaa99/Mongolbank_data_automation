@@ -209,37 +209,37 @@ nodata_cols = [
 plot_data_valid = plot_data[valid_cols]
 
 
-# ======================
-# MAIN CHART
-# ======================
-with right:
-    st.subheader("📈 Main chart")
-
-    # ===== 3️⃣ CHART SAFETY CHECK =====
-    if plot_data is None or plot_data.empty:
-        st.warning("⚠️ Plot data is empty or invalid")
-        st.stop()
-
-    missing = [c for c in selected if c not in plot_data.columns]
-    if missing:
-        st.error(f"❌ Missing columns in plot_data: {missing}")
-        st.stop()
-    plot_data_valid = plot_data_valid.copy()
-    plot_data_valid.index.name = None
-    plot_data_valid.columns = plot_data_valid.columns.map(str)
-
-
-    # ===== SAFE CHART =====
-    st.line_chart(plot_data_valid)
-
-    if len(selected) > 1:
-        st.caption("📊 Multiple indicators shown - check scale differences")
-
-    if nodata_cols:
-        st.info(
-            "🚫 No data available for: " +
-            ", ".join(nodata_cols)
-        )
+    # ======================
+    # MAIN CHART
+    # ======================
+    with right:
+        st.subheader("📈 Main chart")
+    
+        # ===== 3️⃣ CHART SAFETY CHECK =====
+        if plot_data is None or plot_data.empty:
+            st.warning("⚠️ Plot data is empty or invalid")
+            st.stop()
+    
+        missing = [c for c in selected if c not in plot_data.columns]
+        if missing:
+            st.error(f"❌ Missing columns in plot_data: {missing}")
+            st.stop()
+        plot_data_valid = plot_data_valid.copy()
+        plot_data_valid.index.name = None
+        plot_data_valid.columns = plot_data_valid.columns.map(str)
+    
+    
+        # ===== SAFE CHART =====
+        st.line_chart(plot_data_valid)
+    
+        if len(selected) > 1:
+            st.caption("📊 Multiple indicators shown - check scale differences")
+    
+        if nodata_cols:
+            st.info(
+                "🚫 No data available for: " +
+                ", ".join(nodata_cols)
+            )
 
 
 # ======================
