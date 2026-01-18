@@ -477,20 +477,34 @@ def group_chart(group_name):
     )
 
     # 6️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ
+    # 6️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ (ALTair-safe)
     if not valid_inds:
-        nodata = alt.Chart(
-            pd.DataFrame({"label": ["No data yet"]})
-        ).mark_text(
-            align="center",
-            baseline="middle",
-            fontSize=13,
-            color="#94a3b8"
-        ).encode(
-            text="label:N"
-        ).properties(height=240)
-
-        # ⚠️ + БИШ, layer АШИГЛАНА
-        return alt.layer(base, nodata)
+        return (
+            alt.Chart(
+                pd.DataFrame({"x": [0], "y": [0], "label": ["No data yet"]})
+            )
+            .mark_text(
+                align="center",
+                baseline="middle",
+                fontSize=13,
+                color="#94a3b8"
+            )
+            .encode(
+                x=alt.X("x:Q", axis=None),
+                y=alt.Y("y:Q", axis=None),
+                text="label:N"
+            )
+            .properties(
+                height=240,
+                title=alt.TitleParams(
+                    text=group_name,
+                    anchor="start",
+                    fontSize=14,
+                    offset=8
+                ),
+                background="transparent"
+            )
+        )
 
     # 7️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
     lines = base.transform_fold(
