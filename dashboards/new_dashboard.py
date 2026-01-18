@@ -260,6 +260,10 @@ if series["time"].isna().all():
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
+        st.altair_chart(
+            lines.properties(height=420).interactive(),
+            use_container_width=True
+        )
             
     # ===== 1️⃣ X-axis (Year / Month / Quarter)
     if "Month" in df_time.columns:
@@ -323,9 +327,11 @@ base = alt.Chart(chart_df).encode(
         axis=alt.Axis(
             labelAngle=-45,
             labelFontSize=12,
-            grid=False
+            grid=True          # ✅ БУЦААНА
         )
     )
+).properties(
+    background="transparent"   # ✅ ЧИНИЙ ХҮССЭН ЦЭВЭР ХАРАА
 )
 
 lines = base.transform_fold(
@@ -337,28 +343,16 @@ lines = base.transform_fold(
         title=None,
         axis=alt.Axis(
             labelFontSize=12,
-            grid=False
+            grid=True          # ✅ ШУЛУУН GRID
         )
     ),
-    color=alt.Color(
-        "Indicator:N",
-        legend=alt.Legend(title=None)
-    ),
+    color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
     tooltip=[
         alt.Tooltip("x:N", title="Time"),
         alt.Tooltip("Indicator:N"),
         alt.Tooltip("Value:Q", format=",.2f")
     ]
 )
-
-with right:
-    with st.container(border=True):
-        st.subheader("📈 Main chart")
-
-        st.altair_chart(
-            lines.properties(height=420).interactive(),
-            use_container_width=True
-        )
 
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
