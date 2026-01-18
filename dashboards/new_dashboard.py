@@ -11,9 +11,8 @@ st.title("🏦 Macro Policy Dashboard")
 BASE_DIR = Path(__file__).resolve().parents[1]
 EXCEL_PATH = BASE_DIR / "Dashboard_cleaned_data.xlsx"
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def read_sheet(sheet):
-    """Excel файлыг хоёр түвшний header-ээр уншина"""
     return pd.read_excel(EXCEL_PATH, sheet_name=sheet, header=[0, 1])
 
 # ======================
@@ -23,6 +22,7 @@ sheets = [s for s in pd.ExcelFile(EXCEL_PATH).sheet_names
           if s.lower() in ["month", "quarter"]]
 
 left, right = st.columns([1.4, 4.6], gap="large")
+
 with left:
     with st.container(border=True):
         st.subheader("📦 Dataset")
@@ -34,8 +34,7 @@ with left:
             label_visibility="collapsed"
         )
 
-        st.info(f"Frequency: {freq}")
-
+        st.caption(f"Frequency: {freq}")
 # ======================
 # LOAD DATA
 # ======================
@@ -87,9 +86,8 @@ else:
     # Хэрэв MultiIndex биш бол (баталгаажуулалт)
     st.error("❌ Unexpected data format - expected MultiIndex columns")
     st.stop()
-
 # ======================
-# FREQUENCY тодорхойлох
+# FREQUENCY тодорхойлох (ЗӨВ ГАЗАР)
 # ======================
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
 
@@ -194,8 +192,8 @@ for indicator in selected:
 # Графикийн өгөгдөл бэлтгэх
 plot_data = (
     series
-    .loc[:, ["time"] + selected]
-    .copy()                      # 🔑 Streamlit-д зайлшгүй
+    .loc[:, ["time"] + valid_cols]
+    .copy()
     .set_index("time")
     .sort_index()
 )
@@ -239,8 +237,7 @@ with right:
 
     # ===== 1️⃣ X-axis (Year / Month / Quarter)
     if "Month" in df_time.columns:
-        chart_df = series[["Year", "Month"] + selected].copy()
-    
+        chart_df = series[["Year", "Month"] + valid_cols].copy()    
         year = chart_df["Year"]
         month = chart_df["Month"]
     
@@ -309,9 +306,6 @@ with right:
             alt.Tooltip("Value:Q", format=",.2f")
         ]
     )
-
-
-
     st.altair_chart(
         lines.properties(height=420).interactive(),
         use_container_width=True
@@ -320,12 +314,8 @@ with right:
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
 # ======================
-
-
 with st.expander("📄 Raw data"):
     if not plot_data.empty:
         st.dataframe(plot_data, use_container_width=True)
     else:
         st.info("No data available")
-
-
