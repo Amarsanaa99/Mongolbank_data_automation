@@ -33,8 +33,12 @@ with left:
             horizontal=True,
             label_visibility="collapsed"
         )
-
+freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
+with left:
+    with st.container(border=True):
         st.caption(f"Frequency: {freq}")
+
+
 # ======================
 # LOAD DATA
 # ======================
@@ -192,7 +196,7 @@ for indicator in selected:
 # Графикийн өгөгдөл бэлтгэх
 plot_data = (
     series
-    .loc[:, ["time"] + valid_cols]
+    .loc[:, ["time"] + selected]
     .copy()
     .set_index("time")
     .sort_index()
