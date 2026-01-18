@@ -209,17 +209,21 @@ nodata_cols = [
 plot_data_valid = plot_data[valid_cols]
 
 # ======================
-# MAIN CHART (ALTair – FAST & STABLE)
+# MAIN CHART (FAST & STABLE)
 # ======================
 with right:
     st.subheader("📈 Main chart")
 
-    if plot_data_valid.empty:
-        st.warning("⚠️ No data available for selected indicators")
-    else:
-        chart_df = plot_data_valid.reset_index()
+    # 🔒 1. time заавал column байна
+    chart_df = series.loc[:, ["time"] + selected].copy()
 
-        # melt → long format
+    # 🔒 2. өгөгдөлгүй indicator-уудыг хасна
+    chart_df = chart_df.dropna(axis=1, how="all")
+
+    if chart_df.empty or len(chart_df.columns) <= 1:
+        st.warning("⚠️ No data available for selected indicator(s)")
+    else:
+        # 🔥 3. LONG FORMAT – SAFE
         chart_long = chart_df.melt(
             id_vars="time",
             var_name="Indicator",
@@ -232,9 +236,16 @@ with right:
             alt.Chart(chart_long)
             .mark_line(point=True)
             .encode(
-                x=alt.X("time:N", title="Time", axis=alt.Axis(labelAngle=-45)),
-                y=alt.Y("Value:Q", title="Value"),
-                color=alt.Color("Indicator:N", legend=alt.Legend(title="Indicator")),
+                x=alt.X(
+                    "time:N",
+                    title="Time",
+                    axis=alt.Axis(labelAngle=-45)
+                ),
+                y=alt.Y("Value:Q", title=None),
+                color=alt.Color(
+                    "Indicator:N",
+                    legend=alt.Legend(title=None)
+                ),
                 tooltip=["time", "Indicator", "Value"]
             )
             .properties(height=420)
@@ -243,11 +254,6 @@ with right:
 
         st.altair_chart(chart, use_container_width=True)
 
-    if nodata_cols:
-        st.info(
-            "🚫 No data available for: " +
-            ", ".join(map(str, nodata_cols))
-        )
 
 
 # ======================
