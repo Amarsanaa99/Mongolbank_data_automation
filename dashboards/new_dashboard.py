@@ -344,7 +344,7 @@ with right:
                     grid=True,
                     gridColor="#94a3b8",
                     gridOpacity=0.25,
-                    gridWidtх=0.6,
+                    gridWidth=0.6,
                     tickColor="#94a3b8",
                     domain=False
                 )
