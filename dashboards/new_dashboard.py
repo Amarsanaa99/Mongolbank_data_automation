@@ -419,6 +419,7 @@ def small_multiple_chart(df, indicator):
 # ======================
 # SMALL MULTIPLES GRID
 # ======================
+with right:
     st.markdown("### 📊 Indicators")
 
     NUM_COLS = 4
