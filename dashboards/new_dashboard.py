@@ -306,19 +306,16 @@ with right:
         use_container_width=True
     )
 
+# ======================
+# RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
+# ======================
 
+st.markdown("---")  # визуал тусгаарлагч (заавал биш)
 
+with st.expander("📄 Raw data"):
+    if not plot_data.empty:
+        st.dataframe(plot_data, use_container_width=True)
+    else:
+        st.info("No data available")
 
-# ======================
-# RAW DATA
-# ======================
-# ======================
-# RAW DATA (MAIN CHART-ЫН ДООР)
-# ======================
-with right:
-    with st.expander("📄 Raw data"):
-        if not plot_data.empty:
-            st.dataframe(plot_data, use_container_width=True)
-        else:
-            st.info("No data available")
 
