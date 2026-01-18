@@ -24,6 +24,17 @@ sheets = [s for s in pd.ExcelFile(EXCEL_PATH).sheet_names
 
 left, right = st.columns([1.4, 4.6], gap="large")
 
+with left:
+    with st.container(border=True):
+        st.subheader("📦 Dataset")
+
+        dataset = st.radio(
+            "Dataset",
+            sheets,
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+
 # ======================
 # LOAD DATA
 # ======================
@@ -81,24 +92,12 @@ else:
 # ======================
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
 
-
 with left:
     with st.container(border=True):
-        st.subheader("📦 Dataset")
-
-        dataset = st.radio(
-            "Dataset",
-            sheets,
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-
-        st.divider()
-
         st.subheader("🧭 Indicator group")
 
         available_groups = sorted(df_data.columns.get_level_values(0).unique())
-        group = st.radio("Indicator group", available_groups, label_visibility="collapsed")
+        group = st.radio("Indicator group", available_groups)
 
         indicators = sorted([
             col[1] for col in df_data.columns
@@ -112,36 +111,6 @@ with left:
         )
 
         st.info(f"Frequency: {freq}")
-# ======================
-# SELECTORS
-# ======================
-with left:
-    # Боломжит бүлгүүдийг харуулах
-    available_groups = sorted(df_data.columns.get_level_values(0).unique())
-    if not available_groups:
-        st.error("❌ No indicator groups found")
-        st.stop()
-    
-    group = st.radio("🧭 Indicator group", available_groups)
-    
-    # Сонгосон бүлгийн үзүүлэлтүүд
-    indicators = sorted([
-        col[1] for col in df_data.columns 
-        if col[0] == group and not pd.isna(col[1])
-    ])
-    
-    if not indicators:
-        st.error(f"❌ No indicators found in group '{group}'")
-        st.stop()
-    
-    selected = st.multiselect(
-        "📌 Indicators", 
-        indicators, 
-        default=[indicators[0]] if indicators else []
-    )
-    
-    st.info(f"Frequency: {freq}")
-
 # ======================
 # DATA PREPARATION
 # ======================
