@@ -54,8 +54,6 @@ with left:
         )
 
         st.info(f"Frequency: {freq}")
-
-
 # ======================
 # LOAD DATA
 # ======================
@@ -331,10 +329,10 @@ with right:
 
 
 
-        st.altair_chart(
-            lines.properties(height=420).interactive(),
-            use_container_width=True
-        )
+    st.altair_chart(
+        lines.properties(height=420).interactive(),
+        use_container_width=True
+    )
 
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
