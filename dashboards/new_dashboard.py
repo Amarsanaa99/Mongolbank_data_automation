@@ -8,6 +8,33 @@ from pathlib import Path
 st.set_page_config("Macro Policy Dashboard", layout="wide")
 st.title("🏦 Macro Policy Dashboard")
 
+# ✅ GLOBAL STYLE (END USER QUALITY)
+st.markdown("""
+<style>
+/* Page width control */
+.block-container {
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* Sidebar-like left column feel */
+div[data-testid="column"]:first-child {
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+}
+
+/* Section headers */
+h2, h3 {
+    letter-spacing: 0.3px;
+}
+
+/* Remove Altair gray background */
+.vega-embed {
+    background: transparent !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 BASE_DIR = Path(__file__).resolve().parents[1]
 EXCEL_PATH = BASE_DIR / "Dashboard_cleaned_data.xlsx"
 
@@ -290,8 +317,26 @@ with right:
     import altair as alt
 
     base = alt.Chart(chart_df).encode(
-        x=alt.X("x:N", title="Time", axis=alt.Axis(labelAngle=-45))
+        x=alt.X(
+            "x:N",
+            title=None,
+            axis=alt.Axis(
+                labelAngle=-45,
+                labelFontSize=12,
+                titleFontSize=13,
+                grid=True
+            )
+        )
     )
+        y=alt.Y(
+            "Value:Q",
+            title=None,
+            axis=alt.Axis(
+                labelFontSize=12,
+                gridColor="#2a344a"
+            )
+        )
+
 
     lines = base.transform_fold(
         valid_indicators,
