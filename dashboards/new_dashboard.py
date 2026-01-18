@@ -260,7 +260,10 @@ if series["time"].isna().all():
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-
+        st.altair_chart(
+            lines.properties(height=420).interactive(),
+            use_container_width=True
+        )
     # ===== 1️⃣ X-axis (Year / Month / Quarter)
     if "Month" in df_time.columns:
         chart_df = series[["Year", "Month"] + selected].copy()    
@@ -322,53 +325,41 @@ with right:
             title=None,
             axis=alt.Axis(
                 labelAngle=-45,
-                labelFontSize=12,
-                titleFontSize=13,
-                grid=True
+                labelFontSize=11,
+                grid=False          # ❌ GRID УНТРААНА
             )
         )
+    ).properties(
+        background="transparent"   # ✅ CARD-НЫ BACKGROUND-ТАЙ НИЙЦНЭ
     )
+    
     lines = base.transform_fold(
         valid_indicators,
         as_=["Indicator", "Value"]
     ).mark_line(
-        interpolate="monotone",
-        strokeWidth=2.5,
-        opacity=0.95
+        strokeWidth=2.2,
+        interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
     ).encode(
         y=alt.Y(
             "Value:Q",
             title=None,
             axis=alt.Axis(
-                labelFontSize=12,
-                gridColor="#2a344a"
+                labelFontSize=11,
+                grid=False          # ❌ GRID УНТРААНА
             )
         ),
-        color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
+        color=alt.Color(
+            "Indicator:N",
+            legend=alt.Legend(
+                title=None,
+                orient="right"
+            )
+        ),
         tooltip=[
             alt.Tooltip("x:N", title="Time"),
             alt.Tooltip("Indicator:N"),
             alt.Tooltip("Value:Q", format=",.2f")
         ]
-    )
-
-
-
-    lines = base.transform_fold(
-        valid_indicators,
-        as_=["Indicator", "Value"]
-    ).mark_line(point=False).encode(
-        y=alt.Y("Value:Q", title=None),
-        color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
-        tooltip=[
-            alt.Tooltip("x:N", title="Time"),
-            alt.Tooltip("Indicator:N"),
-            alt.Tooltip("Value:Q", format=",.2f")
-        ]
-    )
-    st.altair_chart(
-        lines.properties(height=420).interactive(),
-        use_container_width=True
     )
 
 # ======================
