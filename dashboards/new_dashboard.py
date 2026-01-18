@@ -209,13 +209,6 @@ nodata_cols = [
 plot_data_valid = plot_data[valid_cols]
 
 
-# column-уудыг 100% flat болгох
-plot_data.columns = plot_data.columns.astype(str)
-
-
-
-
-
 # ======================
 # MAIN CHART
 # ======================
