@@ -255,38 +255,22 @@ if series["time"].isna().all():
 
 
 # ======================
-# MAIN CHART (FAST, STABLE, NO melt, NO time)
-# ======================
-# ======================
-# MAIN CHART (WITH ALTAIR BUT SIMPLER)
+# MAIN CHART (CLEAN, OLD STYLE)
 # ======================
 with right:
     with st.container(border=True):
-        st.subheader("📈 Main chart")
-        
-        # ... (дээрх plot_df бэлтгэх код ижил) ...
-        
-        if not plot_df.empty and len(plot_df.columns) > 1:
-            import altair as alt
-            
-            # Өгөгдлийг урт формат руу хувиргах (melt)
-            melted_df = plot_df.melt(
-                id_vars=["Date"],
-                var_name="Indicator",
-                value_name="Value"
+        st.markdown("### 📈 Main chart")
+
+        if plot_data_valid.empty:
+            st.warning("No data for selected indicators")
+
+        else:
+            # time = index, indicators = columns
+            st.line_chart(
+                plot_data_valid,
+                use_container_width=True
             )
-            
-            # График үүсгэх
-            chart = alt.Chart(melted_df).mark_line().encode(
-                x=alt.X("Date:N", title="Date", axis=alt.Axis(labelAngle=-45)),
-                y=alt.Y("Value:Q", title="Value"),
-                color="Indicator:N",
-                tooltip=["Date", "Indicator", "Value"]
-            ).properties(
-                height=400
-            ).interactive()
-            
-            st.altair_chart(chart, use_container_width=True)
+
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
 # ======================
