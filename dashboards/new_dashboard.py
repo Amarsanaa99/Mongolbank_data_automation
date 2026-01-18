@@ -328,14 +328,6 @@ with right:
             )
         )
     )
-    lines = base.transform_fold(
-        valid_indicators,
-        as_=["Indicator", "Value"]
-    ).mark_line(
-        interpolate="monotone",
-        strokeWidth=2.5,
-        opacity=0.95
-    ).encode(
         y=alt.Y(
             "Value:Q",
             title=None,
@@ -343,15 +335,7 @@ with right:
                 labelFontSize=12,
                 gridColor="#2a344a"
             )
-        ),
-        color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
-        tooltip=[
-            alt.Tooltip("x:N", title="Time"),
-            alt.Tooltip("Indicator:N"),
-            alt.Tooltip("Value:Q", format=",.2f")
-        ]
-    )
-
+        )
 
 
     lines = base.transform_fold(
