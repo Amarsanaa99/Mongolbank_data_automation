@@ -257,6 +257,18 @@ if series["time"].isna().all():
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
+# ===== Altair chart (NO Streamlit here)
+base = alt.Chart(chart_df).encode(
+    x=alt.X("x:N", title=None)
+)
+
+lines = base.transform_fold(
+    valid_indicators,
+    as_=["Indicator", "Value"]
+).mark_line().encode(
+    y="Value:Q",
+    color="Indicator:N"
+)
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
