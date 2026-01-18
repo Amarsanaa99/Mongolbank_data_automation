@@ -253,106 +253,88 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-
 # ======================
-# MAIN CHART (FAST, STABLE, NO melt, NO time)
+# MAIN CHART (FAST, STABLE)
 # ======================
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
+
+        # ===== 1️⃣ X-axis (Year / Month / Quarter)
+        if "Month" in df_time.columns:
+            chart_df = series[["Year", "Month"] + selected].copy()
+            chart_df["x"] = (
+                chart_df["Year"].astype(int).astype(str)
+                + "-"
+                + chart_df["Month"].astype(int).astype(str).str.zfill(2)
+            )
+
+        elif "Quarter" in df_time.columns:
+            chart_df = series[["Year", "Quarter"] + selected].copy()
+            chart_df["x"] = (
+                chart_df["Year"].astype(int).astype(str)
+                + "-Q"
+                + chart_df["Quarter"].astype(int).astype(str)
+            )
+
+        else:
+            chart_df = series[["Year"] + selected].copy()
+            chart_df["x"] = chart_df["Year"].astype(int).astype(str)
+
+        # ===== 2️⃣ valid indicators
+        valid_indicators = [
+            col for col in selected
+            if col in chart_df.columns and not chart_df[col].isna().all()
+        ]
+
+        if not valid_indicators:
+            st.warning("⚠️ No data available for selected indicator(s)")
+            st.stop()
+
+        import altair as alt
+
+        # ===== 3️⃣ BASE
+        base = alt.Chart(chart_df).encode(
+            x=alt.X(
+                "x:N",
+                title=None,
+                axis=alt.Axis(
+                    labelAngle=-45,
+                    labelFontSize=12,
+                    grid=True
+                )
+            )
+        ).properties(
+            background="transparent"
+        )
+
+        # ===== 4️⃣ LINES
+        lines = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_line(point=False).encode(
+            y=alt.Y(
+                "Value:Q",
+                title=None,
+                axis=alt.Axis(
+                    labelFontSize=12,
+                    grid=True
+                )
+            ),
+            color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
+            tooltip=[
+                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
+        )
+
+        # ===== 5️⃣ RENDER (ЭНД Л ГАРНА)
         st.altair_chart(
             lines.properties(height=420).interactive(),
             use_container_width=True
         )
-            
-    # ===== 1️⃣ X-axis (Year / Month / Quarter)
-    if "Month" in df_time.columns:
-        chart_df = series[["Year", "Month"] + selected].copy()    
-        year = chart_df["Year"]
-        month = chart_df["Month"]
-    
-        # 🔒 ХОЁУЛАНГ НЬ ЗААВАЛ SERIES БОЛГОНО
-        if isinstance(year, pd.DataFrame):
-            year = year.iloc[:, 0]
-    
-        if isinstance(month, pd.DataFrame):
-            month = month.iloc[:, 0]
-    
-        chart_df["x"] = (
-            year.astype(int).astype(str)
-            + "-"
-            + month.astype(int).astype(str).str.zfill(2)
-        )
 
-    
-    elif "Quarter" in df_time.columns:
-        chart_df = series[["Year", "Quarter"] + selected].copy()
-    
-        year = chart_df["Year"]
-        quarter = chart_df["Quarter"]
-    
-        if isinstance(year, pd.DataFrame):
-            year = year.iloc[:, 0]
-    
-        if isinstance(quarter, pd.DataFrame):
-            quarter = quarter.iloc[:, 0]
-    
-        chart_df["x"] = (
-            year.astype(int).astype(str)
-            + "-Q"
-            + quarter.astype(int).astype(str)
-        )
-
-    else:
-        chart_df = series[["Year"] + selected].copy()
-        chart_df["x"] = chart_df["Year"].astype(int).astype(str)
-
-    # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
-    valid_indicators = [
-        col for col in selected
-        if col in chart_df.columns and not chart_df[col].isna().all()
-    ]
-
-    if not valid_indicators:
-        st.warning("⚠️ No data available for selected indicator(s)")
-        st.stop()
-
-    # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
-    import altair as alt
-
-base = alt.Chart(chart_df).encode(
-    x=alt.X(
-        "x:N",
-        title=None,
-        axis=alt.Axis(
-            labelAngle=-45,
-            labelFontSize=12,
-            grid=True          # ✅ БУЦААНА
-        )
-    )
-).properties(
-    background="transparent"   # ✅ ЧИНИЙ ХҮССЭН ЦЭВЭР ХАРАА
-)
-
-lines = base.transform_fold(
-    valid_indicators,
-    as_=["Indicator", "Value"]
-).mark_line(point=False).encode(
-    y=alt.Y(
-        "Value:Q",
-        title=None,
-        axis=alt.Axis(
-            labelFontSize=12,
-            grid=True          # ✅ ШУЛУУН GRID
-        )
-    ),
-    color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
-    tooltip=[
-        alt.Tooltip("x:N", title="Time"),
-        alt.Tooltip("Indicator:N"),
-        alt.Tooltip("Value:Q", format=",.2f")
-    ]
-)
 
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
