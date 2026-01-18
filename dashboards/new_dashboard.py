@@ -478,18 +478,18 @@ def group_chart(group_name):
 
     # 6️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ
     if not valid_inds:
-_attach = alt.Chart(
-            pd.DataFrame({"text": ["No data yet"]})
-        ).mark_text(
-            align="center",
-            baseline="middle",
-            fontSize=13,
-            color="#94a3b8"
-        ).encode(
-            text="text:N"
-        ).properties(height=240)
-
-        return base + _attach
+        _attach = alt.Chart(
+                    pd.DataFrame({"text": ["No data yet"]})
+                ).mark_text(
+                    align="center",
+                    baseline="middle",
+                    fontSize=13,
+                    color="#94a3b8"
+                ).encode(
+                    text="text:N"
+                ).properties(height=240)
+        
+                return base + _attach
 
     # 7️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
     lines = (
