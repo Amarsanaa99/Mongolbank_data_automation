@@ -233,18 +233,24 @@ with right:
         year = chart_df["Year"]
         month = chart_df["Month"]
     
-        # 🔒 ХОЁУЛАНГ НЬ ЗААВАЛ SERIES БОЛГОНО
         if isinstance(year, pd.DataFrame):
             year = year.iloc[:, 0]
-    
         if isinstance(month, pd.DataFrame):
             month = month.iloc[:, 0]
     
+        year = pd.to_numeric(year, errors="coerce")
+        month = pd.to_numeric(month, errors="coerce")
+    
         chart_df["x"] = (
-            year.astype(int).astype(str)
+            year.astype("Int64").astype(str)
             + "-"
-            + month.astype(int).astype(str).str.zfill(2)
+            + month.astype("Int64").astype(str).str.zfill(2)
         )
+    
+        # 🔒 Altair safe
+        chart_df = chart_df.dropna(subset=["x"])
+        chart_df["x"] = chart_df["x"].astype(str)
+
 
     
     elif "Quarter" in df_time.columns:
