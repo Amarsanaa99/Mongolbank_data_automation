@@ -189,12 +189,29 @@ plot_data = (
     .set_index("time")
     .sort_index()
 )
+# ======================
+# SPLIT: DATA vs NO DATA
+# ======================
+
+# өгөгдөлтэй баганууд
+valid_cols = [
+    col for col in plot_data.columns
+    if not plot_data[col].isna().all()
+]
+
+# өгөгдөлгүй баганууд
+nodata_cols = [
+    col for col in plot_data.columns
+    if plot_data[col].isna().all()
+]
+
+# зөвхөн өгөгдөлтэйг графикт ашиглана
+plot_data_valid = plot_data[valid_cols]
+
 
 # column-уудыг 100% flat болгох
 plot_data.columns = plot_data.columns.astype(str)
 
-# бүх NaN мөрийг хасах
-plot_data = plot_data.dropna(how="all")
 
 
 
@@ -219,11 +236,16 @@ with right:
     plot_data = plot_data.reset_index().set_index("time")
 
     # ===== SAFE CHART =====
-    st.line_chart(plot_data)
+    st.line_chart(plot_data_valid)
 
     if len(selected) > 1:
         st.caption("📊 Multiple indicators shown - check scale differences")
 
+    if nodata_cols:
+        st.info(
+            "🚫 No data available for: " +
+            ", ".join(nodata_cols)
+        )
 
 
 # ======================
