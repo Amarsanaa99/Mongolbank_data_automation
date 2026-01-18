@@ -208,54 +208,59 @@ nodata_cols = [
 # зөвхөн өгөгдөлтэйг графикт ашиглана
 plot_data_valid = plot_data[valid_cols]
 
-
 # ======================
-# MAIN CHART
+# MAIN CHART (ALTair – FAST & STABLE)
 # ======================
 with right:
     st.subheader("📈 Main chart")
-    
-    # ===== 3️⃣ CHART SAFETY CHECK =====
-    if plot_data is None or plot_data.empty:
-        st.warning("⚠️ Plot data is empty or invalid")
-        st.stop()
-    
-    missing = [c for c in selected if c not in plot_data.columns]
-    if missing:
-        st.error(f"❌ Missing columns in plot_data: {missing}")
-        st.stop()
-    plot_data_valid = plot_data_valid.copy()
-    plot_data_valid.index.name = None
-    plot_data_valid.columns = plot_data_valid.columns.map(str)
-    
-    
-    # ===== SAFE CHART =====
-    st.line_chart(plot_data_valid)
-    
-    if len(selected) > 1:
-        st.caption("📊 Multiple indicators shown - check scale differences")
-    
+
+    if plot_data_valid.empty:
+        st.warning("⚠️ No data available for selected indicators")
+    else:
+        chart_df = plot_data_valid.reset_index()
+
+        # melt → long format
+        chart_long = chart_df.melt(
+            id_vars="time",
+            var_name="Indicator",
+            value_name="Value"
+        )
+
+        import altair as alt
+
+        chart = (
+            alt.Chart(chart_long)
+            .mark_line(point=True)
+            .encode(
+                x=alt.X("time:N", title="Time", axis=alt.Axis(labelAngle=-45)),
+                y=alt.Y("Value:Q", title="Value"),
+                color=alt.Color("Indicator:N", legend=alt.Legend(title="Indicator")),
+                tooltip=["time", "Indicator", "Value"]
+            )
+            .properties(height=420)
+            .interactive()
+        )
+
+        st.altair_chart(chart, use_container_width=True)
+
     if nodata_cols:
         st.info(
             "🚫 No data available for: " +
-            ", ".join(nodata_cols)
+            ", ".join(map(str, nodata_cols))
         )
 
 
 # ======================
 # RAW DATA
 # ======================
+# ======================
+# RAW DATA (MAIN CHART-ЫН ДООР)
+# ======================
 with right:
     with st.expander("📄 Raw data"):
-        if not series.empty:
-            # Цэвэр харагдацтай хүснэгт
-            display_cols = ["time"] + selected
-            if all(col in series.columns for col in display_cols):
-                display_df = series[display_cols].copy()
-                display_df = display_df.set_index("time")
-                st.dataframe(display_df, use_container_width=True)
-            else:
-                st.dataframe(series, use_container_width=True)
+        if not plot_data.empty:
+            st.dataframe(plot_data, use_container_width=True)
         else:
             st.info("No data available")
+
 
