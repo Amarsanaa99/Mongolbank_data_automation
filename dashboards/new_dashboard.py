@@ -442,7 +442,7 @@ def group_chart(group_name):
         if col[0] == group_name and not pd.isna(col[1])
     ]
 
-    # 2️⃣ суурь dataframe (time л заавал байна)
+    # 2️⃣ суурь dataframe
     gdf = pd.DataFrame({
         "time": series["time"].values
     })
@@ -458,7 +458,7 @@ def group_chart(group_name):
         if c in gdf.columns and not gdf[c].isna().all()
     ]
 
-    # 5️⃣ BASE CHART (ямар ч үед гарна)
+    # 5️⃣ BASE CHART (border + title заавал гарна)
     base = alt.Chart(gdf).encode(
         x=alt.X(
             "time:N",
@@ -478,48 +478,44 @@ def group_chart(group_name):
 
     # 6️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ
     if not valid_inds:
-        _attach = alt.Chart(
-            pd.DataFrame({"text": ["No data yet"]})
+        nodata = alt.Chart(
+            pd.DataFrame({"label": ["No data yet"]})
         ).mark_text(
             align="center",
             baseline="middle",
             fontSize=13,
             color="#94a3b8"
         ).encode(
-            text="text:N"
+            text="label:N"
         ).properties(height=240)
-    
-        return base + _attach
 
+        # ⚠️ + БИШ, layer АШИГЛАНА
+        return alt.layer(base, nodata)
 
     # 7️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
-    lines = (
-        base
-        .transform_fold(
-            valid_inds,
-            as_=["Indicator", "Value"]
-        )
-        .mark_line(strokeWidth=2)
-        .encode(
-            y=alt.Y(
-                "Value:Q",
-                title=None,
-                axis=alt.Axis(
-                    grid=True,
-                    gridOpacity=0.25,
-                    domain=False
-                )
-            ),
-            color=alt.Color("Indicator:N", legend=None),
-            tooltip=[
-                alt.Tooltip("time:N", title="Date"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
-        )
+    lines = base.transform_fold(
+        valid_inds,
+        as_=["Indicator", "Value"]
+    ).mark_line(strokeWidth=2).encode(
+        y=alt.Y(
+            "Value:Q",
+            title=None,
+            axis=alt.Axis(
+                grid=True,
+                gridOpacity=0.25,
+                domain=False
+            )
+        ),
+        color=alt.Color("Indicator:N", legend=None),
+        tooltip=[
+            alt.Tooltip("time:N", title="Date"),
+            alt.Tooltip("Indicator:N"),
+            alt.Tooltip("Value:Q", format=",.2f")
+        ]
     )
 
     return lines
+
 
 
 for row in rows:
