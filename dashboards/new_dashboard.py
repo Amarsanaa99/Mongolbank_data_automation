@@ -233,24 +233,18 @@ with right:
         year = chart_df["Year"]
         month = chart_df["Month"]
     
+        # 🔒 ХОЁУЛАНГ НЬ ЗААВАЛ SERIES БОЛГОНО
         if isinstance(year, pd.DataFrame):
             year = year.iloc[:, 0]
+    
         if isinstance(month, pd.DataFrame):
             month = month.iloc[:, 0]
     
-        year = pd.to_numeric(year, errors="coerce")
-        month = pd.to_numeric(month, errors="coerce")
-    
         chart_df["x"] = (
-            year.astype("Int64").astype(str)
+            year.astype(int).astype(str)
             + "-"
-            + month.astype("Int64").astype(str).str.zfill(2)
+            + month.astype(int).astype(str).str.zfill(2)
         )
-    
-        # 🔒 Altair safe
-        chart_df = chart_df.dropna(subset=["x"])
-        chart_df["x"] = chart_df["x"].astype(str)
-
 
     
     elif "Quarter" in df_time.columns:
@@ -298,7 +292,11 @@ with right:
     ).mark_line(point=True).encode(
         y=alt.Y("Value:Q", title=None),
         color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
-        tooltip=["x", "Indicator", "Value"]
+        tooltip=[
+            alt.Tooltip("x:N", title="Time"),
+            alt.Tooltip("Indicator:N"),
+            alt.Tooltip("Value:Q", format=",.2f")
+        ]
     )
 
     st.altair_chart(
@@ -321,5 +319,4 @@ with right:
             st.dataframe(plot_data, use_container_width=True)
         else:
             st.info("No data available")
-
 
