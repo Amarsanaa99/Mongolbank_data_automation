@@ -342,8 +342,11 @@ with right:
                 axis=alt.Axis(
                     labelFontSize=11,
                     grid=True,
-                    gridColor="#e0e0e0",
-                    gridOpacity=0.6
+                    gridColor="#94a3b8",
+                    gridOpacity=0.25,
+                    gridWidht=0.6,
+                    tickColor="#94a3b8",
+                    domain=False
                 )
             ),
             color=alt.Color(
