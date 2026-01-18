@@ -236,7 +236,7 @@ with right:
 
     # ===== 1️⃣ X-axis (Year / Month / Quarter)
     if "Month" in df_time.columns:
-        chart_df = series[["Year", "Month"] + valid_cols].copy()    
+        chart_df = series[["Year", "Month"] + selected].copy()    
         year = chart_df["Year"]
         month = chart_df["Month"]
     
