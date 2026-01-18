@@ -253,7 +253,8 @@ if series["time"].isna().all():
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
 with right:
-    st.subheader("📈 Main chart")
+    with st.container(border=True):
+        st.subheader("📈 Main chart")
 
     # ===== 1️⃣ X-axis (Year / Month / Quarter)
     if "Month" in df_time.columns:
@@ -330,16 +331,15 @@ with right:
 
 
 
-    st.altair_chart(
-        lines.properties(height=420).interactive(),
-        use_container_width=True
-    )
+        st.altair_chart(
+            lines.properties(height=420).interactive(),
+            use_container_width=True
+        )
 
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
 # ======================
 
-st.markdown("---")  # визуал тусгаарлагч (заавал биш)
 
 with st.expander("📄 Raw data"):
     if not plot_data.empty:
