@@ -259,11 +259,3 @@ with right:
         else:
             st.info("No data available")
 
-# ======================
-# DEBUG INFO (Optional)
-# ======================
-with st.expander("🔍 Debug Info (for development)"):
-    st.write("**Time columns:**", list(df_time.columns))
-    st.write("**Data columns shape:**", df_data.shape)
-    st.write("**Data column groups:**", available_groups)
-    st.write("**Selected group indicators:**", indicators)
