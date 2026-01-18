@@ -221,49 +221,64 @@ if series["time"].isna().all():
 
 
 # ======================
-# MAIN CHART (FINAL, SAFE)
+# MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
 with right:
     st.subheader("📈 Main chart")
 
-    # 🔑 time + indicators (time = column!)
-    chart_df = series[["time"] + selected].copy()
+    # ===== 1️⃣ X-axis (Year / Month / Quarter)
+    if "Month" in df_time.columns:
+        x_col = "Month"
+        chart_df = series[["Year", "Month"] + selected].copy()
+        chart_df["x"] = (
+            chart_df["Year"].astype(int).astype(str)
+            + "-"
+            + chart_df["Month"].astype(int).astype(str).str.zfill(2)
+        )
 
-    # 🔑 зөвхөн өгөгдөлтэй indicator үлдээнэ
+    elif "Quarter" in df_time.columns:
+        chart_df = series[["Year", "Quarter"] + selected].copy()
+        chart_df["x"] = (
+            chart_df["Year"].astype(int).astype(str)
+            + "-Q"
+            + chart_df["Quarter"].astype(int).astype(str)
+        )
+
+    else:
+        chart_df = series[["Year"] + selected].copy()
+        chart_df["x"] = chart_df["Year"].astype(int).astype(str)
+
+    # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
     valid_indicators = [
         col for col in selected
         if col in chart_df.columns and not chart_df[col].isna().all()
     ]
 
     if not valid_indicators:
-        st.warning("⚠️ Selected indicator(s) have no data")
+        st.warning("⚠️ No data available for selected indicator(s)")
         st.stop()
 
-    chart_df = chart_df[["time"] + valid_indicators]
-
-    # 🔥 LONG FORMAT (KeyError ГАРАХГҮЙ)
-    chart_long = chart_df.melt(
-        id_vars="time",
-        var_name="Indicator",
-        value_name="Value"
-    )
-
+    # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
     import altair as alt
 
-    chart = (
-        alt.Chart(chart_long)
-        .mark_line(point=True)
-        .encode(
-            x=alt.X("time:N", title="Time", axis=alt.Axis(labelAngle=-45)),
-            y=alt.Y("Value:Q", title=None),
-            color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
-            tooltip=["time", "Indicator", "Value"]
-        )
-        .properties(height=420)
-        .interactive()
+    base = alt.Chart(chart_df).encode(
+        x=alt.X("x:N", title="Time", axis=alt.Axis(labelAngle=-45))
     )
 
-    st.altair_chart(chart, use_container_width=True)
+    lines = base.transform_fold(
+        valid_indicators,
+        as_=["Indicator", "Value"]
+    ).mark_line(point=True).encode(
+        y=alt.Y("Value:Q", title=None),
+        color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
+        tooltip=["x", "Indicator", "Value"]
+    )
+
+    st.altair_chart(
+        lines.properties(height=420).interactive(),
+        use_container_width=True
+    )
+
 
 
 
