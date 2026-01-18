@@ -224,9 +224,10 @@ with right:
     if missing:
         st.error(f"❌ Missing columns in plot_data: {missing}")
         st.stop()
+    plot_data_valid = plot_data_valid.copy()
+    plot_data_valid.index.name = None
+    plot_data_valid.columns = plot_data_valid.columns.map(str)
 
-    # 🔥 FIX №2 — ЯГ ЭНД НЭМНЭ
-    plot_data = plot_data.reset_index().set_index("time")
 
     # ===== SAFE CHART =====
     st.line_chart(plot_data_valid)
