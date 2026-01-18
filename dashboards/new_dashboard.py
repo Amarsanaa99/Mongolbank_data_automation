@@ -346,7 +346,6 @@ with right:
                     gridOpacity=0.25,
                     gridWidht=0.6,
                     tickColor="#94a3b8",
-                    domain=False
                 )
             ),
             color=alt.Color(
