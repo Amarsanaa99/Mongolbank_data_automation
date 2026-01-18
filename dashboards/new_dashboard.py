@@ -289,7 +289,7 @@ with right:
     lines = base.transform_fold(
         valid_indicators,
         as_=["Indicator", "Value"]
-    ).mark_line(point=True).encode(
+    ).mark_line().encode(
         y=alt.Y("Value:Q", title=None),
         color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
         tooltip=[
@@ -298,6 +298,7 @@ with right:
             alt.Tooltip("Value:Q", format=",.2f")
         ]
     )
+
 
     st.altair_chart(
         lines.properties(height=420).interactive(),
