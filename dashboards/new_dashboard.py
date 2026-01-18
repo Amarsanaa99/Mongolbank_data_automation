@@ -318,11 +318,13 @@ with right:
         base = alt.Chart(chart_df).encode(
             x=alt.X(
                 "x:N",
-                title=None,
+                title="Date",
                 axis=alt.Axis(
                     labelAngle=-45,
                     labelFontSize=11,
-                    grid=False          # ❌ GRID УНТРААНА
+                    grid=True,
+                    gridColor="#e0e0e0",
+                    gridOpacity=0.6
                 )
             )
         ).properties(
@@ -338,10 +340,12 @@ with right:
         ).encode(
             y=alt.Y(
                 "Value:Q",
-                title=None,
+                title="Value",
                 axis=alt.Axis(
                     labelFontSize=11,
-                    grid=False          # ❌ GRID УНТРААНА
+                    grid=True,
+                    gridColor="#e0e0e0",
+                    gridOpacity=0.6
                 )
             ),
             color=alt.Color(
