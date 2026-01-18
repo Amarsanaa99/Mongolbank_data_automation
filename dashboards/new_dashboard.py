@@ -366,10 +366,10 @@ with right:
             alt.Tooltip("Value:Q", format=",.2f")
         ]
     )
-    st.altair_chart(
-        lines.properties(height=420).interactive(),
-        use_container_width=True
-    )
+        st.altair_chart(
+            lines.properties(height=420).interactive(),
+            use_container_width=True
+        )
 
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
