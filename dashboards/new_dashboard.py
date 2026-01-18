@@ -367,6 +367,77 @@ with right:
             use_container_width=True
         )
 # ======================
+# SMALL MULTIPLE CHART
+# ======================
+def small_multiple_chart(df, indicator):
+    import altair as alt
+
+    return (
+        alt.Chart(df)
+        .transform_filter(
+            alt.datum[indicator] != None
+        )
+        .mark_line(
+            strokeWidth=2,
+            interpolate="linear"
+        )
+        .encode(
+            x=alt.X(
+                "x:N",
+                title=None,
+                axis=alt.Axis(
+                    labels=False,
+                    ticks=False,
+                    grid=False
+                )
+            ),
+            y=alt.Y(
+                f"{indicator}:Q",
+                title=None,
+                axis=alt.Axis(
+                    grid=True,
+                    gridOpacity=0.2,
+                    domain=False
+                )
+            ),
+            tooltip=[
+                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip(f"{indicator}:Q", format=",.2f")
+            ]
+        )
+        .properties(
+            height=220,
+            title=alt.TitleParams(
+                text=indicator,
+                anchor="start",
+                fontSize=13,
+                offset=6
+            ),
+            background="transparent"
+        )
+    )
+# ======================
+# SMALL MULTIPLES GRID
+# ======================
+with right:
+    st.markdown("### 📊 Indicators")
+
+    NUM_COLS = 4
+    indicators_grid = valid_indicators
+
+    for i in range(0, len(indicators_grid), NUM_COLS):
+        cols = st.columns(NUM_COLS, gap="large")
+
+        for col, ind in zip(cols, indicators_grid[i:i + NUM_COLS]):
+            with col:
+                with st.container(border=True):
+                    st.altair_chart(
+                        small_multiple_chart(chart_df, ind),
+                        use_container_width=True
+                    )
+
+
+# ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
 # ======================
 with st.expander("📄 Raw data"):
