@@ -23,6 +23,18 @@ sheets = [s for s in pd.ExcelFile(EXCEL_PATH).sheet_names
           if s.lower() in ["month", "quarter"]]
 
 left, right = st.columns([1.4, 4.6], gap="large")
+with left:
+    with st.container(border=True):
+        st.subheader("📦 Dataset")
+
+        dataset = st.radio(
+            "Dataset",
+            sheets,
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+
+        st.info(f"Frequency: {freq}")
 
 # ======================
 # LOAD DATA
@@ -82,22 +94,6 @@ else:
 freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
 
 with left:
-
-    # ======================
-    # 📦 DATASET (аль хэдийн OK)
-    # ======================
-    with st.container(border=True):
-        st.subheader("📦 Dataset")
-
-        dataset = st.radio(
-            "Dataset",
-            sheets,
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-
-        st.info(f"Frequency: {freq}")
-
     # ======================
     # 🧭 INDICATOR GROUP (ТУСДАА ХҮРЭЭ)
     # ======================
@@ -110,7 +106,6 @@ with left:
             available_groups,
             label_visibility="collapsed"
         )
-
     # ======================
     # 📌 INDICATORS (ТУСДАА ХҮРЭЭ)
     # ======================
