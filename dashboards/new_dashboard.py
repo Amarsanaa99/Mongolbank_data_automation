@@ -260,7 +260,7 @@ if series["time"].isna().all():
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-
+            
     # ===== 1️⃣ X-axis (Year / Month / Quarter)
     if "Month" in df_time.columns:
         chart_df = series[["Year", "Month"] + selected].copy()    
@@ -316,60 +316,49 @@ with right:
     # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
     import altair as alt
 
-    base = alt.Chart(chart_df).encode(
-        x=alt.X(
-            "x:N",
-            title=None,
-            axis=alt.Axis(
-                labelAngle=-45,
-                labelFontSize=12,
-                titleFontSize=13,
-                grid=True
-            )
+base = alt.Chart(chart_df).encode(
+    x=alt.X(
+        "x:N",
+        title=None,
+        axis=alt.Axis(
+            labelAngle=-45,
+            labelFontSize=12,
+            grid=False
         )
     )
-    lines = base.transform_fold(
-        valid_indicators,
-        as_=["Indicator", "Value"]
-    ).mark_line(
-        interpolate="monotone",
-        strokeWidth=2.5,
-        opacity=0.95
-    ).encode(
-        y=alt.Y(
-            "Value:Q",
-            title=None,
-            axis=alt.Axis(
-                labelFontSize=12,
-                gridColor="#2a344a"
-            )
-        ),
-        color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
-        tooltip=[
-            alt.Tooltip("x:N", title="Time"),
-            alt.Tooltip("Indicator:N"),
-            alt.Tooltip("Value:Q", format=",.2f")
-        ]
-    )
+)
 
+lines = base.transform_fold(
+    valid_indicators,
+    as_=["Indicator", "Value"]
+).mark_line(point=False).encode(
+    y=alt.Y(
+        "Value:Q",
+        title=None,
+        axis=alt.Axis(
+            labelFontSize=12,
+            grid=False
+        )
+    ),
+    color=alt.Color(
+        "Indicator:N",
+        legend=alt.Legend(title=None)
+    ),
+    tooltip=[
+        alt.Tooltip("x:N", title="Time"),
+        alt.Tooltip("Indicator:N"),
+        alt.Tooltip("Value:Q", format=",.2f")
+    ]
+)
 
+with right:
+    with st.container(border=True):
+        st.subheader("📈 Main chart")
 
-    lines = base.transform_fold(
-        valid_indicators,
-        as_=["Indicator", "Value"]
-    ).mark_line(point=False).encode(
-        y=alt.Y("Value:Q", title=None),
-        color=alt.Color("Indicator:N", legend=alt.Legend(title=None)),
-        tooltip=[
-            alt.Tooltip("x:N", title="Time"),
-            alt.Tooltip("Indicator:N"),
-            alt.Tooltip("Value:Q", format=",.2f")
-        ]
-    )
-    st.altair_chart(
-        lines.properties(height=420).interactive(),
-        use_container_width=True
-    )
+        st.altair_chart(
+            lines.properties(height=420).interactive(),
+            use_container_width=True
+        )
 
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
