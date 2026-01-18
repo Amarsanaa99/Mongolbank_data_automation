@@ -233,7 +233,7 @@ with right:
         chart_df["x"] = (
             chart_df["Year"].astype(int).astype(str)
             + "-"
-            + chart_df["Month"].astype(int).astype(str).str.zfill(2)
+            + chart_df["Month"].iloc[:, 0].astype(int).astype(str).str.zfill(2)
         )
 
     elif "Quarter" in df_time.columns:
