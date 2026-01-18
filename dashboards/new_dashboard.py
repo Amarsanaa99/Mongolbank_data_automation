@@ -257,26 +257,9 @@ if series["time"].isna().all():
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
-# ===== Altair chart (NO Streamlit here)
-base = alt.Chart(chart_df).encode(
-    x=alt.X("x:N", title=None)
-)
-
-lines = base.transform_fold(
-    valid_indicators,
-    as_=["Indicator", "Value"]
-).mark_line().encode(
-    y="Value:Q",
-    color="Indicator:N"
-)
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-
-        st.altair_chart(
-            lines.properties(height=420).interactive(),
-            use_container_width=True
-        )
     # ===== 1️⃣ X-axis (Year / Month / Quarter)
     if "Month" in df_time.columns:
         chart_df = series[["Year", "Month"] + selected].copy()    
@@ -374,7 +357,10 @@ with right:
             alt.Tooltip("Value:Q", format=",.2f")
         ]
     )
-        st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(
+        lines.properties(height=420).interactive(),
+        use_container_width=True
+    )
 # ======================
 # RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
 # ======================
