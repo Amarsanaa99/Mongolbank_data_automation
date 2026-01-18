@@ -260,6 +260,11 @@ if series["time"].isna().all():
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
+
+        st.altair_chart(
+            lines.properties(height=420).interactive(),
+            use_container_width=True
+        )
     # ===== 1️⃣ X-axis (Year / Month / Quarter)
     if "Month" in df_time.columns:
         chart_df = series[["Year", "Month"] + selected].copy()    
