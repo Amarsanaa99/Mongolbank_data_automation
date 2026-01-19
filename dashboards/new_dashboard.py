@@ -586,7 +586,6 @@ def group_chart(group_name):
                 labelFontSize=11,
                 symbolSize=90,
                 symbolStrokeWidth=2,
-                columns=1,
                 columnPadding=8,
                 padding=12,
                 offset=10
