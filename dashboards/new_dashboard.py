@@ -446,17 +446,22 @@ def group_chart(group_name):
     gdf = pd.DataFrame({
         "time": series["time"].values
     })
-    
-    # 3️⃣ indicator-уудыг нэмэх (урт таарна)
+
+    # 3️⃣ indicator-уудыг нэмэх
     for ind in inds:
         if (group_name, ind) in df_data.columns:
             gdf[ind] = df_data[(group_name, ind)].values
-    
-    # ✅ 4️⃣ ЭНД Л TIME FILTER ХИЙНЭ
+
+    # 4️⃣ TIME FILTER (дараа нь!)
     gdf = gdf[gdf["time"] >= "2020"]
 
+    # ✅ 5️⃣ өгөгдөлтэй indicator-ууд
+    valid_inds = [
+        c for c in inds
+        if c in gdf.columns and not gdf[c].isna().all()
+    ]
 
-    # 5️⃣ BASE CHART (border + title заавал гарна)
+    # 6️⃣ BASE CHART (үргэлж харагдана)
     base = alt.Chart(gdf).encode(
         x=alt.X(
             "time:N",
@@ -474,8 +479,7 @@ def group_chart(group_name):
         background="transparent"
     )
 
-    # 6️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ
-    # 6️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ (ALTair-safe)
+    # 7️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ
     if not valid_inds:
         return (
             alt.Chart(
@@ -504,7 +508,7 @@ def group_chart(group_name):
             )
         )
 
-    # 7️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
+    # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
     lines = base.transform_fold(
         valid_inds,
         as_=["Indicator", "Value"]
