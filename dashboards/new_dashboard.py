@@ -509,7 +509,8 @@ def group_chart(group_name):
             axis=alt.Axis(
                 labelAngle=-45,
                 grid=False,
-                titleFontSize=10
+                titleFontSize=12,
+                labelFontSize=11
             )
         )
     ).properties(
@@ -571,19 +572,20 @@ def group_chart(group_name):
                 tickColor="#475569",   # (сонголт)
                 labelColor="#cbd5e1",  # (сонголт)
                 titleColor="#e5e7eb",
-                titleFontSize=11
+                titleFontSize=11,
+                titleFontSize=12
             )
         ),
         color=alt.Color(
             "Indicator:N", 
             legend=alt.Legend(
-                orient="bottom",
+                orient="bottom-left",
                 direction="horizontal",
                 title=None,
-                labelFontSize=10,
-                symbolSize=70,
-                padding=2,
-                offset=0
+                labelFontSize=11,
+                symbolSize=90,
+                padding=6,
+                offset=6
             )
         ),
         tooltip=[
