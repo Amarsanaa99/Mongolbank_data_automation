@@ -356,11 +356,13 @@ with right:
                 axis=alt.Axis(
                     labelAngle=-45,
                     labelFontSize=11,
+                    labelLimit=140,
                     grid=False
                 )
             )
         ).properties(
-            background="transparent"   # ✅ CARD-НЫ BACKGROUND-ТАЙ НИЙЦНЭ
+            padding={"bottom": 60},   # 🔥 CARD ДООД ТАЛД ЗАЙ ӨГНӨ
+            background="transparent"
         )
         
         lines = base.transform_fold(
