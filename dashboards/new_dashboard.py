@@ -505,8 +505,12 @@ def group_chart(group_name):
     base = alt.Chart(gdf).encode(
         x=alt.X(
             "time:N",
-            title=None,
-            axis=alt.Axis(labelAngle=-45, grid=False)
+            title="Date",
+            axis=alt.Axis(
+                labelAngle=-45, 
+                grid=False,
+                titlefrontSize=11
+            )
         )
     ).properties(
         height=240,
@@ -537,7 +541,7 @@ def group_chart(group_name):
                 text="label:N"
             )
             .properties(
-                height=240,
+                height=270,
                 title=alt.TitleParams(
                     text=group_name,
                     anchor="start",
@@ -555,14 +559,24 @@ def group_chart(group_name):
     ).mark_line(strokeWidth=2).encode(
         y=alt.Y(
             "Value:Q",
-            title=None,
+            title="Value",
             axis=alt.Axis(
                 grid=True,
                 gridOpacity=0.25,
                 domain=False
+                titleFontSize=11
             )
         ),
-        color=alt.Color("Indicator:N", legend=None),
+        color=alt.Color(
+            "Indicator:N", 
+            legend=alt.Legend(
+                orient="bottom",
+                direction="Horizontal",
+                title=None,
+                LabelFrontSize=10,
+                symbolSize=120
+            )
+        ),
         tooltip=[
             alt.Tooltip("time:N", title="Date"),
             alt.Tooltip("Indicator:N"),
