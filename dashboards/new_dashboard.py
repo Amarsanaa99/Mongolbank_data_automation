@@ -453,8 +453,12 @@ with right:
         col[1] for col in df_data.columns
         if col[0] == group
     ]
+    # KPI-д харуулах эхний indicator
+    kpi_main_indicator = group_indicators[:1]
     
-    kpi_df = compute_group_kpis(chart_df, group_indicators)
+    # Хураагддаг хүснэгтэд орох бусад indicator
+    kpi_other_indicators = group_indicators[1:]
+    kpi_df = compute_group_kpis(chart_df, kpi_main_indicator)
 
     st.markdown("### 📌 Indicator-level KPIs")
     
