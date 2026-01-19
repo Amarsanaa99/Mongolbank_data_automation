@@ -511,6 +511,7 @@ def group_chart(group_name):
                 grid=False,
                 titlefrontSize=11
             )
+        )
     ).properties(
         height=240,
         title=alt.TitleParams(
@@ -570,7 +571,7 @@ def group_chart(group_name):
             "Indicator:N", 
             legend=alt.Legend(
                 orient="bottom",
-                direction="Horizontal",
+                direction="horizontal",
                 title=None,
                 LabelFrontSize=10,
                 symbolSize=120
