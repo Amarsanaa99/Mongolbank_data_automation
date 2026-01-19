@@ -582,7 +582,7 @@ def group_chart(group_name):
                 orient="bottom",
                 direction="horizontal",
                 title=None,
-                labelLimit=280,
+                labelLimit=150,
                 labelFontSize=11,
                 symbolSize=90,
                 symbolStrokeWidth=2,
