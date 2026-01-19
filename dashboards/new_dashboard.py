@@ -453,42 +453,51 @@ with right:
         col[1] for col in df_data.columns
         if col[0] == group
     ]
-    # KPI-д харуулах эхний indicator
-    kpi_main_indicator = group_indicators[:1]
+    # ======================
+    # 📊 KPI CALCULATION (INDICATOR LEVEL)
+    # ======================
     
-    # Хураагддаг хүснэгтэд орох бусад indicator
-    kpi_other_indicators = group_indicators[1:]
-    kpi_df = compute_group_kpis(chart_df, kpi_main_indicator)
+    # 🔹 БҮХ indicator-уудын KPI-г НЭГ УДАА бодно
+    kpi_df = compute_group_kpis(chart_df, group_indicators)
+    
+    # 🔹 KPI-д харуулах PRIMARY indicator
+    primary_indicator = selected[0]
+    
+    # 🔹 KPI-г салгах
+    kpi_main = kpi_df[kpi_df["Indicator"] == primary_indicator]
+    kpi_rest = kpi_df[kpi_df["Indicator"] != primary_indicator]
+
 
     st.markdown("### 📌 Indicator-level KPIs")
     
-    if kpi_df.empty:
+    if kpi_main.empty:
         st.info("No KPI data available.")
     else:
-        for _, row in kpi_df.iterrows():
-            with st.container(border=True):
-                st.subheader(f"📊 {row['Indicator']}")
+        row = kpi_main.iloc[0]
     
-                cols = st.columns(6)
+        with st.container(border=True):
+            st.subheader(f"📊 {row['Indicator']}")
     
-                cols[0].metric("MIN", f"{row['Min']:.2f}")
-                cols[1].metric("MAX", f"{row['Max']:.2f}")
-                cols[2].metric("MEAN", f"{row['Mean']:.2f}")
-                cols[3].metric("MEDIAN", f"{row['Median']:.2f}")
-                cols[4].metric("STD (Volatility)", f"{row['Std']:.2f}")
-                cols[5].metric("LAST", f"{row['Last']:.2f}")
+            cols = st.columns(6)
+            cols[0].metric("MIN", f"{row['Min']:.2f}")
+            cols[1].metric("MAX", f"{row['Max']:.2f}")
+            cols[2].metric("MEAN", f"{row['Mean']:.2f}")
+            cols[3].metric("MEDIAN", f"{row['Median']:.2f}")
+            cols[4].metric("STD (Volatility)", f"{row['Std']:.2f}")
+            cols[5].metric("LAST", f"{row['Last']:.2f}")
+
     # ======================
     # 📋 OPTIONAL — Indicator-level KPI TABLE
     # ======================
-    
-    if len(valid_indicators) > 1 and not kpi_df.empty:
+    if not kpi_rest.empty:
         with st.expander("📋 Indicator-level statistics"):
             st.dataframe(
-                kpi_df
+                kpi_rest
                 .set_index("Indicator")
                 .round(2),
                 use_container_width=True
             )
+
 
 
 # ======================
