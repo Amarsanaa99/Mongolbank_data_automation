@@ -279,7 +279,6 @@ with right:
                 + month.astype(int).astype(str).str.zfill(2)
             )
     
-        
         elif "Quarter" in df_time.columns:
             chart_df = series[["Year", "Quarter"] + selected].copy()
         
@@ -297,10 +296,17 @@ with right:
                 + "-Q"
                 + quarter.astype(int).astype(str)
             )
-    
+
         else:
             chart_df = series[["Year"] + selected].copy()
             chart_df["x"] = chart_df["Year"].astype(int).astype(str)
+        # ======================
+        # ⏳ APPLY TIME RANGE (MAIN CHART ONLY)
+        # ======================
+        chart_df = chart_df[
+            (chart_df["x"] >= start_time) &
+            (chart_df["x"] <= end_time)
+        ]
     
         # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
         valid_indicators = [
