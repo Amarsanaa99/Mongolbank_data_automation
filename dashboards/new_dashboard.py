@@ -509,16 +509,16 @@ def group_chart(group_name):
             axis=alt.Axis(
                 labelAngle=-45, 
                 grid=False,
-                titleFontSize=11
+                titleFontSize=10
             )
         )
     ).properties(
-        height=240,
+        height=320,
         title=alt.TitleParams(
             text=group_name,
             anchor="start",
             fontSize=14,
-            offset=8
+            offset=6
         ),
         background="transparent"
     )
@@ -541,12 +541,12 @@ def group_chart(group_name):
                 text="label:N"
             )
             .properties(
-                height=270,
+                height=320,
                 title=alt.TitleParams(
                     text=group_name,
                     anchor="start",
                     fontSize=14,
-                    offset=8
+                    offset=6
                 ),
                 background="transparent"
             )
@@ -574,7 +574,8 @@ def group_chart(group_name):
                 direction="horizontal",
                 title=None,
                 labelFontSize=10,
-                symbolSize=120
+                symbolSize=70,
+                padding=4
             )
         ),
         tooltip=[
@@ -589,7 +590,7 @@ def group_chart(group_name):
 
 
 for row in rows:
-    cols = st.columns(NUM_COLS, gap="large")
+    cols = st.columns(NUM_COLS, gap="small")
     for col, grp in zip(cols, row):
         with col:
             with st.container(border=True):
