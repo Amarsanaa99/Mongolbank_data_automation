@@ -579,13 +579,16 @@ def group_chart(group_name):
         color=alt.Color(
             "Indicator:N", 
             legend=alt.Legend(
-                orient="bottom-left",
+                orient="bottom",
                 direction="horizontal",
                 title=None,
+                labelLimit=200,
                 labelFontSize=11,
                 symbolSize=90,
-                padding=6,
-                offset=6
+                symbolStrokeWidth=2,
+                padding=8,
+                offset=18,
+                anchor="start"
             )
         ),
         tooltip=[
