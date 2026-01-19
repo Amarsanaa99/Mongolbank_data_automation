@@ -417,10 +417,13 @@ with right:
             ]
         )
 
+        chart = lines + points
+        
         st.altair_chart(
-            lines.properties(height=520).interactive(),
+            chart.properties(height=520).interactive(),
             use_container_width=True
         )
+
 
     def compute_group_kpis(df, indicators):
         stats = []
