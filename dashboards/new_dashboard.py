@@ -510,10 +510,13 @@ def group_chart(group_name):
                 labelAngle=-45, 
                 grid=False,
                 titleFontSize=10
+                labelPadding=2,
+                tickPadding=2
             )
         )
     ).properties(
         height=320,
+        padding={"top": 8, "bottom": 4, "left": 8, "right":8},
         title=alt.TitleParams(
             text=group_name,
             anchor="start",
@@ -575,7 +578,8 @@ def group_chart(group_name):
                 title=None,
                 labelFontSize=10,
                 symbolSize=70,
-                padding=4
+                padding=2,
+                offset=0
             )
         ),
         tooltip=[
