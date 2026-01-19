@@ -205,7 +205,7 @@ elif year is not None:
 
 else:
     st.error("❌ No valid time columns found")
-    st.stop()ъ
+    st.stop()
 # ======================
 # ⏳ TIME RANGE (MAIN CHART ONLY)
 # ======================
