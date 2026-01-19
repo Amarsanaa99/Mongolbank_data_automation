@@ -473,6 +473,19 @@ with right:
                 cols[3].metric("MEDIAN", f"{row['Median']:.2f}")
                 cols[4].metric("STD (Volatility)", f"{row['Std']:.2f}")
                 cols[5].metric("LAST", f"{row['Last']:.2f}")
+    # ======================
+    # 📋 OPTIONAL — Indicator-level KPI TABLE
+    # ======================
+    
+    if len(valid_indicators) > 1 and not kpi_df.empty:
+        with st.expander("📋 Indicator-level statistics"):
+            st.dataframe(
+                kpi_df
+                .set_index("Indicator")
+                .round(2),
+                use_container_width=True
+            )
+
 
 # ======================
 # SMALL MULTIPLE CHART
