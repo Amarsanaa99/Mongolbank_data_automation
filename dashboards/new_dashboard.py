@@ -509,7 +509,7 @@ def group_chart(group_name):
             axis=alt.Axis(
                 labelAngle=-45, 
                 grid=False,
-                titleFrontSize=11
+                titleFontSize=11
             )
         )
     ).properties(
