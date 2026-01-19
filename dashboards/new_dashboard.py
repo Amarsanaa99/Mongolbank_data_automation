@@ -706,13 +706,38 @@ for row in rows:
                     st.altair_chart(chart, use_container_width=True)
 
 
-
-
 # ======================
-# RAW DATA (MAIN CHART-ААС ТУСАД НЬ)
+# 📄 RAW DATA — INDICATOR GROUP LEVEL
 # ======================
-with st.expander("📄 Raw data"):
-    if not plot_data.empty:
-        st.dataframe(plot_data, use_container_width=True)
+with st.expander(f"📄 Raw data — {group} group"):
+    
+    # 1️⃣ тухайн group-д хамаарах бүх indicator
+    group_cols = [
+        col[1] for col in df_data.columns
+        if col[0] == group and not pd.isna(col[1])
+    ]
+
+    if not group_cols:
+        st.info("No indicators in this group.")
     else:
-        st.info("No data available")
+        raw_group_df = pd.DataFrame({
+            "time": series["time"]
+        })
+
+        # 2️⃣ indicator-уудыг нэмэх
+        for ind in group_cols:
+            if (group, ind) in df_data.columns:
+                raw_group_df[ind] = df_data[(group, ind)].values
+
+        # 3️⃣ цэгцлэх
+        raw_group_df = (
+            raw_group_df
+            .dropna(how="all", subset=group_cols)
+            .sort_values("time")
+            .reset_index(drop=True)
+        )
+
+        st.dataframe(
+            raw_group_df,
+            use_container_width=True
+        )
