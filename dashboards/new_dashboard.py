@@ -507,16 +507,14 @@ def group_chart(group_name):
             "time:N",
             title="Date",
             axis=alt.Axis(
-                labelAngle=-45, 
+                labelAngle=-45,
                 grid=False,
-                titleFontSize=10,
-                labelPadding=2,
-                tickPadding=2
+                titleFontSize=10
             )
         )
     ).properties(
         height=400,
-        padding={"top": 8, "bottom": 4, "left": 8, "right":8},
+        padding={"top": 8, "bottom": 4, "left": 8, "right": 8},
         title=alt.TitleParams(
             text=group_name,
             anchor="start",
@@ -525,6 +523,7 @@ def group_chart(group_name):
         ),
         background="transparent"
     )
+
 
     # 7️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ
     if not valid_inds:
