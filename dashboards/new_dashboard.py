@@ -430,11 +430,17 @@ with right:
     
         return pd.DataFrame(stats)
 
-    
-    
     # ======================
-    # 📊 KPI CALCULATION (GROUP LEVEL)
+    # 📊 KPI CALCULATION (INDICATOR LEVEL)
     # ======================
+    
+    group_indicators = [
+        col[1] for col in df_data.columns
+        if col[0] == group
+    ]
+    
+    kpi_df = compute_group_kpis(chart_df, group_indicators)
+
     st.markdown("### 📌 Indicator-level KPIs")
     
     if kpi_df.empty:
