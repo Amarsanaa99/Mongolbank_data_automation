@@ -402,6 +402,21 @@ with right:
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
+        points = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_point(
+            opacity=0,
+            size=80
+        ).encode(
+            y="Value:Q",
+            tooltip=[
+                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
+        )
+
         st.altair_chart(
             lines.properties(height=520).interactive(),
             use_container_width=True
