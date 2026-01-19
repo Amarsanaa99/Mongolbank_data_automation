@@ -301,6 +301,25 @@ with right:
             chart_df = series[["Year"] + selected].copy()
             chart_df["x"] = chart_df["Year"].astype(int).astype(str)
         # ======================
+        # ⏳ TIME RANGE SELECTOR (MAIN CHART ONLY)
+        # ======================
+        all_x = (
+            chart_df["x"]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+        
+        all_x = sorted(all_x)
+        
+        start_time, end_time = st.select_slider(
+            "Select time range",
+            options=all_x,
+            value=(all_x[0], all_x[-1])
+        )
+
+        # ======================
         # ⏳ APPLY TIME RANGE (MAIN CHART ONLY)
         # ======================
         chart_df = chart_df[
