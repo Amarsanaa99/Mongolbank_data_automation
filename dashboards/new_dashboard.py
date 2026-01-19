@@ -13,10 +13,12 @@ st.markdown("""
 <style>
 /* Page width control */
 .block-container {
-    padding-top: 1.5rem;
-    padding-bottom: 2rem;
+    padding-top: 3.2rem;
+    padding-bottom: 2.2rem;
 }
-
+h1 {
+    margin-top:0;
+}
 /* Sidebar-like left column feel */
 div[data-testid="column"]:first-child {
     background: rgba(255,255,255,0.02);
