@@ -587,8 +587,8 @@ def group_chart(group_name):
                 symbolSize=90,
                 symbolStrokeWidth=2,
                 columnPadding=8,
-                padding=2,
-                offset=0
+                padding=0,
+                offset=2
             )
         ),
         tooltip=[
