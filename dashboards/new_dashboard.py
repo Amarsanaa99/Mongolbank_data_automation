@@ -564,8 +564,13 @@ def group_chart(group_name):
             title="Value",
             axis=alt.Axis(
                 grid=True,
-                gridOpacity=0.25,
+                gridColor="#334155",   # 🔥 GRID COLOR (slate-700)
+                gridOpacity=0.45,      # 🔥 илүү тод
+                gridWidth=1,           # 🔥 нимгэн
                 domain=False,
+                tickColor="#475569",   # (сонголт)
+                labelColor="#cbd5e1",  # (сонголт)
+                titleColor="#e5e7eb",
                 titleFontSize=11
             )
         ),
