@@ -572,7 +572,7 @@ def group_chart(group_name):
                 tickColor="#475569",   # (сонголт)
                 labelColor="#cbd5e1",  # (сонголт)
                 titleColor="#e5e7eb",
-                titleFontSize=11,
+                labelFontSize=11,
                 titleFontSize=12
             )
         ),
