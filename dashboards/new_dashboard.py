@@ -515,7 +515,7 @@ def group_chart(group_name):
         )
     ).properties(
         height=320,
-        padding={"top": 6, "bottom": 2, "left": 6, "right": 6},
+        padding={"top": 6, "bottom": 0, "left": 6, "right": 6},
         title=alt.TitleParams(
             text=group_name,
             anchor="start",
@@ -584,9 +584,9 @@ def group_chart(group_name):
                 title=None,
                 labelLimit=150,
                 labelFontSize=11,
-                symbolSize=90,
+                symbolSize=80,
                 symbolStrokeWidth=2,
-                columnPadding=8,
+                columnPadding=4,
                 padding=0,
                 offset=2
             )
