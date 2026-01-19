@@ -573,7 +573,7 @@ def group_chart(group_name):
                 orient="bottom",
                 direction="horizontal",
                 title=None,
-                labelFrontSize=10,
+                labelFontSize=10,
                 symbolSize=120
             )
         ),
