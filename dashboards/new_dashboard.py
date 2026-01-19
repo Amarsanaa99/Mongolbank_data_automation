@@ -442,23 +442,19 @@ def group_chart(group_name):
         if col[0] == group_name and not pd.isna(col[1])
     ]
 
-    # 2️⃣ суурь dataframe
+    # 2️⃣ суурь dataframe (БҮХ ОНУУД)
     gdf = pd.DataFrame({
         "time": series["time"].values
     })
-    # ✅ All indicator groups → 2020 оноос эхэлнэ
-    gdf = gdf[gdf["time"] >= "2020"]
     
-    # 3️⃣ indicator-уудыг нэмэх
+    # 3️⃣ indicator-уудыг нэмэх (урт таарна)
     for ind in inds:
         if (group_name, ind) in df_data.columns:
             gdf[ind] = df_data[(group_name, ind)].values
+    
+    # ✅ 4️⃣ ЭНД Л TIME FILTER ХИЙНЭ
+    gdf = gdf[gdf["time"] >= "2020"]
 
-    # 4️⃣ өгөгдөлтэй indicator
-    valid_inds = [
-        c for c in inds
-        if c in gdf.columns and not gdf[c].isna().all()
-    ]
 
     # 5️⃣ BASE CHART (border + title заавал гарна)
     base = alt.Chart(gdf).encode(
