@@ -466,7 +466,27 @@ with right:
     # 🔹 KPI-г салгах
     kpi_main = kpi_df[kpi_df["Indicator"] == primary_indicator]
     kpi_rest = kpi_df[kpi_df["Indicator"] != primary_indicator]
-
+    
+    st.markdown("""
+    <style>
+    .kpi-card {
+        background: linear-gradient(180deg, #020617, #020617);
+        border: 1px solid rgba(59,130,246,0.35);
+        border-radius: 14px;
+        padding: 16px 18px;
+    }
+    .kpi-label {
+        font-size: 12px;
+        color: #93c5fd;
+        letter-spacing: 0.08em;
+    }
+    .kpi-value {
+        font-size: 30px;
+        font-weight: 600;
+        color: #3b82f6;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     st.markdown("### 📌 Indicator-level KPIs")
     
@@ -479,12 +499,43 @@ with right:
             st.subheader(f"📊 {row['Indicator']}")
     
             cols = st.columns(6)
-            cols[0].metric("MIN", f"{row['Min']:.2f}")
-            cols[1].metric("MAX", f"{row['Max']:.2f}")
-            cols[2].metric("MEAN", f"{row['Mean']:.2f}")
-            cols[3].metric("MEDIAN", f"{row['Median']:.2f}")
-            cols[4].metric("STD (Volatility)", f"{row['Std']:.2f}")
-            cols[5].metric("LAST", f"{row['Last']:.2f}")
+    # ===== KPI CARD HELPER (OUTSIDE BLOCK)
+    def kpi_card(label, value):
+        st.markdown(
+            f"""
+            <div class="kpi-card">
+                <div class="kpi-label">{label}</div>
+                <div class="kpi-value">{value}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    
+    st.markdown("### 📌 Indicator-level KPIs")
+    
+    if kpi_main.empty:
+        st.info("No KPI data available.")
+    else:
+        row = kpi_main.iloc[0]
+    
+        with st.container(border=True):
+            st.subheader(f"📊 {row['Indicator']}")
+    
+            cols = st.columns(6)
+    
+            with cols[0]:
+                kpi_card("MIN", f"{row['Min']:.2f}")
+            with cols[1]:
+                kpi_card("MAX", f"{row['Max']:.2f}")
+            with cols[2]:
+                kpi_card("MEAN", f"{row['Mean']:.2f}")
+            with cols[3]:
+                kpi_card("MEDIAN", f"{row['Median']:.2f}")
+            with cols[4]:
+                kpi_card("STD", f"{row['Std']:.2f}")
+            with cols[5]:
+                kpi_card("LAST", f"{row['Last']:.2f}")
+
 
     # ======================
     # 📋 OPTIONAL — Indicator-level KPI TABLE
