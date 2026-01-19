@@ -446,7 +446,9 @@ def group_chart(group_name):
     gdf = pd.DataFrame({
         "time": series["time"].values
     })
-
+    # ✅ All indicator groups → 2020 оноос эхэлнэ
+    gdf = gdf[gdf["time"] >= "2020"]
+    
     # 3️⃣ indicator-уудыг нэмэх
     for ind in inds:
         if (group_name, ind) in df_data.columns:
