@@ -446,11 +446,11 @@ def small_multiple_chart(df, indicator):
             ]
         )
         .properties(
-            height=220,
+            height=320,
             title=alt.TitleParams(
                 text=indicator,
                 anchor="start",
-                fontSize=13,
+                fontSize=14,
                 offset=6
             ),
             background="transparent"
