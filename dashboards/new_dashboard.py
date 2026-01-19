@@ -446,7 +446,7 @@ def small_multiple_chart(df, indicator):
             ]
         )
         .properties(
-            height=320,
+            height=400,
             title=alt.TitleParams(
                 text=indicator,
                 anchor="start",
@@ -515,7 +515,7 @@ def group_chart(group_name):
             )
         )
     ).properties(
-        height=320,
+        height=400,
         padding={"top": 8, "bottom": 4, "left": 8, "right":8},
         title=alt.TitleParams(
             text=group_name,
@@ -544,7 +544,7 @@ def group_chart(group_name):
                 text="label:N"
             )
             .properties(
-                height=320,
+                height=400,
                 title=alt.TitleParams(
                     text=group_name,
                     anchor="start",
