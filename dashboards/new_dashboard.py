@@ -587,7 +587,7 @@ def group_chart(group_name):
                 symbolSize=90,
                 symbolStrokeWidth=2,
                 columnPadding=8,
-                padding=12,
+                padding=8,
                 offset=10
             )
         ),
