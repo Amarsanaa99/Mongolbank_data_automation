@@ -406,6 +406,60 @@ with right:
             lines.properties(height=520).interactive(),
             use_container_width=True
         )
+
+def compute_group_kpis_flat(df, indicators):
+    """
+    df: chart_df (time range applied)
+    indicators: тухайн group-ийн indicator list
+    """
+    values = []
+
+    for ind in indicators:
+        if ind not in df.columns:
+            continue
+
+        s = pd.to_numeric(df[ind], errors="coerce").dropna()
+        values.extend(s.tolist())
+
+    if not values:
+        return None
+
+    s_all = pd.Series(values)
+
+    return {
+        "Min": s_all.min(),
+        "Max": s_all.max(),
+        "Mean": s_all.mean(),
+        "Median": s_all.median(),
+        "Std": s_all.std(),
+        "Last": s_all.iloc[-1]
+    }
+
+
+# ======================
+# 📊 KPI CALCULATION (GROUP LEVEL)
+# ======================
+group_indicators = [
+    col[1] for col in df_data.columns
+    if col[0] == group
+]
+
+group_kpi = compute_group_kpis_flat(chart_df, group_indicators)
+
+st.markdown("### 📌 Group-level KPIs")
+
+if not group_kpi:
+    st.info("No KPI data available for this indicator group.")
+else:
+    kpi_cols = st.columns(6)
+
+    kpi_cols[0].metric("MIN", f"{group_kpi['Min']:,.2f}")
+    kpi_cols[1].metric("MAX", f"{group_kpi['Max']:,.2f}")
+    kpi_cols[2].metric("MEAN", f"{group_kpi['Mean']:,.2f}")
+    kpi_cols[3].metric("MEDIAN", f"{group_kpi['Median']:,.2f}")
+    kpi_cols[4].metric("STD (Volatility)", f"{group_kpi['Std']:,.2f}")
+    kpi_cols[5].metric("LAST", f"{group_kpi['Last']:,.2f}")
+
 # ======================
 # SMALL MULTIPLE CHART
 # ======================
