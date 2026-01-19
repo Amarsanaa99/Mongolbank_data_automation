@@ -563,7 +563,7 @@ def group_chart(group_name):
             axis=alt.Axis(
                 grid=True,
                 gridOpacity=0.25,
-                domain=False
+                domain=False,
                 titleFontSize=11
             )
         ),
