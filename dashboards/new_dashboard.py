@@ -488,17 +488,6 @@ with right:
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("### 📌 Indicator-level KPIs")
-    
-    if kpi_main.empty:
-        st.info("No KPI data available.")
-    else:
-        row = kpi_main.iloc[0]
-    
-        with st.container(border=True):
-            st.subheader(f"📊 {row['Indicator']}")
-    
-            cols = st.columns(6)
     # ===== KPI CARD HELPER (OUTSIDE BLOCK)
     def kpi_card(label, value):
         st.markdown(
