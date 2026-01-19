@@ -147,33 +147,6 @@ with left:
             default=[indicators[0]] if indicators else [],
             label_visibility="collapsed"
         )
-    # ======================
-    # ⏳ TIME RANGE (MAIN CHART ONLY)
-    # ======================
-    with st.container(border=True):
-        st.subheader("⏳ Time range")
-    
-        # бүх боломжит хугацаа
-        all_time = (
-            series["time"]
-            .dropna()
-            .astype(str)
-            .unique()
-            .tolist()
-        )
-        all_time = sorted(all_time)
-    
-        start_time = st.selectbox(
-            "Start",
-            options=all_time,
-            index=0
-        )
-    
-        end_time = st.selectbox(
-            "End",
-            options=all_time,
-            index=len(all_time) - 1
-        )
 
 # ======================
 # DATA PREPARATION
@@ -232,7 +205,34 @@ elif year is not None:
 
 else:
     st.error("❌ No valid time columns found")
-    st.stop()
+    st.stop()ъ
+# ======================
+# ⏳ TIME RANGE (MAIN CHART ONLY)
+# ======================
+with left:
+    with st.container(border=True):
+        st.subheader("⏳ Time range")
+
+        all_time = (
+            series["time"]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+        all_time = sorted(all_time)
+
+        start_time = st.selectbox(
+            "Start",
+            options=all_time,
+            index=0
+        )
+
+        end_time = st.selectbox(
+            "End",
+            options=all_time,
+            index=len(all_time) - 1
+        )
 
 
 # Сонгосон үзүүлэлтүүдийг нэмэх
