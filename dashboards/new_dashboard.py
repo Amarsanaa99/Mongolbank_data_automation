@@ -511,7 +511,6 @@ def group_chart(group_name):
                 grid=False,
                 titlefrontSize=11
             )
-        )
     ).properties(
         height=240,
         title=alt.TitleParams(
