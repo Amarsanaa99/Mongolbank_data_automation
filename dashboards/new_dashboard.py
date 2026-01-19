@@ -399,7 +399,7 @@ with right:
             ]
         )
         st.altair_chart(
-            lines.properties(height=420).interactive(),
+            lines.properties(height=520).interactive(),
             use_container_width=True
         )
 # ======================
