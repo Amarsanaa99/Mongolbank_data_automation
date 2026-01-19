@@ -470,10 +470,14 @@ with right:
     st.markdown("""
     <style>
     .kpi-card {
-        background: linear-gradient(180deg, #020617, #020617);
-        border: 1px solid rgba(59,130,246,0.35);
-        border-radius: 14px;
-        padding: 16px 18px;
+        background: linear-gradient(
+            180deg,
+            rgba(15, 23, 42, 0.85),   /* slate-900 */
+            rgba(15, 23, 42, 0.65)
+        );
+        border: 1px solid rgba(59,130,246,0.25);
+        border-radius: 16px;
+        padding: 18px 20px;
     }
     .kpi-label {
         font-size: 12px;
@@ -506,7 +510,6 @@ with right:
         st.info("No KPI data available.")
     else:
         row = kpi_main.iloc[0]
-    
         with st.container(border=True):
             st.subheader(f"📊 {row['Indicator']}")
     
@@ -524,7 +527,9 @@ with right:
                 kpi_card("STD", f"{row['Std']:.2f}")
             with cols[5]:
                 kpi_card("LAST", f"{row['Last']:.2f}")
-
+                
+    # ✅ ЭНЭ МӨР — KPI SECTION-ИЙГ "АМЬСГАЛТАЙ" БОЛГОНО
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
     # ======================
     # 📋 OPTIONAL — Indicator-level KPI TABLE
