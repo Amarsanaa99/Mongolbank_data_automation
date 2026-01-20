@@ -421,36 +421,6 @@ with right:
             lines.properties(height=350).interactive(),
             use_container_width=True
         )
-    # ======================
-    # 📉 CHANGE SUMMARY (BLOOMBERG STYLE)
-    # ======================
-    
-    # 🔹 PRIMARY indicator
-    primary_indicator = selected[0]
-    
-    # 🔹 Frequency тодорхойлох
-    if "Month" in df_time.columns:
-        freq = "Monthly"
-    elif "Quarter" in df_time.columns:
-        freq = "Quarterly"
-    else:
-        freq = "Yearly"
-    
-    changes = compute_changes(chart_df, primary_indicator, freq)
-    
-    if changes:
-        st.markdown(
-            f"""
-            <div class="change-bar">
-                {render_change("YoY", changes["yoy"])}
-                {render_change("YTD", changes["ytd"])}
-                {render_change("Prev", changes["mom"])}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    
     def compute_changes(df, indicator, freq):
         s = df[["x", indicator]].dropna().copy()
         s = s.sort_values("x")
@@ -506,7 +476,34 @@ with right:
             {label}: {value:.2f}%
         </span>
         """
-
+    # ======================
+    # 📉 CHANGE SUMMARY (BLOOMBERG STYLE)
+    # ======================
+    
+    # 🔹 PRIMARY indicator
+    primary_indicator = selected[0]
+    
+    # 🔹 Frequency тодорхойлох
+    if "Month" in df_time.columns:
+        freq = "Monthly"
+    elif "Quarter" in df_time.columns:
+        freq = "Quarterly"
+    else:
+        freq = "Yearly"
+    
+    changes = compute_changes(chart_df, primary_indicator, freq)
+    
+    if changes:
+        st.markdown(
+            f"""
+            <div class="change-bar">
+                {render_change("YoY", changes["yoy"])}
+                {render_change("YTD", changes["ytd"])}
+                {render_change("Prev", changes["mom"])}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
     
     def compute_group_kpis(df, indicators):
         stats = []
