@@ -549,21 +549,16 @@ with right:
             }
             
             .change-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                gap: 16px;
-                padding: 4px;
-                max-width: 100%;
+                display: flex;
+                gap: 12px;
+                overflow-x: auto;
+                padding: 6px 2px;
             }
+
             
             .change-card {
-                background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.95) 100%);
-                border: 1px solid rgba(148,163,184,0.2);
-                border-radius: 12px;
-                padding: 20px;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                backdrop-filter: blur(10px);
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                min-width: 220px;
+                padding: 10px 12px;
             }
             
             .change-card:hover {
@@ -595,7 +590,20 @@ with right:
                 color: #60a5fa;
                 text-shadow: 0 2px 8px rgba(96,165,250,0.3);
             }
+            .change-up {
+                color: #22c55e;        /* green */
+                font-weight: 600;
+            }
             
+            .change-down {
+                color: #ef4444;        /* red */
+                font-weight: 600;
+            }
+            
+            .change-arrow {
+                margin-right: 4px;
+            }
+
             .change-metrics {
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
