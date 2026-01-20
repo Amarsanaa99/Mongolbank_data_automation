@@ -477,18 +477,18 @@ with right:
         );
         border: 1px solid rgba(59,130,246,0.25);
         border-radius: 16px;
-        padding: 18px 20px;
+        padding: 10px 14px;
     
         /* 🔥 АМЬСГАЛ */
         margin: 10px 0;   /* дээд/доод */
     }
     .kpi-label {
-        font-size: 12px;
+        font-size: 11px;
         color: #93c5fd;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
     }
     .kpi-value {
-        font-size: 30px;
+        font-size: 24px;
         font-weight: 600;
         color: #3b82f6;
     }
@@ -545,9 +545,6 @@ with right:
                 .round(2),
                 use_container_width=True
             )
-
-
-
 # ======================
 # SMALL MULTIPLE CHART
 # ======================
