@@ -176,17 +176,29 @@ def compute_changes(df, indicator, freq):
     latest_val = float(latest[indicator])
     prev_val = float(s.iloc[-2][indicator])
     latest_time = str(latest["x"])
+    
+    # 🚨 TIME VALIDATION (ШААРДЛАГАТАЙ)
+    if latest_time.lower() in ["nan", "none", ""]:
+        return None
+    
+    if freq in ["Monthly", "Quarterly"] and len(latest_time) < 6:
+        return None
+
 
     # Prev
     mom = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
 
     # YoY
+    # YoY (100% SAFE)
     yoy = None
-    if freq in ["Monthly", "Quarterly"] and len(latest_time) >= 4:
-        yoy_time = str(int(latest_time[:4]) - 1) + latest_time[4:]
-    elif latest_time.isdigit():
-        yoy_time = str(int(latest_time) - 1)
-    else:
+    yoy_time = None
+
+    try:
+        if freq in ["Monthly", "Quarterly"] and latest_time[:4].isdigit():
+            yoy_time = str(int(latest_time[:4]) - 1) + latest_time[4:]
+        elif freq == "Yearly" and latest_time.isdigit():
+            yoy_time = str(int(latest_time) - 1)
+    except Exception:
         yoy_time = None
 
     if yoy_time:
@@ -505,8 +517,13 @@ with right:
         freq = "Quarterly"
     else:
         freq = "Yearly"
-    
-    changes = compute_changes(chart_df, primary_indicator, freq)
+    changes = None
+    if (
+        primary_indicator in chart_df.columns
+        and not chart_df[primary_indicator].isna().all()
+    ):
+        changes = compute_changes(chart_df, primary_indicator, freq)
+
     
     if changes:
         st.markdown(
