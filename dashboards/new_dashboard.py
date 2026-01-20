@@ -165,16 +165,17 @@ if not selected:
 
 def compute_changes(df, indicator, freq):
     s = df[["x", indicator]].dropna().copy()
-    s["x"] = s["x"].astype(str)   # 🔒 хамгаалалт
+
+    # 🔒 x ЦЭВЭРЛЭХ (SPACE / EMPTY / nan)
+    s["x"] = s["x"].astype(str).str.strip()
+    s = s[s["x"] != ""]
     s = s.sort_values("x")
 
     if len(s) < 2:
         return None
-
     latest = s.iloc[-1]
-
-    latest_val = float(latest[indicator])
-    prev_val = float(s.iloc[-2][indicator])
+    latest_val = float(latest[indicator].iloc[0]) if hasattr(latest[indicator], "iloc") else float(latest[indicator])
+    prev_val   = float(s.iloc[-2][indicator])
     latest_time = str(latest["x"])
     
     # 🚨 TIME VALIDATION (ШААРДЛАГАТАЙ)
@@ -188,18 +189,20 @@ def compute_changes(df, indicator, freq):
     # Prev
     mom = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
 
-    # YoY
-    # YoY (100% SAFE)
+    # YoY (SAFE)
     yoy = None
     yoy_time = None
-
+    
     try:
-        if freq in ["Monthly", "Quarterly"] and latest_time[:4].isdigit():
+        latest_time = latest_time.strip()   # 🔥 SPACE ЦЭВЭРЛЭНЭ
+    
+        if freq in ["Monthly", "Quarterly"] and len(latest_time) >= 4 and latest_time[:4].isdigit():
             yoy_time = str(int(latest_time[:4]) - 1) + latest_time[4:]
         elif freq == "Yearly" and latest_time.isdigit():
             yoy_time = str(int(latest_time) - 1)
     except Exception:
         yoy_time = None
+
 
     if yoy_time:
         yoy_row = s[s["x"] == yoy_time]
@@ -500,9 +503,8 @@ with right:
 
         st.altair_chart(
             lines.properties(height=350).interactive(),
-            use_container_width=True
+            width="stretch"
         )
-
     # ======================
     # 📉 CHANGE SUMMARY (BLOOMBERG STYLE)
     # ======================
