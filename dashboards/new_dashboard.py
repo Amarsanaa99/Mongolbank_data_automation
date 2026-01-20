@@ -708,7 +708,7 @@ with right:
             """+ cards_html+"""
             </div>
             """,
-            height=160
+            height=120
             )
         else:
             st.caption("No data yet")
