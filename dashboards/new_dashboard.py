@@ -540,57 +540,145 @@ with right:
         # ✅ LOOP ДУУССАНЫ ДАРАА ГАНЦ УДАА RENDER
         if cards_html:
             components.html(
-                f"""
-                <style>
-                .change-grid {{
-                    display: flex;
-                    grid-auto-flow: column;
-                    grid-auto-columns: 220px;
-                    gap: 12px;
-                    overflow-x: auto;
-                    padding-bottom: 6px;
-                }}
-    
-                .change-card {{
-                    background: linear-gradient(
-                        180deg,
-                        rgba(15,23,42,0.85),
-                        rgba(15,23,42,0.65)
-                    );
-                    border: 1px solid rgba(148,163,184,0.25);
-                    border-radius: 14px;
-                    min-width: 200px;
-                    padding: 8px 12px;
-                    font-family: sans-serif;
-                }}
-    
-                .change-title {{
-                    font-size: 13px;
-                    font-weight: 600;
-                    margin-bottom: 6px;
-                    color: #e5e7eb;
-                }}
-    
-                .change-bar {{
-                    display: flex;
-                    flex-direction: column;
-                    gap: 4px;
-                }}
-                
-                .change-item{{
-                    font-size: 12px;
-                    line-height: 1.25;
-                }}
-    
-                .change-up {{ color: #22c55e; }}
-                .change-down {{ color: #ef4444; }}
-                </style>
-    
-                <div class="change-grid">
-                    {cards_html}
-                </div>
-                """,
-                height=110
+            f"""
+            <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            .change-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 16px;
+                padding: 4px;
+                max-width: 100%;
+            }
+            
+            .change-card {
+                background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.95) 100%);
+                border: 1px solid rgba(148,163,184,0.2);
+                border-radius: 12px;
+                padding: 20px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                backdrop-filter: blur(10px);
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            
+            .change-card:hover {
+                transform: translateY(-4px);
+                border-color: rgba(148,163,184,0.4);
+                box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+            }
+            
+            .change-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid rgba(148,163,184,0.1);
+            }
+            
+            .change-title {
+                font-size: 14px;
+                font-weight: 600;
+                color: #e2e8f0;
+                line-height: 1.4;
+                max-width: 60%;
+            }
+            
+            .change-latest {
+                font-size: 24px;
+                font-weight: 700;
+                color: #60a5fa;
+                text-shadow: 0 2px 8px rgba(96,165,250,0.3);
+            }
+            
+            .change-metrics {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+            
+            .metric-item {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                padding: 10px;
+                background: rgba(30,41,59,0.5);
+                border-radius: 8px;
+                transition: all 0.2s ease;
+                border: 1px solid transparent;
+            }
+            
+            .metric-item:hover {
+                background: rgba(30,41,59,0.8);
+                border-color: rgba(148,163,184,0.3);
+            }
+            
+            .metric-label {
+                font-size: 11px;
+                font-weight: 600;
+                color: #94a3b8;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .metric-value {
+                font-size: 16px;
+                font-weight: 700;
+                font-family: 'Monaco', 'Courier New', monospace;
+            }
+            
+            .metric-up .metric-value {
+                color: #22c55e;
+                text-shadow: 0 0 8px rgba(34,197,94,0.4);
+            }
+            
+            .metric-down .metric-value {
+                color: #ef4444;
+                text-shadow: 0 0 8px rgba(239,68,68,0.4);
+            }
+            
+            .metric-neutral .metric-value {
+                color: #94a3b8;
+            }
+            
+            /* Scrollbar styling */
+            ::-webkit-scrollbar {
+                height: 8px;
+                width: 8px;
+            }
+            
+            ::-webkit-scrollbar-track {
+                background: rgba(30,41,59,0.5);
+                border-radius: 4px;
+            }
+            
+            ::-webkit-scrollbar-thumb {
+                background: rgba(148,163,184,0.3);
+                border-radius: 4px;
+            }
+            
+            ::-webkit-scrollbar-thumb:hover {
+                background: rgba(148,163,184,0.5);
+            }
+            
+            /* Responsive */
+            @media (max-width: 768px) {
+                .change-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            </style>
+            
+            <div class="change-grid">
+            {cards_html}
+            </div>
+            """,
+            height=160
             )
         else:
             st.caption("No data yet")
