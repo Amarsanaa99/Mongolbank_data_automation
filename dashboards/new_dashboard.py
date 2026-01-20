@@ -515,57 +515,70 @@ with right:
         st.caption("No indicators in this group.")
     else:
         # 🔥 НЭГ МӨР — indicator хэд байна, төдий чинээ column
-        cols = st.columns(len(group_indicators))
-    
-        for col, ind in zip(cols, group_indicators):
-            with col:
-                st.markdown(f"**{ind}**")
-    
-                tmp = pd.DataFrame({
-                    "x": series["time"],
-                    ind: df_data[(group, ind)].values
-                })
-    
-                if not tmp[ind].isna().all():
-                    changes = compute_changes(tmp, ind, freq)
-                else:
-                    changes = None
-       
+        cards_html = ""
+        
+        for ind in group_indicators:
+            tmp = pd.DataFrame({
+                "x": series["time"],
+                ind: df_data[(group, ind)].values
+            })
+        
+            if not tmp[ind].isna().all():
+                changes = compute_changes(tmp, ind, freq)
+            else:
+                changes = None
+        
+            if changes:
+                cards_html += f"""
+                <div class="change-card">
+                    <div class="change-title">{ind}</div>
+                    <div class="change-bar">
+                        {render_change("YoY", changes.get("yoy"))}
+                        {render_change("YTD", changes.get("ytd"))}
+                        {render_change("Prev", changes.get("prev"))}
+                    </div>
+                </div>
+                """
                 if changes:
                     components.html(
                         f"""
                         <style>
+                        .change-grid {{
+                            display: grid;
+                            grid-auto-flow: column;
+                            grid-auto-columns: 230px;   /* 🔒 card width */
+                            gap: 16px;
+                            overflow-x: auto;
+                            padding-bottom: 6px;
+                        }}
+                    
+                        .change-card {{
+                            background: rgba(15, 23, 42, 0.45);
+                            border: 1px solid rgba(148,163,184,0.25);
+                            border-radius: 14px;
+                            padding: 10px 14px;
+                            font-family: sans-serif;
+                            white-space: nowrap;
+                        }}
+                    
+                        .change-title {{
+                            font-weight: 600;
+                            margin-bottom: 6px;
+                            color: #e5e7eb;
+                        }}
+                    
                         .change-bar {{
                             display: flex;
                             flex-direction: column;
-                            gap: 18px;
-                            padding: 8px 14px;
-                            border-radius: 14px;
-                            background: rgba(15, 23, 42, 0.45);
-                            border: 1px solid rgba(148,163,184,0.25);
-                            margin: 10px 0 14px 0;
-                            font-family: sans-serif;
-                        }}
-                        .change-item {{
-                            font-size: 13px;
-                            font-weight: 500;
-                            color: #e5e7eb;
-                        }}
-                        .change-up {{ color: #22c55e; }}
-                        .change-down {{ color: #ef4444; }}
-                        .change-arrow {{
-                            font-size: 14px;
-                            margin-right: 4px;
+                            gap: 6px;
                         }}
                         </style>
-        
-                        <div class="change-bar">
-                            {render_change("YoY", changes.get("yoy"))}
-                            {render_change("YTD", changes.get("ytd"))}
-                            {render_change("Prev", changes.get("prev"))}
+                    
+                        <div class="change-grid">
+                            {cards_html}
                         </div>
                         """,
-                        height=140
+                        height=190
                     )
                 else:
                     st.caption("No data yet")
