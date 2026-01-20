@@ -565,11 +565,22 @@ with right:
                 overflow-x: auto;
                 padding: 6px 2px;
             }
-
             
             .change-card {
                 min-width: 220px;
                 padding: 10px 12px;
+            
+                /* ✅ ХҮРЭЭ + BACKGROUND */
+                background: linear-gradient(
+                    180deg,
+                    rgba(15, 23, 42, 0.85),
+                    rgba(15, 23, 42, 0.65)
+                );
+                border: 1px solid rgba(148,163,184,0.25);
+                border-radius: 16px;
+            
+                /* 🔥 KPI card шиг амьсгал */
+                transition: all 0.2s ease;
             }
             
             .change-card:hover {
