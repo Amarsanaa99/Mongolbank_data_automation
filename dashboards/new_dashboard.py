@@ -712,9 +712,6 @@ with right:
             )
         else:
             st.caption("No data yet")
-
-
-
     
     def compute_group_kpis(df, indicators):
         stats = []
@@ -772,10 +769,17 @@ with right:
         border: 1px solid rgba(59,130,246,0.25);
         border-radius: 16px;
         padding: 10px 14px;
+        margin: 10px 0;
     
-        /* 🔥 АМЬСГАЛ */
-        margin: 10px 0;   /* дээд/доод */
+        /* ✅ ЭНЭ 1 МӨР */
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+    
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+    }
+
     .kpi-label {
         font-size: 11px;
         color: #93c5fd;
