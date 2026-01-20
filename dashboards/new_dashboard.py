@@ -527,10 +527,17 @@ with right:
                     st.markdown(f"**{ind}**")
     
                     changes = None
-                    if ind in series.columns and not series[ind].isna().all():
-                        tmp = full_series[["time", ind]].rename(columns={"time": "x"})
+                    # 🔥 series БИШ — df_data + df_time ашиглана
+                    tmp = pd.DataFrame({
+                        "x": series["time"],
+                        ind: df_data[(group, ind)].values
+                    })
+                    
+                    if not tmp[ind].isna().all():
                         changes = compute_changes(tmp, ind, freq)
-                        
+                    else:
+                        changes = None
+       
                     if changes:
                         components.html(
                             f"""
