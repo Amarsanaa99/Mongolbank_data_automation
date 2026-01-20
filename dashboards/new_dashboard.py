@@ -547,7 +547,18 @@ with right:
                 padding: 0;
                 box-sizing: border-box;
             }
-            
+            .change-bar {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                margin-top: 6px;
+            }
+            .change-item {
+                display: block;
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
             .change-grid {
                 display: flex;
                 gap: 12px;
