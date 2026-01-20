@@ -544,6 +544,7 @@ with right:
                             <style>
                             .change-bar {{
                                 display: flex;
+                                flex-direction: column;
                                 gap: 18px;
                                 padding: 8px 14px;
                                 border-radius: 14px;
