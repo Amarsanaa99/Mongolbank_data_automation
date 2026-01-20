@@ -509,35 +509,35 @@ with right:
     # 📉 CHANGE SUMMARY (BLOOMBERG STYLE)
     # ======================
     
-    # 🔹 PRIMARY indicator
-    primary_indicator = selected[0]
-    
-    # 🔹 Frequency тодорхойлох
-    if "Month" in df_time.columns:
-        freq = "Monthly"
-    elif "Quarter" in df_time.columns:
-        freq = "Quarterly"
-    else:
-        freq = "Yearly"
-    changes = None
-    if (
-        primary_indicator in chart_df.columns
-        and not chart_df[primary_indicator].isna().all()
-    ):
-        changes = compute_changes(chart_df, primary_indicator, freq)
+# ======================
+# 📉 CHANGE SUMMARY — PER INDICATOR
+# ======================
+st.markdown("### 📉 Change summary")
 
-    
-    if changes:
-        st.markdown(
-            f"""
-            <div class="change-bar">
-                {render_change("YoY", changes["yoy"])}
-                {render_change("YTD", changes["ytd"])}
-                {render_change("Prev", changes["mom"])}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+cols = st.columns(len(selected))
+
+for col, ind in zip(cols, selected):
+    with col:
+        changes = None
+        if ind in chart_df.columns and not chart_df[ind].isna().all():
+            changes = compute_changes(chart_df, ind, freq)
+
+        st.markdown(f"**{ind}**")
+
+        if changes:
+            st.markdown(
+                f"""
+                <div class="change-bar">
+                    {render_change("YoY", changes["yoy"])}
+                    {render_change("YTD", changes["ytd"])}
+                    {render_change("Prev", changes["mom"])}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        else:
+            st.caption("No data yet")
+
     
     def compute_group_kpis(df, indicators):
         stats = []
