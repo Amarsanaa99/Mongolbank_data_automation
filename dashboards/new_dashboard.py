@@ -564,7 +564,7 @@ with right:
                                 {render_change("Prev", changes.get("prev"))}
                             </div>
                             """,
-                            height=120
+                            height=140
                         )
                     else:
                         st.caption("No data yet")
