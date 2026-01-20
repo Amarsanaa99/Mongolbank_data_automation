@@ -677,13 +677,27 @@ with right:
         )
         
     # 🔥 HEADER ROW — INLINE
-    h_left, h_right = st.columns([3, 2])
-    
-    with h_left:
-        st.markdown("### 📌 Indicator-level KPIs")
-    
-    with h_right:
-        st.markdown(f"### 📊 {primary_indicator}")
+    st.markdown(
+        f"""
+        <div style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+            margin-bottom: 4px;
+        ">
+            <span style="font-size: 1.25rem; font-weight: 600;">
+                📌 Indicator-level KPIs
+            </span>
+            <span style="opacity: 0.6;">➜</span>
+            <span style="font-size: 1.25rem; font-weight: 600; color: #60a5fa;">
+                📊 {primary_indicator}
+            </span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     if kpi_main.empty:
         st.info("No KPI data available.")
         st.stop()
