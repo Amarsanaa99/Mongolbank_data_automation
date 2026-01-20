@@ -514,29 +514,22 @@ with right:
     if not group_indicators:
         st.caption("No indicators in this group.")
     else:
-        NUM_COLS = 4
-        rows = [
-            group_indicators[i:i + NUM_COLS]
-            for i in range(0, len(group_indicators), NUM_COLS)
-        ]
+        # 🔥 НЭГ МӨР — indicator хэд байна, төдий чинээ column
+        cols = st.columns(len(group_indicators))
     
-        for row in rows:
-            cols = st.columns(NUM_COLS)
-            for col, ind in zip(cols, row):
-                with col:
-                    st.markdown(f"**{ind}**")
+        for col, ind in zip(cols, group_indicators):
+            with col:
+                st.markdown(f"**{ind}**")
     
+                tmp = pd.DataFrame({
+                    "x": series["time"],
+                    ind: df_data[(group, ind)].values
+                })
+    
+                if not tmp[ind].isna().all():
+                    changes = compute_changes(tmp, ind, freq)
+                else:
                     changes = None
-                    # 🔥 series БИШ — df_data + df_time ашиглана
-                    tmp = pd.DataFrame({
-                        "x": series["time"],
-                        ind: df_data[(group, ind)].values
-                    })
-                    
-                    if not tmp[ind].isna().all():
-                        changes = compute_changes(tmp, ind, freq)
-                    else:
-                        changes = None
        
                     if changes:
                         components.html(
