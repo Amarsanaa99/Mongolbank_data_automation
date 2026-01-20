@@ -472,12 +472,15 @@ with right:
     .kpi-card {
         background: linear-gradient(
             180deg,
-            rgba(15, 23, 42, 0.85),   /* slate-900 */
+            rgba(15, 23, 42, 0.85),
             rgba(15, 23, 42, 0.65)
         );
         border: 1px solid rgba(59,130,246,0.25);
         border-radius: 16px;
         padding: 18px 20px;
+    
+        /* 🔥 АМЬСГАЛ */
+        margin: 6px 0;   /* дээд/доод */
     }
     .kpi-label {
         font-size: 12px;
