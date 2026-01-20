@@ -429,33 +429,36 @@ with right:
             return None
     
         latest = s.iloc[-1]
-        latest_val = latest[indicator]
-        latest_time = latest["x"]
+    
+        # 🔥 SCALAR БОЛГОНО
+        latest_val = float(latest[indicator])
+        prev_val = float(s.iloc[-2][indicator])
+        latest_time = str(latest["x"])
     
         # 🔹 Previous period
-        prev_val = s.iloc[-2][indicator]
         mom = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
     
         # 🔹 YoY
         yoy = None
-        if freq == "Monthly":
-            yoy_time = str(int(latest_time[:4]) - 1) + latest_time[4:]
-        elif freq == "Quarterly":
+        if freq in ["Monthly", "Quarterly"]:
             yoy_time = str(int(latest_time[:4]) - 1) + latest_time[4:]
         else:
             yoy_time = str(int(latest_time) - 1)
     
         yoy_row = s[s["x"] == yoy_time]
         if not yoy_row.empty:
-            prev_year_val = yoy_row.iloc[0][indicator]
-            yoy = (latest_val / prev_year_val - 1) * 100 if prev_year_val != 0 else None
+            prev_year_val = float(yoy_row.iloc[0][indicator])
+            if prev_year_val != 0:
+                yoy = (latest_val / prev_year_val - 1) * 100
     
         # 🔹 YTD
         ytd = None
         current_year = latest_time[:4]
-        year_start = s[s["x"].str.startswith(current_year)].iloc[0][indicator]
-        if year_start != 0:
-            ytd = (latest_val / year_start - 1) * 100
+        year_data = s[s["x"].str.startswith(current_year)]
+        if not year_data.empty:
+            year_start = float(year_data.iloc[0][indicator])
+            if year_start != 0:
+                ytd = (latest_val / year_start - 1) * 100
     
         return {
             "latest": latest_val,
@@ -463,6 +466,7 @@ with right:
             "yoy": yoy,
             "ytd": ytd
         }
+
     def render_change(label, value):
         if value is None:
             return f"<span class='change-item'>{label}: N/A</span>"
