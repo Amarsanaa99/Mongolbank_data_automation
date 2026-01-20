@@ -567,10 +567,10 @@ with right:
             }
             
             .change-card {
-                min-width: 220px;
-                padding: 10px 12px;
+                width: fit-content;
+                min-width: unset;
+                padding: 10px 14px;
             
-                /* ✅ ХҮРЭЭ + BACKGROUND */
                 background: linear-gradient(
                     180deg,
                     rgba(15, 23, 42, 0.85),
@@ -579,10 +579,10 @@ with right:
                 border: 1px solid rgba(148,163,184,0.25);
                 border-radius: 16px;
             
-                /* 🔥 KPI card шиг амьсгал */
+                white-space: nowrap;   /* 🔥 яг бичвэртээ таарна */
                 transition: all 0.2s ease;
             }
-            
+
             .change-card:hover {
                 transform: translateY(-4px);
                 border-color: rgba(148,163,184,0.4);
