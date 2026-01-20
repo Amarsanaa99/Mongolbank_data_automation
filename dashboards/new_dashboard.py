@@ -162,70 +162,63 @@ if not selected:
 # ======================
 # 🔧 KPI & CHANGE HELPERS (GLOBAL)
 # ======================
-
 def compute_changes(df, indicator, freq):
     s = df[["x", indicator]].dropna().copy()
 
-    # 🔒 x ЦЭВЭРЛЭХ (SPACE / EMPTY / nan)
+    # 🔒 X хамгаалалт (ЧИНИЙ ХҮССЭН ХЭСЭГ)
     s["x"] = s["x"].astype(str).str.strip()
     s = s[s["x"] != ""]
-    s = s.sort_values("x")
 
     if len(s) < 2:
         return None
-    latest = s.iloc[-1]
-    latest_val = float(latest[indicator].iloc[0]) if hasattr(latest[indicator], "iloc") else float(latest[indicator])
+
+    # 🔒 SORT
+    s = s.sort_values("x").reset_index(drop=True)
+
+    # 🔒 VALUE SCALAR
+    latest_val = float(s.iloc[-1][indicator])
     prev_val   = float(s.iloc[-2][indicator])
-    latest_time = str(latest["x"])
-    
-    # 🚨 TIME VALIDATION (ШААРДЛАГАТАЙ)
-    if latest_time.lower() in ["nan", "none", ""]:
-        return None
-    
-    if freq in ["Monthly", "Quarterly"] and len(latest_time) < 6:
-        return None
 
+    # ======================
+    # 🔹 PREV (QoQ / MoM)
+    # ======================
+    prev = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
 
-    # Prev
-    mom = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
-
-    # YoY (SAFE)
+    # ======================
+    # 🔹 YoY (INDEX-BASED)
+    # ======================
     yoy = None
-    yoy_time = None
-    
-    try:
-        latest_time = latest_time.strip()   # 🔥 SPACE ЦЭВЭРЛЭНЭ
-    
-        if freq in ["Monthly", "Quarterly"] and len(latest_time) >= 4 and latest_time[:4].isdigit():
-            yoy_time = str(int(latest_time[:4]) - 1) + latest_time[4:]
-        elif freq == "Yearly" and latest_time.isdigit():
-            yoy_time = str(int(latest_time) - 1)
-    except Exception:
-        yoy_time = None
+    if freq == "Quarterly" and len(s) >= 5:
+        base_val = float(s.iloc[-5][indicator])
+        if base_val != 0:
+            yoy = (latest_val / base_val - 1) * 100
 
+    elif freq == "Monthly" and len(s) >= 13:
+        base_val = float(s.iloc[-13][indicator])
+        if base_val != 0:
+            yoy = (latest_val / base_val - 1) * 100
 
-    if yoy_time:
-        yoy_row = s[s["x"] == yoy_time]
-        if not yoy_row.empty:
-            prev_year_val = float(yoy_row.iloc[0][indicator])
-            if prev_year_val != 0:
-                yoy = (latest_val / prev_year_val - 1) * 100
-
-    # YTD
+    # ======================
+    # 🔹 YTD
+    # ======================
     ytd = None
-    current_year = latest_time[:4]
-    year_data = s[s["x"].str.startswith(current_year)]
-    if not year_data.empty:
-        year_start = float(year_data.iloc[0][indicator])
-        if year_start != 0:
-            ytd = (latest_val / year_start - 1) * 100
+    try:
+        current_year = s.iloc[-1]["x"][:4]
+        year_data = s[s["x"].str.startswith(current_year)]
+        if len(year_data) >= 1:
+            year_start = float(year_data.iloc[0][indicator])
+            if year_start != 0:
+                ytd = (latest_val / year_start - 1) * 100
+    except:
+        ytd = None
 
     return {
         "latest": latest_val,
-        "mom": mom,
+        "prev": prev,
         "yoy": yoy,
         "ytd": ytd
     }
+
 
 
 def render_change(label, value):
