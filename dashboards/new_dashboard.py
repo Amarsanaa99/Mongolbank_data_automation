@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import streamlit.components.v1 as components
 from pathlib import Path
 
 # ======================
@@ -220,20 +221,20 @@ def compute_changes(df, indicator, freq):
     }
 
 
-
 def render_change(label, value):
-    if value is None:
+    if value is None or (isinstance(value, float) and pd.isna(value)):
         return f"<span class='change-item'>{label}: N/A</span>"
 
     arrow = "▲" if value > 0 else "▼"
     cls = "change-up" if value > 0 else "change-down"
 
-    return f"""
-    <span class="change-item {cls}">
-        <span class="change-arrow">{arrow}</span>
-        {label}: {value:.2f}%
-    </span>
-    """
+    return (
+        f"<span class='change-item {cls}'>"
+        f"<span class='change-arrow'>{arrow}</span>"
+        f"{label}: {value:.2f}%"
+        f"</span>"
+    )
+
 
 
 # Өгөгдлийг цуваа болгон нэгтгэх
@@ -518,15 +519,15 @@ with right:
             st.markdown(f"**{ind}**")
     
             if changes:
-                st.markdown(
+                components.html(
                     f"""
                     <div class="change-bar">
-                        {render_change("YoY", changes["yoy"])}
-                        {render_change("YTD", changes["ytd"])}
-                        {render_change("Prev", changes["prev"])}
+                        {render_change("YoY", changes.get("yoy"))}
+                        {render_change("YTD", changes.get("ytd"))}
+                        {render_change("Prev", changes.get("prev"))}
                     </div>
                     """,
-                    unsafe_allow_html=True
+                    height=80
                 )
             else:
                 st.caption("No data yet")
