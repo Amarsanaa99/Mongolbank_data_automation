@@ -500,61 +500,66 @@ with right:
             width="stretch"
         )
     # ======================
-    # 📉 CHANGE SUMMARY — PER INDICATOR
+    # 📉 CHANGE SUMMARY — GROUP LEVEL (FIXED)
     # ======================
     st.markdown("### 📉 Change summary")
     
-    cols = st.columns(len(selected))
+    # 🔹 group-д хамаарах БҮХ indicator
+    group_indicators = [
+        col[1] for col in df_data.columns
+        if col[0] == group and not pd.isna(col[1])
+    ]
     
-    for col, ind in zip(cols, selected):
-        with col:
-            changes = None
-            if ind in chart_df.columns and not chart_df[ind].isna().all():
-                changes = compute_changes(chart_df, ind, freq)
+    if not group_indicators:
+        st.caption("No indicators in this group.")
+    else:
+        cols = st.columns(len(group_indicators))
     
-            st.markdown(f"**{ind}**")
+        for col, ind in zip(cols, group_indicators):
+            with col:
+                st.markdown(f"**{ind}**")
     
-            if changes:
-                components.html(
-                    f"""
-                    <style>
-                    .change-bar {{
-                        display: flex;
-                        gap: 18px;
-                        padding: 8px 14px;
-                        border-radius: 14px;
-                        background: rgba(15, 23, 42, 0.45);
-                        border: 1px solid rgba(148,163,184,0.25);
-                        margin: 10px 0 14px 0;
-                        font-family: sans-serif;
-                    }}
-                    .change-item {{
-                        font-size: 13px;
-                        font-weight: 500;
-                        color: #e5e7eb;
-                    }}
-                    .change-up {{
-                        color: #22c55e;
-                    }}
-                    .change-down {{
-                        color: #ef4444;
-                    }}
-                    .change-arrow {{
-                        font-size: 14px;
-                        margin-right: 4px;
-                    }}
-                    </style>
-                
-                    <div class="change-bar">
-                        {render_change("YoY", changes.get("yoy"))}
-                        {render_change("YTD", changes.get("ytd"))}
-                        {render_change("Prev", changes.get("prev"))}
-                    </div>
-                    """,
-                    height=90
-                )
-            else:
-                st.caption("No data yet")
+                changes = None
+                if ind in chart_df.columns and not chart_df[ind].isna().all():
+                    changes = compute_changes(chart_df, ind, freq)
+    
+                if changes:
+                    components.html(
+                        f"""
+                        <style>
+                        .change-bar {{
+                            display: flex;
+                            gap: 18px;
+                            padding: 8px 14px;
+                            border-radius: 14px;
+                            background: rgba(15, 23, 42, 0.45);
+                            border: 1px solid rgba(148,163,184,0.25);
+                            margin: 10px 0 14px 0;
+                            font-family: sans-serif;
+                        }}
+                        .change-item {{
+                            font-size: 13px;
+                            font-weight: 500;
+                            color: #e5e7eb;
+                        }}
+                        .change-up {{ color: #22c55e; }}
+                        .change-down {{ color: #ef4444; }}
+                        .change-arrow {{
+                            font-size: 14px;
+                            margin-right: 4px;
+                        }}
+                        </style>
+    
+                        <div class="change-bar">
+                            {render_change("YoY", changes.get("yoy"))}
+                            {render_change("YTD", changes.get("ytd"))}
+                            {render_change("Prev", changes.get("prev"))}
+                        </div>
+                        """,
+                        height=90
+                    )
+                else:
+                    st.caption("No data yet")
 
     
     def compute_group_kpis(df, indicators):
