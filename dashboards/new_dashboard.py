@@ -500,10 +500,6 @@ with right:
             width="stretch"
         )
     # ======================
-    # 📉 CHANGE SUMMARY (BLOOMBERG STYLE)
-    # ======================
-    
-    # ======================
     # 📉 CHANGE SUMMARY — PER INDICATOR
     # ======================
     st.markdown("### 📉 Change summary")
@@ -521,13 +517,41 @@ with right:
             if changes:
                 components.html(
                     f"""
+                    <style>
+                    .change-bar {{
+                        display: flex;
+                        gap: 18px;
+                        padding: 8px 14px;
+                        border-radius: 14px;
+                        background: rgba(15, 23, 42, 0.45);
+                        border: 1px solid rgba(148,163,184,0.25);
+                        margin: 10px 0 14px 0;
+                        font-family: sans-serif;
+                    }}
+                    .change-item {{
+                        font-size: 13px;
+                        font-weight: 500;
+                        color: #e5e7eb;
+                    }}
+                    .change-up {{
+                        color: #22c55e;
+                    }}
+                    .change-down {{
+                        color: #ef4444;
+                    }}
+                    .change-arrow {{
+                        font-size: 14px;
+                        margin-right: 4px;
+                    }}
+                    </style>
+                
                     <div class="change-bar">
                         {render_change("YoY", changes.get("yoy"))}
                         {render_change("YTD", changes.get("ytd"))}
                         {render_change("Prev", changes.get("prev"))}
                     </div>
                     """,
-                    height=80
+                    height=90
                 )
             else:
                 st.caption("No data yet")
@@ -602,37 +626,6 @@ with right:
         font-size: 24px;
         font-weight: 600;
         color: #3b82f6;
-    }
-    /* ======================
-    CHANGE BAR (Bloomberg style)
-    ====================== */
-    .change-bar {
-        display: flex;
-        gap: 18px;
-        padding: 8px 14px;
-        border-radius: 14px;
-        background: rgba(15, 23, 42, 0.45);
-        border: 1px solid rgba(148,163,184,0.25);
-        margin: 10px 0 14px 0;
-    }
-    
-    .change-item {
-        font-size: 13px;
-        font-weight: 500;
-        color: #e5e7eb;
-    }
-    
-    .change-up {
-        color: #22c55e;
-    }
-    
-    .change-down {
-        color: #ef4444;
-    }
-    
-    .change-arrow {
-        font-size: 14px;
-        margin-right: 4px;
     }
     </style>
     """, unsafe_allow_html=True)
