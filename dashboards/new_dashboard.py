@@ -157,8 +157,7 @@ with left:
 # DATA PREPARATION
 # ======================
 if not selected:
-    st.warning("⚠️ No indicators selected")
-    st.stop()
+    st.info("ℹ️ No indicators selected — showing group-level summary only.")
 
 # ======================
 # 🔧 KPI & CHANGE HELPERS (GLOBAL)
@@ -513,16 +512,25 @@ with right:
     if not group_indicators:
         st.caption("No indicators in this group.")
     else:
-        cols = st.columns(len(group_indicators))
-    
+        NUM_COLS = 4
+        rows = [
+            group_indicators[i:i + NUM_COLS]
+            for i in range(0, len(group_indicators), NUM_COLS)
+        ]
+        
+        for row in rows:
+            cols = st.columns(NUM_COLS)
+            for col, ind in zip(cols, row):
+                with col:
+                    ...
         for col, ind in zip(cols, group_indicators):
             with col:
                 st.markdown(f"**{ind}**")
     
                 changes = None
-                if ind in chart_df.columns and not chart_df[ind].isna().all():
-                    changes = compute_changes(chart_df, ind, freq)
-    
+                if ind in series.columns and not series[ind].isna().all():
+                    tmp = series[["time", ind]].rename(columns={"time": "x"})
+                    changes = compute_changes(tmp, ind, freq)
                 if changes:
                     components.html(
                         f"""
