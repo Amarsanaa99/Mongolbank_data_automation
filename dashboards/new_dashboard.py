@@ -495,7 +495,7 @@ with right:
         )
 
         st.altair_chart(
-            lines.properties(height=350).interactive(),
+            lines.properties(height=340).interactive(),
             width="stretch"
         )
     
