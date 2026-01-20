@@ -523,7 +523,7 @@ with right:
                     <div class="change-bar">
                         {render_change("YoY", changes["yoy"])}
                         {render_change("YTD", changes["ytd"])}
-                        {render_change("Prev", changes["mom"])}
+                        {render_change("Prev", changes["prev"])}
                     </div>
                     """,
                     unsafe_allow_html=True
