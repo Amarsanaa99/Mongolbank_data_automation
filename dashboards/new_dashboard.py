@@ -583,7 +583,7 @@ with right:
                     {cards_html}
                 </div>
                 """,
-                height=200
+                height=140
             )
         else:
             st.caption("No data yet")
@@ -699,9 +699,6 @@ with right:
                 kpi_card("STD (VOTATILITY)", f"{row['Std']:.2f}")
             with cols[5]:
                 kpi_card("LAST VALUE", f"{row['Last']:.2f}")
-                
-    # ✅ ЭНЭ МӨР — KPI SECTION-ИЙГ "АМЬСГАЛТАЙ" БОЛГОНО
-    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
     # ======================
     # 📋 OPTIONAL — Indicator-level KPI TABLE
