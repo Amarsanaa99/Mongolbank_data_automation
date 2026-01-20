@@ -545,10 +545,10 @@ with right:
                 .change-grid {{
                     display: grid;
                     grid-auto-flow: column;
-                    grid-auto-columns: 240px;
-                    gap: 16px;
+                    grid-auto-columns: 220px;
+                    gap: 12px;
                     overflow-x: auto;
-                    padding-bottom: 6px;
+                    padding-bottom: 4px;
                 }}
     
                 .change-card {{
@@ -559,20 +559,26 @@ with right:
                     );
                     border: 1px solid rgba(148,163,184,0.25);
                     border-radius: 16px;
-                    padding: 12px 14px;
+                    padding: 8px 12px;
                     font-family: sans-serif;
                 }}
     
                 .change-title {{
+                    font-size: 13px;
                     font-weight: 600;
-                    margin-bottom: 8px;
+                    margin-bottom: 4px;
                     color: #e5e7eb;
                 }}
     
                 .change-bar {{
                     display: flex;
                     flex-direction: column;
-                    gap: 6px;
+                    gap: 4px;
+                }}
+                
+                .change-item{{
+                    font-size: 12px;
+                    line-height: 1.25;
                 }}
     
                 .change-up {{ color: #22c55e; }}
@@ -583,7 +589,7 @@ with right:
                     {cards_html}
                 </div>
                 """,
-                height=130
+                height=110
             )
         else:
             st.caption("No data yet")
