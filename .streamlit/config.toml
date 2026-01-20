@@ -1,23 +1,30 @@
 [theme]
 base = "dark"
 
-# General color setup
-textColor = "#e2e8f0"
-primaryColor = "#615fff"
-backgroundColor = "#1d293d"
-secondaryBackgroundColor = "#0f172b"
+# Text
+textColor = "#e5e7eb"
+
+# 🔵 Mongolbank main navy
+backgroundColor = "#2E384D"
+
+# 🔵 Darker container background
+secondaryBackgroundColor = "#1F2937"
+
+# 🔵 Accent blue (KPI, active, highlights)
+primaryColor = "#3B82F6"
 
 # Widgets
 showWidgetBorder = true
-borderColor = "#314158"
+borderColor = "#334155"
 
 # Dataframes
-dataframeHeaderBackgroundColor = "#1d293d"
+dataframeHeaderBackgroundColor = "#2E384D"
 
-# Base text
-font = "'Space Grotesk':https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap"
-baseFontWeight = 300
+# Font
+font = "Space Grotesk"
+baseFontWeight = 400
 baseFontSize = 14
+
 
 # Heading text
 headingFont = "Space Grotesk"
