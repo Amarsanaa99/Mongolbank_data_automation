@@ -421,7 +421,93 @@ with right:
             lines.properties(height=350).interactive(),
             use_container_width=True
         )
+    # ======================
+    # 📉 CHANGE SUMMARY (BLOOMBERG STYLE)
+    # ======================
+    
+    # 🔹 PRIMARY indicator
+    primary_indicator = selected[0]
+    
+    # 🔹 Frequency тодорхойлох
+    if "Month" in df_time.columns:
+        freq = "Monthly"
+    elif "Quarter" in df_time.columns:
+        freq = "Quarterly"
+    else:
+        freq = "Yearly"
+    
+    changes = compute_changes(chart_df, primary_indicator, freq)
+    
+    if changes:
+        st.markdown(
+            f"""
+            <div class="change-bar">
+                {render_change("YoY", changes["yoy"])}
+                {render_change("YTD", changes["ytd"])}
+                {render_change("Prev", changes["mom"])}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
+    
+    def compute_changes(df, indicator, freq):
+        s = df[["x", indicator]].dropna().copy()
+        s = s.sort_values("x")
+    
+        if len(s) < 2:
+            return None
+    
+        latest = s.iloc[-1]
+        latest_val = latest[indicator]
+        latest_time = latest["x"]
+    
+        # 🔹 Previous period
+        prev_val = s.iloc[-2][indicator]
+        mom = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
+    
+        # 🔹 YoY
+        yoy = None
+        if freq == "Monthly":
+            yoy_time = str(int(latest_time[:4]) - 1) + latest_time[4:]
+        elif freq == "Quarterly":
+            yoy_time = str(int(latest_time[:4]) - 1) + latest_time[4:]
+        else:
+            yoy_time = str(int(latest_time) - 1)
+    
+        yoy_row = s[s["x"] == yoy_time]
+        if not yoy_row.empty:
+            prev_year_val = yoy_row.iloc[0][indicator]
+            yoy = (latest_val / prev_year_val - 1) * 100 if prev_year_val != 0 else None
+    
+        # 🔹 YTD
+        ytd = None
+        current_year = latest_time[:4]
+        year_start = s[s["x"].str.startswith(current_year)].iloc[0][indicator]
+        if year_start != 0:
+            ytd = (latest_val / year_start - 1) * 100
+    
+        return {
+            "latest": latest_val,
+            "mom": mom,
+            "yoy": yoy,
+            "ytd": ytd
+        }
+    def render_change(label, value):
+        if value is None:
+            return f"<span class='change-item'>{label}: N/A</span>"
+    
+        arrow = "▲" if value > 0 else "▼"
+        cls = "change-up" if value > 0 else "change-down"
+    
+        return f"""
+        <span class="change-item {cls}">
+            <span class="change-arrow">{arrow}</span>
+            {label}: {value:.2f}%
+        </span>
+        """
+
+    
     def compute_group_kpis(df, indicators):
         stats = []
     
@@ -491,6 +577,37 @@ with right:
         font-size: 24px;
         font-weight: 600;
         color: #3b82f6;
+    }
+    /* ======================
+    CHANGE BAR (Bloomberg style)
+    ====================== */
+    .change-bar {
+        display: flex;
+        gap: 18px;
+        padding: 8px 14px;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.45);
+        border: 1px solid rgba(148,163,184,0.25);
+        margin: 10px 0 14px 0;
+    }
+    
+    .change-item {
+        font-size: 13px;
+        font-weight: 500;
+        color: #e5e7eb;
+    }
+    
+    .change-up {
+        color: #22c55e;
+    }
+    
+    .change-down {
+        color: #ef4444;
+    }
+    
+    .change-arrow {
+        font-size: 14px;
+        margin-right: 4px;
     }
     </style>
     """, unsafe_allow_html=True)
