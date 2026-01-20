@@ -543,12 +543,12 @@ with right:
                 f"""
                 <style>
                 .change-grid {{
-                    display: grid;
+                    display: flex;
                     grid-auto-flow: column;
                     grid-auto-columns: 220px;
                     gap: 12px;
                     overflow-x: auto;
-                    padding-bottom: 4px;
+                    padding-bottom: 6px;
                 }}
     
                 .change-card {{
@@ -558,7 +558,8 @@ with right:
                         rgba(15,23,42,0.65)
                     );
                     border: 1px solid rgba(148,163,184,0.25);
-                    border-radius: 16px;
+                    border-radius: 14px;
+                    min-width: 200px;
                     padding: 8px 12px;
                     font-family: sans-serif;
                 }}
@@ -566,7 +567,7 @@ with right:
                 .change-title {{
                     font-size: 13px;
                     font-weight: 600;
-                    margin-bottom: 4px;
+                    margin-bottom: 6px;
                     color: #e5e7eb;
                 }}
     
