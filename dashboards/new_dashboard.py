@@ -480,7 +480,7 @@ with right:
         padding: 18px 20px;
     
         /* 🔥 АМЬСГАЛ */
-        margin: 6px 0;   /* дээд/доод */
+        margin: 10px 0;   /* дээд/доод */
     }
     .kpi-label {
         font-size: 12px;
