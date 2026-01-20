@@ -442,7 +442,7 @@ with right:
                 )
             )
         ).properties(
-            padding={"bottom": 20},   # 🔥 CARD ДООД ТАЛД ЗАЙ ӨГНӨ
+            padding={"bottom": 10},   # 🔥 CARD ДООД ТАЛД ЗАЙ ӨГНӨ
             background="transparent"
         )
         
