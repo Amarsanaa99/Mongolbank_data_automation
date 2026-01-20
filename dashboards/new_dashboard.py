@@ -502,10 +502,8 @@ with right:
     # ======================
     # 📉 CHANGE SUMMARY — GROUP LEVEL (FIXED)
     # ======================
-    full_series = series.copy()
     st.markdown("### 📉 Change summary")
     
-    # 🔹 group-д хамаарах БҮХ indicator
     group_indicators = [
         col[1] for col in df_data.columns
         if col[0] == group and not pd.isna(col[1])
@@ -514,20 +512,19 @@ with right:
     if not group_indicators:
         st.caption("No indicators in this group.")
     else:
-        # 🔥 НЭГ МӨР — indicator хэд байна, төдий чинээ column
         cards_html = ""
-        
+    
         for ind in group_indicators:
             tmp = pd.DataFrame({
                 "x": series["time"],
                 ind: df_data[(group, ind)].values
             })
-        
+    
             if not tmp[ind].isna().all():
                 changes = compute_changes(tmp, ind, freq)
             else:
                 changes = None
-        
+    
             if changes:
                 cards_html += f"""
                 <div class="change-card">
@@ -539,49 +536,59 @@ with right:
                     </div>
                 </div>
                 """
-                if changes:
-                    components.html(
-                        f"""
-                        <style>
-                        .change-grid {{
-                            display: grid;
-                            grid-auto-flow: column;
-                            grid-auto-columns: 230px;   /* 🔒 card width */
-                            gap: 16px;
-                            overflow-x: auto;
-                            padding-bottom: 6px;
-                        }}
-                    
-                        .change-card {{
-                            background: rgba(15, 23, 42, 0.45);
-                            border: 1px solid rgba(148,163,184,0.25);
-                            border-radius: 14px;
-                            padding: 10px 14px;
-                            font-family: sans-serif;
-                            white-space: nowrap;
-                        }}
-                    
-                        .change-title {{
-                            font-weight: 600;
-                            margin-bottom: 6px;
-                            color: #e5e7eb;
-                        }}
-                    
-                        .change-bar {{
-                            display: flex;
-                            flex-direction: column;
-                            gap: 6px;
-                        }}
-                        </style>
-                    
-                        <div class="change-grid">
-                            {cards_html}
-                        </div>
-                        """,
-                        height=190
-                    )
-                else:
-                    st.caption("No data yet")
+    
+        # ✅ LOOP ДУУССАНЫ ДАРАА ГАНЦ УДАА RENDER
+        if cards_html:
+            components.html(
+                f"""
+                <style>
+                .change-grid {{
+                    display: grid;
+                    grid-auto-flow: column;
+                    grid-auto-columns: 240px;
+                    gap: 16px;
+                    overflow-x: auto;
+                    padding-bottom: 6px;
+                }}
+    
+                .change-card {{
+                    background: linear-gradient(
+                        180deg,
+                        rgba(15,23,42,0.85),
+                        rgba(15,23,42,0.65)
+                    );
+                    border: 1px solid rgba(148,163,184,0.25);
+                    border-radius: 16px;
+                    padding: 12px 14px;
+                    font-family: sans-serif;
+                }}
+    
+                .change-title {{
+                    font-weight: 600;
+                    margin-bottom: 8px;
+                    color: #e5e7eb;
+                }}
+    
+                .change-bar {{
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                }}
+    
+                .change-up {{ color: #22c55e; }}
+                .change-down {{ color: #ef4444; }}
+                </style>
+    
+                <div class="change-grid">
+                    {cards_html}
+                </div>
+                """,
+                height=200
+            )
+        else:
+            st.caption("No data yet")
+
+
 
     
     def compute_group_kpis(df, indicators):
