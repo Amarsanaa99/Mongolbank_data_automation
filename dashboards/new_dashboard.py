@@ -583,7 +583,7 @@ with right:
                     {cards_html}
                 </div>
                 """,
-                height=100
+                height=130
             )
         else:
             st.caption("No data yet")
