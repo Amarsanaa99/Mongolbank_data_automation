@@ -683,7 +683,12 @@ with right:
         st.markdown("### 📌 Indicator-level KPIs")
     
     with h_right:
-        st.markdown(f"### 📊 {row['Indicator']}")
+        st.markdown(f"### 📊 {primary_indicator}")
+    if kpi_main.empty:
+        st.info("No KPI data available.")
+        st.stop()
+        
+    row = kpi_main.iloc[0]   # ✅ row ЭНД Л ҮҮСНЭ
     
     # 🔽 KPI CARDS (ӨМНӨХӨӨРӨӨ)
     cols = st.columns(6)
