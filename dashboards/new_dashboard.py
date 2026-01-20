@@ -675,30 +675,32 @@ with right:
             """,
             unsafe_allow_html=True
         )
+        
+    # 🔥 HEADER ROW — INLINE
+    h_left, h_right = st.columns([3, 2])
     
-    st.markdown("### 📌 Indicator-level KPIs")
+    with h_left:
+        st.markdown("### 📌 Indicator-level KPIs")
     
-    if kpi_main.empty:
-        st.info("No KPI data available.")
-    else:
-        row = kpi_main.iloc[0]
-        with st.container(border=True):
-            st.subheader(f"📊 {row['Indicator']}")
+    with h_right:
+        st.markdown(f"### 📊 {row['Indicator']}")
     
-            cols = st.columns(6)
+    # 🔽 KPI CARDS (ӨМНӨХӨӨРӨӨ)
+    cols = st.columns(6)
     
-            with cols[0]:
-                kpi_card("MINIMUM VALUE", f"{row['Min']:.2f}")
-            with cols[1]:
-                kpi_card("MAXIMUM VALUE", f"{row['Max']:.2f}")
-            with cols[2]:
-                kpi_card("MEAN", f"{row['Mean']:.2f}")
-            with cols[3]:
-                kpi_card("MEDIAN", f"{row['Median']:.2f}")
-            with cols[4]:
-                kpi_card("STD (VOTATILITY)", f"{row['Std']:.2f}")
-            with cols[5]:
-                kpi_card("LAST VALUE", f"{row['Last']:.2f}")
+    with cols[0]:
+        kpi_card("MINIMUM VALUE", f"{row['Min']:.2f}")
+    with cols[1]:
+        kpi_card("MAXIMUM VALUE", f"{row['Max']:.2f}")
+    with cols[2]:
+        kpi_card("MEAN", f"{row['Mean']:.2f}")
+    with cols[3]:
+        kpi_card("MEDIAN", f"{row['Median']:.2f}")
+    with cols[4]:
+        kpi_card("STD (VOTATILITY)", f"{row['Std']:.2f}")
+    with cols[5]:
+        kpi_card("LAST VALUE", f"{row['Last']:.2f}")
+
 
     # ======================
     # 📋 OPTIONAL — Indicator-level KPI TABLE
