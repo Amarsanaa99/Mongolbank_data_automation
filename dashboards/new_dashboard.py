@@ -540,7 +540,7 @@ with right:
         # ✅ LOOP ДУУССАНЫ ДАРАА ГАНЦ УДАА RENDER
         if cards_html:
             components.html(
-            f"""
+            """
             <style>
             * {
                 margin: 0;
@@ -675,7 +675,7 @@ with right:
             </style>
             
             <div class="change-grid">
-            {cards_html}
+            """+ cards_html+"""
             </div>
             """,
             height=160
