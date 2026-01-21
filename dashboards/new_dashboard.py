@@ -302,48 +302,105 @@ with left:
     with st.container(border=True):
         st.subheader("⏳ Time range")
 
-        # 🔹 YEAR (ALWAYS)
-        years = sorted(
-        as_series(series["Year"])
-        .dropna()
-        .astype(int)
-        .unique()
+        # ======================
+        # YEAR (ALWAYS)
+        # ======================
+        years = (
+            as_series(series["Year"])
+            .dropna()
+            .astype(int)
+            .unique()
         )
 
+        y_min, y_max = int(years.min()), int(years.max())
 
-        start_year, end_year = st.select_slider(
-            "Year",
-            options=years,
-            value=(years[0], years[-1])
-        )
+        col1, col2 = st.columns([3, 1])
+
+        with col1:
+            year_range = st.select_slider(
+                "Year range",
+                options=list(range(y_min, y_max + 1)),
+                value=(y_min, y_max)
+            )
+
+        with col2:
+            year_start = st.number_input(
+                "Start",
+                min_value=y_min,
+                max_value=y_max,
+                value=year_range[0],
+                key="year_start"
+            )
+            year_end = st.number_input(
+                "End",
+                min_value=y_min,
+                max_value=y_max,
+                value=year_range[1],
+                key="year_end"
+            )
+
 
         # 🔹 MONTH or QUARTER (CONDITIONAL)
+        # ======================
+        # MONTH or QUARTER
+        # ======================
+        
         if freq == "Monthly":
-            months = sorted(
+            months = (
                 as_series(series["Month"])
                 .dropna()
                 .astype(int)
                 .unique()
             )
-            start_sub, end_sub = st.select_slider(
-                "Month",
-                options=months,
-                value=(months[0], months[-1])
-            )
 
+            m_min, m_max = int(months.min()), int(months.max())
+
+            col3, col4 = st.columns([3, 1])
+            
+            with col3:
+                month_range = st.select_slider(
+                    "Month range",
+                    options=list(range(1, 13)),
+                    value=(m_min, m_max)
+                )
+            
+            with col4:
+                start_sub = st.number_input(
+                    "M start",
+                    1, 12,
+                    month_range[0],
+                    key="month_start"
+                )
+                end_sub = st.number_input(
+                    "M end",
+                    1, 12,
+                    month_range[1],
+                    key="month_end"
+                )
+        
         elif freq == "Quarterly":
-            quarters = sorted(
-                as_series(series["Quarter"])
-                .dropna()
-                .astype(int)
-                .unique()
-            )
+            col3, col4 = st.columns([3, 1])
 
-            start_sub, end_sub = st.select_slider(
-                "Quarter",
-                options=quarters,
-                value=(quarters[0], quarters[-1]))
+            with col3:
+                quarter_range = st.select_slider(
+                    "Quarter range",
+                    options=[1, 2, 3, 4],
+                    value=(1, 4)
+                )
 
+            with col4:
+                start_sub = st.number_input(
+                    "Q start",
+                    1, 4,
+                    quarter_range[0],
+                    key="quarter_start"
+                )
+                end_sub = st.number_input(
+                    "Q end",
+                    1, 4,
+                    quarter_range[1],
+                    key="quarter_end"
+                )
 
 
 # Сонгосон үзүүлэлтүүдийг нэмэх
