@@ -373,14 +373,13 @@ with left:
             start_time = f"{start_year}-Q{start_quarter}"
             end_time = f"{end_year}-Q{end_quarter}"
 
+
+
+
 # Сонгосон үзүүлэлтүүдийг нэмэх
 for indicator in selected:
     if (group, indicator) in df_data.columns:
-        series[indicator] = pd.Series(
-            df_data[(group, indicator)].values,
-            index=series.index
-        )
-
+        series[indicator] = df_data[(group, indicator)].values
     else:
         st.warning(f"Indicator '{indicator}' not found in data")
 
@@ -422,141 +421,104 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-# 🔥 Year + Month → time
-series["time"] = pd.to_datetime(
-    series["Year"].astype(str) + "-" +
-    series["Month"].astype(str).str.zfill(2),
-    format="%Y-%m"
-)
 
 # ======================
-# MAIN CHART (STABLE)
+# MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
-import altair as alt
 with right:
     with st.container(border=True):
-        st.subheader("📈 Main chart (Advanced)")
-
-        # 1️⃣ ЗӨВХӨН series-д байгаа indicator
-        valid_selected = [c for c in selected if c in series.columns]
-
-        if not valid_selected:
-            st.warning("⚠️ No valid indicators to plot.")
-            st.stop()
-
-        # 2️⃣ chart_df (time + valid indicators)
-        chart_df = series.loc[:, ["time"] + valid_selected].copy()
-
-        # 3️⃣ БҮХ indicator NA бол мөрийг хаяна
-        chart_df = chart_df.loc[
-            ~chart_df[valid_selected].isna().all(axis=1)
+        st.subheader("📈 Main chart")
+        # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
+        chart_df = series[["time"] + selected].copy()
+        
+        # ⏳ APPLY TIME RANGE (STRING-SAFE) — ЗӨВ, ХАНГАЛТТАЙ
+        chart_df = chart_df[
+            (chart_df["time"] >= start_time) &
+            (chart_df["time"] <= end_time)
         ]
 
-        # 4️⃣ time сорт
-        chart_df = chart_df.sort_values("time")
-
-        # ======================
-        # 🔍 BRUSH (X-AXIS ZOOM)
-        # ======================
-        brush = alt.selection_interval(
-            encodings=["x"],
-            name="brush"
+        # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
+        valid_indicators = [
+            col for col in selected
+            if col in chart_df.columns and not chart_df[col].isna().all()
+        ]
+    
+        if not valid_indicators:
+            st.warning("⚠️ No data available for selected indicator(s)")
+            st.stop()
+    
+        # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
+        import altair as alt
+    
+        base = alt.Chart(chart_df).encode(
+            x=alt.X(
+                "time:N",
+                title=None,
+                sort="ascending",
+                axis=alt.Axis(
+                    labelAngle=0,
+                    labelFontSize=11,
+                    grid=False,
+                    labelExpr="substring(datum.value, 0, 4)"
+                )
+            )
+        ).properties(
+            padding={"bottom": 5},   
+            background="transparent"
+        )
+        
+        lines = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_line(
+            strokeWidth=2.2,
+            interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
+        ).encode(
+            y=alt.Y(
+                "Value:Q",
+                title=None,
+                axis=alt.Axis(
+                    labelFontSize=11,
+                    grid=True,
+                    gridColor="#94a3b8",
+                    gridOpacity=0.25,
+                    gridWidth=0.6,
+                    tickColor="#94a3b8",
+                    domain=False
+                )
+            ),
+            color=alt.Color(
+                "Indicator:N",
+                legend=alt.Legend(
+                    title=None,
+                    orient="right"
+                )
+            ),
+            tooltip=[
+                alt.Tooltip("time:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
+        )
+        points = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_point(
+            opacity=0,
+            size=80
+        ).encode(
+            y="Value:Q",
+            tooltip=[
+                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
         )
 
-        # ======================
-        # 📈 MAIN (TOP) CHART
-        # ======================
-        main = (
-            alt.Chart(chart_df)
-            .transform_fold(
-                valid_selected,
-                as_=["Indicator", "Value"]
-            )
-
-            .mark_line(strokeWidth=2.5)
-            .encode(
-                x=alt.X(
-                    "time:N",
-                    title=None,
-                    axis=alt.Axis(
-                        labelAngle=0,
-                        labelFontSize=11,
-                        grid=False
-                    ),
-                    scale=alt.Scale(domain=brush)
-                ),
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=alt.Axis(
-                        grid=True,
-                        gridOpacity=0.25,
-                        domain=False
-                    )
-                ),
-                color=alt.Color(
-                    "Indicator:N",
-                    legend=alt.Legend(title=None, orient="right")
-                ),
-                tooltip=[
-                    alt.Tooltip("time:N", title="Time"),
-                    alt.Tooltip("Indicator:N"),
-                    alt.Tooltip("Value:Q", format=",.2f")
-                ]
-            )
-            .properties(
-                height=360,
-                background="transparent"
-            )
+        st.altair_chart(
+            lines.properties(height=340).interactive(),
+            width="stretch"
         )
-
-        # ======================
-        # ⏳ BRUSH (BOTTOM) CHART
-        # ======================
-        timeline = (
-            alt.Chart(chart_df)
-            .transform_fold(
-                valid_selected,   # 🔥 ЗӨВ
-                as_=["Indicator", "Value"]
-            )
-            .mark_line(opacity=0.5)
-            .encode(
-                x=alt.X(
-                    "time:N",
-                    title=None,
-                    axis=alt.Axis(
-                        labels=False,
-                        ticks=False,
-                        grid=False
-                    )
-                ),
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=None
-                ),
-                color=alt.Color("Indicator:N", legend=None)
-            )
-            .add_selection(brush)
-            .properties(
-                height=90,
-                background="transparent"
-            )
-        )
-
-        # ======================
-        # 🧩 COMBINE
-        # ======================
-        final_chart = alt.vconcat(
-            main,
-            timeline,
-            spacing=10
-        ).resolve_scale(
-            y="independent"
-        )
-
-        st.altair_chart(final_chart, use_container_width=True)
-
     
     def compute_group_kpis(df, indicators):
         stats = []
