@@ -565,16 +565,21 @@ with right:
 
     # ===== KPI CARD HELPER (OUTSIDE BLOCK)
     def kpi_card(label, value, sublabel=None):
+        sub = ""
+        if sublabel is not None:
+            sub = f"<div class='kpi-sub'>{str(sublabel)}</div>"
+    
         st.markdown(
             f"""
             <div class="kpi-card">
                 <div class="kpi-label">{label}</div>
                 <div class="kpi-value">{value}</div>
-                {f"<div class='kpi-sub'>{sublabel}</div>" if sublabel else ""}
+                {sub}
             </div>
             """,
             unsafe_allow_html=True
         )
+
 
         
     # 🔥 HEADER ROW — INLINE
@@ -612,7 +617,7 @@ with right:
         kpi_card(
             "LAST VALUE",
             f"{float(row['Last']):.2f}",
-            row["Last date"]
+            str(row["Last date"])
         )
         
     with cols[1]:
