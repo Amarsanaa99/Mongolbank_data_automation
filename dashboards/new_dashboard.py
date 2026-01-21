@@ -420,33 +420,36 @@ if series["time"].isna().all():
 
 
 # ======================
-# MAIN CHART (FAST, STABLE, NO melt, NO time)
+# MAIN CHART (STABLE)
 # ======================
 import altair as alt
+
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart (Advanced)")
 
-        # 1️⃣ chart_df ЭХЭЛЖ
+        # 1️⃣ series-д реально байгаа indicator-ууд
         valid_selected = [
             c for c in selected
-            if c in chart_df.columns
+            if c in series.columns
         ]
 
         if not valid_selected:
             st.warning("⚠️ No valid indicators to plot.")
             st.stop()
 
-        # 2️⃣ зөвхөн реально байгаа indicator
-        chart_df = series[["time"] + selected].copy()
-        
+        # 2️⃣ ОДОО chart_df-ийг үүсгэнэ
+        chart_df = series[["time"] + valid_selected].copy()
+
         # 3️⃣ өгөгдөлтэй мөрүүд
         chart_df = chart_df.dropna(
             subset=valid_selected,
             how="all"
         )
-        
+
+        # 4️⃣ time сорт
         chart_df = chart_df.sort_values("time")
+
 
         # ======================
         # 🔍 BRUSH (X-AXIS ZOOM)
