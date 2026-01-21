@@ -445,16 +445,12 @@ with right:
         # 2️⃣ chart_df үүсгэнэ (зөвхөн бодит баганууд)
         chart_df = series[["time"] + valid_selected].copy()
 
-        # 3️⃣ SAFE subset (ганц үнэн эх сурвалж)
-        safe_subset = [
-            c for c in valid_selected
-            if c in chart_df.columns
-        ]
-
-        # 4️⃣ dropna — ЗӨВХӨН НЭГ УДАА
-        if safe_subset:
+        # 3️⃣ dropna-г 100% safe байдлаар хийх
+        common_cols = chart_df.columns.intersection(valid_selected)
+        
+        if len(common_cols) > 0:
             chart_df = chart_df.dropna(
-                subset=safe_subset,
+                subset=list(common_cols),
                 how="all"
             )
 
