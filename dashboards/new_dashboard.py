@@ -472,20 +472,27 @@ with right:
             if ind not in df.columns:
                 continue
     
-            s = pd.to_numeric(df[ind], errors="coerce").dropna()
-            if s.empty:
+            series = df[["time", ind]].copy()
+            series[ind] = pd.to_numeric(series[ind], errors="coerce")
+            
+            last_valid_idx = series[ind].last_valid_index()
+            if last_valid_idx is None:
                 continue
-    
+            
+            last_value = series.loc[last_valid_idx, ind]
+            last_date  = series.loc[last_valid_idx, "time"]
+            
             stats.append({
                 "Indicator": ind,
-                "Min": s.min(),
-                "Max": s.max(),
-                "Mean": s.mean(),
-                "Median": s.median(),
-                "Std": s.std(),
-                "Last": s.iloc[-1]
+                "Min": series[ind].min(),
+                "Max": series[ind].max(),
+                "Mean": series[ind].mean(),
+                "Median": series[ind].median(),
+                "Std": series[ind].std(),
+                "Last": last_value,
+                "Last date": last_date     # ✅ ШИНЭ
             })
-    
+
         return pd.DataFrame(stats)
 
     # ======================
@@ -592,7 +599,6 @@ with right:
         st.stop()
         
     row = kpi_main.iloc[0]   # ✅ row ЭНД Л ҮҮСНЭ
-    last_time = chart_df["time"].dropna().iloc[-1]
 
     # 🔽 KPI CARDS (ӨМНӨХӨӨРӨӨ)
     cols = st.columns(6)
@@ -601,7 +607,7 @@ with right:
         kpi_card(
             "LAST VALUE",
             f"{row['Last']:.2f}",
-            last_time
+            row["Last date"]
         )
         
     with cols[1]:
