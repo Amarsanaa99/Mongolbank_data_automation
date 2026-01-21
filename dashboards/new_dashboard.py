@@ -447,28 +447,18 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
         
-        # ===== 3️⃣ ADVANCED CHART with ZOOM & PAN
+        # ===== 3️⃣ ADVANCED INTERACTIVE CHART (ZOOM & PAN)
         import altair as alt
         
-        # 🔥 ZOOM SELECTION (X-axis only)
-        brush = alt.selection_interval(
-            encodings=['x'],
-            name='brush'
-        )
-        
-        # MAIN LINE CHART with ZOOM enabled
-        lines = alt.Chart(chart_df).transform_fold(
+        # BASE CHART with transform_fold
+        base = alt.Chart(chart_df).transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
-        ).mark_line(
-            strokeWidth=2.2,
-            interpolate="linear"
         ).encode(
             x=alt.X(
                 "time:N",
                 title=None,
                 sort="ascending",
-                scale=alt.Scale(domain={'selection': brush, 'encoding': 'x'}),
                 axis=alt.Axis(
                     labelAngle=0,
                     labelFontSize=11,
@@ -501,61 +491,22 @@ with right:
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
+        )
+        
+        # MAIN LINE CHART
+        lines = base.mark_line(
+            strokeWidth=2.2,
+            interpolate="linear"
         ).properties(
             height=340,
             background="transparent"
         )
         
-        # MINI CONTEXT CHART (OVERVIEW)
-        mini = alt.Chart(chart_df).transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_line(
-            strokeWidth=1.5
-        ).encode(
-            x=alt.X(
-                "time:N",
-                title=None,
-                sort="ascending",
-                axis=alt.Axis(
-                    labelAngle=0,
-                    labelFontSize=9,
-                    grid=False,
-                    labelExpr="substring(datum.value, 0, 4)"
-                )
-            ),
-            y=alt.Y(
-                "Value:Q",
-                title=None,
-                axis=alt.Axis(
-                    labels=False,
-                    ticks=False,
-                    domain=False,
-                    grid=False
-                )
-            ),
-            color=alt.Color(
-                "Indicator:N",
-                legend=None
-            )
-        ).properties(
-            height=60,
-            background="transparent"
-        ).add_selection(
-            brush
-        )
-        
-        # COMBINE: Main chart + mini overview
-        final_chart = alt.vconcat(
-            lines,
-            mini,
-            spacing=10
-        ).resolve_scale(
-            color='shared'
-        )
+        # 🔥 ZOOM & PAN боломжтой болгох
+        interactive_chart = lines.interactive()
         
         st.altair_chart(
-            final_chart,
+            interactive_chart,
             use_container_width=True
         )
     
