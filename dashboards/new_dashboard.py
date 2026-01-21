@@ -301,106 +301,56 @@ for col in ["Year", "Month", "Quarter"]:
 with left:
     with st.container(border=True):
         st.subheader("⏳ Time range")
-
-        # ======================
-        # YEAR (ALWAYS)
-        # ======================
-        years = (
+    
+        years = sorted(
             as_series(series["Year"])
             .dropna()
             .astype(int)
             .unique()
+            .tolist()
         )
-
-        y_min, y_max = int(years.min()), int(years.max())
-
-        col1, col2 = st.columns([3, 1])
-
+    
+        col1, col2 = st.columns(2)
+    
         with col1:
-            year_range = st.select_slider(
-                "Year range",
-                options=list(range(y_min, y_max + 1)),
-                value=(y_min, y_max)
+            year_start = st.selectbox(
+                "Start year",
+                years,
+                index=0
             )
-
+    
         with col2:
-            year_start = st.number_input(
-                "Start",
-                min_value=y_min,
-                max_value=y_max,
-                value=year_range[0],
-                key="year_start"
+            year_end = st.selectbox(
+                "End year",
+                years,
+                index=len(years) - 1
             )
-            year_end = st.number_input(
-                "End",
-                min_value=y_min,
-                max_value=y_max,
-                value=year_range[1],
-                key="year_end"
-            )
-
 
         # 🔹 MONTH or QUARTER (CONDITIONAL)
         # ======================
         # MONTH or QUARTER
         # ======================
-        
         if freq == "Monthly":
-            months = (
-                as_series(series["Month"])
-                .dropna()
-                .astype(int)
-                .unique()
-            )
-
-            m_min, m_max = int(months.min()), int(months.max())
-
-            col3, col4 = st.columns([3, 1])
-            
-            with col3:
-                month_range = st.select_slider(
-                    "Month range",
-                    options=list(range(1, 13)),
-                    value=(m_min, m_max)
-                )
-            
-            with col4:
-                start_sub = st.number_input(
-                    "M start",
-                    1, 12,
-                    month_range[0],
-                    key="month_start"
-                )
-                end_sub = st.number_input(
-                    "M end",
-                    1, 12,
-                    month_range[1],
-                    key="month_end"
-                )
+            months = list(range(1, 13))
         
-        elif freq == "Quarterly":
-            col3, col4 = st.columns([3, 1])
-
+            col3, col4 = st.columns(2)
+        
             with col3:
-                quarter_range = st.select_slider(
-                    "Quarter range",
-                    options=[1, 2, 3, 4],
-                    value=(1, 4)
-                )
-
+                start_sub = st.selectbox("Start month", months, index=0)
+        
             with col4:
-                start_sub = st.number_input(
-                    "Q start",
-                    1, 4,
-                    quarter_range[0],
-                    key="quarter_start"
-                )
-                end_sub = st.number_input(
-                    "Q end",
-                    1, 4,
-                    quarter_range[1],
-                    key="quarter_end"
-                )
+                end_sub = st.selectbox("End month", months, index=11)
+
+        if freq == "Quarterly":
+            col3, col4 = st.columns(2)
+        
+            with col3:
+                start_sub = st.selectbox("Start quarter", [1, 2, 3, 4], index=0)
+        
+            with col4:
+                end_sub = st.selectbox("End quarter", [1, 2, 3, 4], index=3)
+
+
 
 
 # Сонгосон үзүүлэлтүүдийг нэмэх
@@ -465,9 +415,10 @@ with right:
 
         # ⏳ APPLY TIME RANGE (STRING-SAFE)
         mask = (
-            (year_s >= start_year) &
-            (year_s <= end_year)
+            (year_s >= year_start) &
+            (year_s <= year_end)
         )
+
         
         if freq == "Monthly" and month_s is not None:
             mask &= (
