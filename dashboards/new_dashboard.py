@@ -474,7 +474,7 @@ with right:
                 )
             ),
             tooltip=[
-                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip("x:N"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
@@ -896,7 +896,7 @@ def small_multiple_chart(df, indicator):
                 )
             ),
             tooltip=[
-                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip("x:N"),
                 alt.Tooltip(f"{indicator}:Q", format=",.2f")
             ]
         )
