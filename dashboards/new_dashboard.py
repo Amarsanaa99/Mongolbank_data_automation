@@ -498,8 +498,7 @@ with right:
             base
             .mark_line(strokeWidth=2.4)
             .properties(
-                height=360,
-                background="transparent"
+                height=360
             )
             .interactive(bind_x=True)  # 🔥 MOUSE ZOOM + PAN
         )
@@ -531,12 +530,15 @@ with right:
         )
 
         # ===== 6️⃣ LINK MAIN ↔ MINI
-        final_chart = alt.vconcat(
-            main_chart.transform_filter(brush),
-            mini_chart,
-            spacing=10
-        ).resolve_scale(
-            color="shared"
+        final_chart = (
+            alt.vconcat(
+                main_chart.transform_filter(brush),
+                mini_chart,
+                spacing=10
+            )
+            .properties(
+                background="transparent"
+            )
         )
 
         st.altair_chart(
