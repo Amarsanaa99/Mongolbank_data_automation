@@ -380,12 +380,9 @@ with right:
         
             if isinstance(month, pd.DataFrame):
                 month = month.iloc[:, 0]
-        
-            chart_df["x"] = (
-                year.astype(int).astype(str)
-                + "-"
-                + month.astype(int).astype(str).str.zfill(2)
-            )
+                    
+            chart_df["x"] = chart_df["Year"].astype(int).astype(str)
+
     
         elif "Quarter" in df_time.columns:
             chart_df = series[["Year", "Quarter"] + selected].copy()
@@ -435,7 +432,7 @@ with right:
                 "x:N",
                 title=None,
                 axis=alt.Axis(
-                    labelAngle=-45,
+                    labelAngle=0,
                     labelFontSize=11,
                     labelLimit=140,
                     grid=False
@@ -949,6 +946,7 @@ def group_chart(group_name):
 
     # 4️⃣ TIME FILTER (дараа нь!)
     gdf = gdf[gdf["time"] >= "2020"]
+    gdf["year"] = gdf["time"].str.slice(0, 4)
 
     # ✅ 5️⃣ өгөгдөлтэй indicator-ууд
     valid_inds = [
@@ -959,7 +957,7 @@ def group_chart(group_name):
     # 6️⃣ BASE CHART (үргэлж харагдана)
     base = alt.Chart(gdf).encode(
         x=alt.X(
-            "time:N",
+            "year:N",
             title=None,
             axis=alt.Axis(
                 labelAngle=-45,
