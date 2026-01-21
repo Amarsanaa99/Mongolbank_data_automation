@@ -376,11 +376,6 @@ with right:
         # ===== 1️⃣ DATA
         chart_df = series[["year_label"] + selected].copy()
         chart_df = chart_df.rename(columns={"year_label": "x"})
-
-
-        else:
-            chart_df = series[["Year"] + selected].copy()
-            chart_df["x"] = chart_df["Year"].astype(int).astype(str)
         
         # ======================
         # ⏳ APPLY TIME RANGE (MAIN CHART ONLY)
