@@ -465,6 +465,167 @@ with right:
             width="stretch"
         )
     
+    def compute_group_kpis(df, indicators):
+        stats = []
+    
+        for ind in indicators:
+            if ind not in df.columns:
+                continue
+    
+            s = pd.to_numeric(df[ind], errors="coerce").dropna()
+            if s.empty:
+                continue
+    
+            stats.append({
+                "Indicator": ind,
+                "Min": s.min(),
+                "Max": s.max(),
+                "Mean": s.mean(),
+                "Median": s.median(),
+                "Std": s.std(),
+                "Last": s.iloc[-1]
+            })
+    
+        return pd.DataFrame(stats)
+
+    # ======================
+    # 📊 KPI CALCULATION (INDICATOR LEVEL)
+    # ======================
+    
+    group_indicators = [
+        col[1] for col in df_data.columns
+        if col[0] == group
+    ]
+    # ======================
+    # 📊 KPI CALCULATION (INDICATOR LEVEL)
+    # ======================
+    
+    # 🔹 БҮХ indicator-уудын KPI-г НЭГ УДАА бодно
+    kpi_df = compute_group_kpis(chart_df, group_indicators)
+    
+    # 🔹 KPI-д харуулах PRIMARY indicator
+    primary_indicator = selected[0]
+    
+    # 🔹 KPI-г салгах
+    kpi_main = kpi_df[kpi_df["Indicator"] == primary_indicator]
+    kpi_rest = kpi_df[kpi_df["Indicator"] != primary_indicator]
+    
+    st.markdown("""
+    <style>
+    .kpi-card {
+        background: linear-gradient(
+            180deg,
+            rgba(15, 23, 42, 0.85),
+            rgba(15, 23, 42, 0.65)
+        );
+        border: 1px solid rgba(59,130,246,0.25);
+        border-radius: 16px;
+        padding: 10px 14px;
+        margin: 10px 0;
+    
+        /* ✅ ЭНЭ 1 МӨР */
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+    }
+
+    .kpi-label {
+        font-size: 11px;
+        color: #93c5fd;
+        letter-spacing: 0.06em;
+    }
+    .kpi-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: #3b82f6;
+    }
+    .kpi-sub {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-top: -2px;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ===== KPI CARD HELPER (OUTSIDE BLOCK)
+    def kpi_card(label, value, sublabel=None):
+        st.markdown(
+            f"""
+            <div class="kpi-card">
+                <div class="kpi-label">{label}</div>
+                <div class="kpi-value">{value}</div>
+                {f"<div class='kpi-sub'>{sublabel}</div>" if sublabel else ""}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        
+    # 🔥 HEADER ROW — INLINE
+    st.markdown(
+        f"""
+        <div style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+            margin-bottom: 4px;
+        ">
+            <span style="font-size: 1.25rem; font-weight: 600;">
+                📌 Indicator-level KPIs
+            </span>
+            <span style="opacity: 0.6;">➜</span>
+            <span style="font-size: 1.25rem; font-weight: 600; color: #60a5fa;">
+                📊 {primary_indicator}
+            </span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    if kpi_main.empty:
+        st.info("No KPI data available.")
+        st.stop()
+        
+    row = kpi_main.iloc[0]   # ✅ row ЭНД Л ҮҮСНЭ
+    last_time = chart_df["time"].dropna().iloc[-1]
+
+    # 🔽 KPI CARDS (ӨМНӨХӨӨРӨӨ)
+    cols = st.columns(6)
+    
+    with cols[0]:
+        kpi_card(
+            "LAST VALUE",
+            f"{row['Last']:.2f}",
+            last_time
+        )
+        
+    with cols[1]:
+        kpi_card("MEAN", f"{row['Mean']:.2f}")
+    with cols[2]:
+        kpi_card("MEDIAN", f"{row['Median']:.2f}")
+    with cols[3]:
+        kpi_card("MINIMUM VALUE", f"{row['Min']:.2f}")
+    with cols[4]:
+        kpi_card("MAXIMUM VALUE", f"{row['Max']:.2f}")
+    with cols[5]:
+        kpi_card("STD (VOTATILITY)", f"{row['Std']:.2f}")
+
+    # ======================
+    # 📋 OPTIONAL — Indicator-level KPI TABLE
+    # ======================
+    if not kpi_rest.empty:
+        with st.expander("📋 Indicator-level statistics"):
+            st.dataframe(
+                kpi_rest
+                .set_index("Indicator")
+                .round(2),
+                use_container_width=True
+            )
     # ======================
     # 📉 CHANGE SUMMARY — GROUP LEVEL (FIXED)
     # ======================
@@ -678,168 +839,6 @@ with right:
             )
         else:
             st.caption("No data yet")
-    
-    def compute_group_kpis(df, indicators):
-        stats = []
-    
-        for ind in indicators:
-            if ind not in df.columns:
-                continue
-    
-            s = pd.to_numeric(df[ind], errors="coerce").dropna()
-            if s.empty:
-                continue
-    
-            stats.append({
-                "Indicator": ind,
-                "Min": s.min(),
-                "Max": s.max(),
-                "Mean": s.mean(),
-                "Median": s.median(),
-                "Std": s.std(),
-                "Last": s.iloc[-1]
-            })
-    
-        return pd.DataFrame(stats)
-
-    # ======================
-    # 📊 KPI CALCULATION (INDICATOR LEVEL)
-    # ======================
-    
-    group_indicators = [
-        col[1] for col in df_data.columns
-        if col[0] == group
-    ]
-    # ======================
-    # 📊 KPI CALCULATION (INDICATOR LEVEL)
-    # ======================
-    
-    # 🔹 БҮХ indicator-уудын KPI-г НЭГ УДАА бодно
-    kpi_df = compute_group_kpis(chart_df, group_indicators)
-    
-    # 🔹 KPI-д харуулах PRIMARY indicator
-    primary_indicator = selected[0]
-    
-    # 🔹 KPI-г салгах
-    kpi_main = kpi_df[kpi_df["Indicator"] == primary_indicator]
-    kpi_rest = kpi_df[kpi_df["Indicator"] != primary_indicator]
-    
-    st.markdown("""
-    <style>
-    .kpi-card {
-        background: linear-gradient(
-            180deg,
-            rgba(15, 23, 42, 0.85),
-            rgba(15, 23, 42, 0.65)
-        );
-        border: 1px solid rgba(59,130,246,0.25);
-        border-radius: 16px;
-        padding: 10px 14px;
-        margin: 10px 0;
-    
-        /* ✅ ЭНЭ 1 МӨР */
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .kpi-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 24px rgba(0,0,0,0.25);
-    }
-
-    .kpi-label {
-        font-size: 11px;
-        color: #93c5fd;
-        letter-spacing: 0.06em;
-    }
-    .kpi-value {
-        font-size: 24px;
-        font-weight: 600;
-        color: #3b82f6;
-    }
-    .kpi-sub {
-    font-size: 11px;
-    opacity: 0.6;
-    margin-top: -2px;
-    }
-
-    </style>
-    """, unsafe_allow_html=True)
-
-    # ===== KPI CARD HELPER (OUTSIDE BLOCK)
-    def kpi_card(label, value, sublabel=None):
-        st.markdown(
-            f"""
-            <div class="kpi-card">
-                <div class="kpi-label">{label}</div>
-                <div class="kpi-value">{value}</div>
-                {f"<div class='kpi-sub'>{sublabel}</div>" if sublabel else ""}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        
-    # 🔥 HEADER ROW — INLINE
-    st.markdown(
-        f"""
-        <div style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 6px;
-            margin-bottom: 4px;
-        ">
-            <span style="font-size: 1.25rem; font-weight: 600;">
-                📌 Indicator-level KPIs
-            </span>
-            <span style="opacity: 0.6;">➜</span>
-            <span style="font-size: 1.25rem; font-weight: 600; color: #60a5fa;">
-                📊 {primary_indicator}
-            </span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    if kpi_main.empty:
-        st.info("No KPI data available.")
-        st.stop()
-        
-    row = kpi_main.iloc[0]   # ✅ row ЭНД Л ҮҮСНЭ
-    last_time = chart_df["time"].dropna().iloc[-1]
-
-    # 🔽 KPI CARDS (ӨМНӨХӨӨРӨӨ)
-    cols = st.columns(6)
-    
-    with cols[0]:
-        kpi_card(
-            "LAST VALUE",
-            f"{row['Last']:.2f}",
-            last_time
-        )
-        
-    with cols[1]:
-        kpi_card("MEAN", f"{row['Mean']:.2f}")
-    with cols[2]:
-        kpi_card("MEDIAN", f"{row['Median']:.2f}")
-    with cols[3]:
-        kpi_card("MINIMUM VALUE", f"{row['Min']:.2f}")
-    with cols[4]:
-        kpi_card("MAXIMUM VALUE", f"{row['Max']:.2f}")
-    with cols[5]:
-        kpi_card("STD (VOTATILITY)", f"{row['Std']:.2f}")
-
-    # ======================
-    # 📋 OPTIONAL — Indicator-level KPI TABLE
-    # ======================
-    if not kpi_rest.empty:
-        with st.expander("📋 Indicator-level statistics"):
-            st.dataframe(
-                kpi_rest
-                .set_index("Indicator")
-                .round(2),
-                use_container_width=True
-            )
 # ======================
 # SMALL MULTIPLE CHART
 # ======================
