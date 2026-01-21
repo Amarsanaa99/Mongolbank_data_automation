@@ -422,6 +422,13 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
+# 🔥 Year + Month → time
+series["time"] = pd.to_datetime(
+    series["Year"].astype(str) + "-" +
+    series["Month"].astype(str).str.zfill(2),
+    format="%Y-%m"
+)
+
 # ======================
 # MAIN CHART (STABLE)
 # ======================
@@ -430,49 +437,22 @@ with right:
     with st.container(border=True):
         st.subheader("📈 Main chart (Advanced)")
 
-        # 🔒 ALWAYS DEFINE HERE
-        valid_selected = [
-            c for c in selected
-            if c in series.columns
-        ]
+        # 1️⃣ ЗӨВХӨН series-д байгаа indicator
+        valid_selected = [c for c in selected if c in series.columns]
 
         if not valid_selected:
             st.warning("⚠️ No valid indicators to plot.")
             st.stop()
 
-        # 🔥 ЭХЛЭЭД "time" багана series-д байгаа эсэхийг шалгах
-        if "time" not in series.columns:
-            st.error("❌ 'time' column not found in series. Check Year/Month/Quarter logic.")
-            st.stop()
+        # 2️⃣ chart_df (time + valid indicators)
+        chart_df = series.loc[:, ["time"] + valid_selected].copy()
 
-        # chart_df үүсгэх
-        try:
-            chart_df = series.loc[:, ["time"] + valid_selected].copy()
-        except KeyError as e:
-            st.error(f"❌ Error creating chart_df: {e}. Check if 'time' and selected indicators exist in series.")
-            st.stop()
+        # 3️⃣ БҮХ indicator NA бол мөрийг хаяна
+        chart_df = chart_df.loc[
+            ~chart_df[valid_selected].isna().all(axis=1)
+        ]
 
-        # chart_df хоосон эсэхийг шалгах
-        if chart_df.empty:
-            st.warning("⚠️ chart_df is empty. No data to plot.")
-            st.stop()
-
-        # 🔥 "time" багана chart_df-д байгаа эсэхийг шалгах
-        if "time" not in chart_df.columns:
-            st.error("❌ 'time' column not found in chart_df. This is unexpected.")
-            st.stop()
-
-        # "time" баганын NaN утгуудыг устгах
-        chart_df = chart_df.dropna(subset=["time"])
-
-        # 🔥 valid_selected баганууд байгаа эсэхийг шалгах
-        # Зөвхөн chart_df-д байгаа багануудыг ашиглах
-        existing_cols = [col for col in valid_selected if col in chart_df.columns]
-        if existing_cols:
-            chart_df = chart_df.loc[
-                ~chart_df[existing_cols].isna().all(axis=1)
-            ]
-
+        # 4️⃣ time сорт
         chart_df = chart_df.sort_values("time")
 
         # ======================
