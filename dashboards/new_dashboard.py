@@ -616,10 +616,11 @@ with right:
     cols = st.columns(6)
     
     with cols[0]:
+        last_date = str(row["Last date"]).split('\n')[0].split('Name:')[0].strip()
         kpi_card(
             "LAST VALUE",
             f"{float(row['Last']):.2f}",
-            str(row["Last date"].iloc[0] if hasattr(row["Last date"], 'iloc') else row["Last date"])
+            last_date
         )
         
     with cols[1]:
