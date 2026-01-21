@@ -501,7 +501,7 @@ with right:
                 height=360,
                 background="transparent"
             )
-            .interactive(bind="scales")  # 🔥 MOUSE ZOOM + PAN
+            .interactive(bind_x=True)  # 🔥 MOUSE ZOOM + PAN
         )
 
         # ===== 5️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
