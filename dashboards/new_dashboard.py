@@ -616,16 +616,10 @@ with right:
     cols = st.columns(6)
     
     with cols[0]:
-        last_date_val = row["Last date"]
-        
-        # 🔒 Хэрвээ Series байвал scalar болгоно
-        if isinstance(last_date_val, pd.Series):
-            last_date_val = last_date_val.iloc[0]
-        
         kpi_card(
             "LAST VALUE",
             f"{float(row['Last']):.2f}",
-            str(last_date_val)
+            str(row["Last date"].iloc[0] if hasattr(row["Last date"], 'iloc') else row["Last date"])
         )
         
     with cols[1]:
