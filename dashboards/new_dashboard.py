@@ -421,36 +421,46 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-
 # ======================
-# MAIN CHART (FAST, STABLE, NO melt, NO time)
+# MAIN CHART (ADVANCED: ZOOM + PAN enabled)
 # ======================
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
+        
         # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
         
-        # ⏳ APPLY TIME RANGE (STRING-SAFE) — ЗӨВ, ХАНГАЛТТАЙ
+        # ⏳ APPLY TIME RANGE (STRING-SAFE)
         chart_df = chart_df[
             (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
         ]
-
+        
         # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
         valid_indicators = [
             col for col in selected
             if col in chart_df.columns and not chart_df[col].isna().all()
         ]
-    
+        
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
-    
-        # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
+        
+        # ===== 3️⃣ ADVANCED CHART with ZOOM & PAN
         import altair as alt
-    
-        base = alt.Chart(chart_df).encode(
+        
+        # 🔥 ZOOM SELECTION (X-axis only)
+        brush = alt.selection_interval(
+            encodings=['x'],
+            name='brush'
+        )
+        
+        # BASE CHART
+        base = alt.Chart(chart_df).transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).encode(
             x=alt.X(
                 "time:N",
                 title=None,
@@ -461,19 +471,7 @@ with right:
                     grid=False,
                     labelExpr="substring(datum.value, 0, 4)"
                 )
-            )
-        ).properties(
-            padding={"bottom": 5},   
-            background="transparent"
-        )
-        
-        lines = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_line(
-            strokeWidth=2.2,
-            interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
-        ).encode(
+            ),
             y=alt.Y(
                 "Value:Q",
                 title=None,
@@ -499,25 +497,41 @@ with right:
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
+        ).properties(
+            height=340,
+            background="transparent"
         )
-        points = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_point(
-            opacity=0,
-            size=80
+        
+        # MAIN LINE CHART with ZOOM enabled
+        lines = base.mark_line(
+            strokeWidth=2.2,
+            interpolate="linear"
+        ).add_selection(
+            brush
         ).encode(
-            y="Value:Q",
-            tooltip=[
-                alt.Tooltip("x:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
+            opacity=alt.condition(brush, alt.value(1), alt.value(0.3))
         )
-
+        
+        # MINI CONTEXT CHART (OVERVIEW)
+        mini = base.mark_line(
+            strokeWidth=1.5
+        ).properties(
+            height=60
+        ).add_selection(
+            brush
+        )
+        
+        # COMBINE: Main chart + mini overview
+        final_chart = alt.vconcat(
+            lines,
+            mini
+        ).resolve_scale(
+            color='shared'
+        )
+        
         st.altair_chart(
-            lines.properties(height=340).interactive(),
-            width="stretch"
+            final_chart,
+            use_container_width=True
         )
     
     def compute_group_kpis(df, indicators):
