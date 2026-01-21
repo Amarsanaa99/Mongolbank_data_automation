@@ -424,7 +424,11 @@ with right:
         st.subheader("📈 Main chart")
         # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
-
+        # ⏳ APPLY TIME RANGE (STRING-SAFE) - ЭНГИЙН АРГА
+        chart_df = chart_df[
+            (chart_df["time"] >= start_time) &
+            (chart_df["time"] <= end_time)
+        ]
         # 🔒 Series болгох (ЗААВАЛ)
         year_s = series["Year"].squeeze()
         month_s = series["Month"].squeeze() if "Month" in series.columns else None
