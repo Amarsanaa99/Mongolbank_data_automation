@@ -422,7 +422,6 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-
 # ======================
 # MAIN CHART (STABLE)
 # ======================
@@ -445,17 +444,18 @@ with right:
         # 2️⃣ chart_df үүсгэнэ (зөвхөн бодит баганууд)
         chart_df = series[["time"] + valid_selected].copy()
 
-        # 3️⃣ dropna-г 100% safe байдлаар хийх
+        # 3️⃣ dropna — 100% SAFE (АЛДАА ГАРАХГҮЙ)
         common_cols = chart_df.columns.intersection(valid_selected)
-        
+
         if len(common_cols) > 0:
             chart_df = chart_df.dropna(
                 subset=list(common_cols),
                 how="all"
             )
 
-        # 5️⃣ time сорт (dropna-гийн ДАРАА)
+        # 4️⃣ time сорт (ЗААВАЛ СҮҮЛД)
         chart_df = chart_df.sort_values("time")
+
 
 
 
