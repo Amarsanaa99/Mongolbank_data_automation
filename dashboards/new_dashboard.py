@@ -6,10 +6,9 @@ from pathlib import Path
 # ======================
 # PAGE
 # ======================
-st.set_page_config("Macro Policy Dashboard", layout="wide")
-st.title("🏦 Macro Policy Dashboard")
-st.caption("Survey-based Macro Indicators")
-st.success("🔥 APP STARTED — UI rendering OK")
+st.set_page_config("Dashboard", layout="wide")
+st.title("🏦 Dashboard")
+st.caption("Macro Indicators")
 
 # ✅ GLOBAL STYLE (END USER QUALITY)
 st.markdown("""
