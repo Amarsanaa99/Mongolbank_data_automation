@@ -464,7 +464,7 @@ with right:
             lines.properties(height=340).interactive(),
             width="stretch"
         )
-    
+
     def compute_group_kpis(df, indicators):
         stats = []
     
@@ -474,19 +474,13 @@ with right:
     
             series = df[["time", ind]].copy()
             series[ind] = pd.to_numeric(series[ind], errors="coerce")
+            series = series.dropna(subset=[ind])
     
-            last_valid_idx = series[ind].last_valid_index()
-            if last_valid_idx is None:
+            if series.empty:
                 continue
     
-            raw_val = series.loc[last_valid_idx, ind]
-    
-            try:
-                last_value = float(raw_val)
-            except:
-                continue
-    
-            last_date = str(series.loc[last_valid_idx, "time"])
+            last_value = float(series[ind].iloc[-1])
+            last_date  = series["time"].iloc[-1]   # ✅ ЭНД
     
             stats.append({
                 "Indicator": ind,
@@ -500,6 +494,7 @@ with right:
             })
     
         return pd.DataFrame(stats)
+
 
 
     # ======================
