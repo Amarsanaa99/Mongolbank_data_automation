@@ -310,45 +310,51 @@ with left:
             .tolist()
         )
     
+        min_year, max_year = min(years), max(years)
+    
+        # 🔵 SLIDER (drag)
+        year_range = st.slider(
+            "Year range",
+            min_value=min_year,
+            max_value=max_year,
+            value=(min_year, max_year),
+            step=1
+        )
+    
+        # 🔢 NUMBER INPUT (type)
         col1, col2 = st.columns(2)
-    
         with col1:
-            year_start = st.selectbox(
-                "Start year",
-                years,
-                index=0
+            year_start = st.number_input(
+                "Start",
+                min_value=min_year,
+                max_value=max_year,
+                value=year_range[0],
+                step=1
+            )
+        with col2:
+            year_end = st.number_input(
+                "End",
+                min_value=min_year,
+                max_value=max_year,
+                value=year_range[1],
+                step=1
             )
     
-        with col2:
-            year_end = st.selectbox(
-                "End year",
-                years,
-                index=len(years) - 1
+        # 🔹 MONTH / QUARTER
+        if freq == "Monthly":
+            start_sub, end_sub = st.slider(
+                "Month range",
+                1, 12,
+                (1, 12)
+            )
+    
+        if freq == "Quarterly":
+            start_sub, end_sub = st.slider(
+                "Quarter range",
+                1, 4,
+                (1, 4)
             )
 
-        # 🔹 MONTH or QUARTER (CONDITIONAL)
-        # ======================
-        # MONTH or QUARTER
-        # ======================
-        if freq == "Monthly":
-            months = list(range(1, 13))
-        
-            col3, col4 = st.columns(2)
-        
-            with col3:
-                start_sub = st.selectbox("Start month", months, index=0)
-        
-            with col4:
-                end_sub = st.selectbox("End month", months, index=11)
-
-        if freq == "Quarterly":
-            col3, col4 = st.columns(2)
-        
-            with col3:
-                start_sub = st.selectbox("Start quarter", [1, 2, 3, 4], index=0)
-        
-            with col4:
-                end_sub = st.selectbox("End quarter", [1, 2, 3, 4], index=3)
 
 
 
@@ -418,7 +424,6 @@ with right:
             (year_s >= year_start) &
             (year_s <= year_end)
         )
-
         
         if freq == "Monthly" and month_s is not None:
             mask &= (
