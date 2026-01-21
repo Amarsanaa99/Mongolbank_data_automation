@@ -431,25 +431,25 @@ with right:
     with st.container(border=True):
         st.subheader("📈 Main chart (Advanced)")
 
-        # ======================
-        # MAIN CHART DATA (HARD SAFE)
-        # ======================
-        
-        # 1️⃣ chart_df-г дахин баталгаатай үүсгэнэ
+        # 🔒 ALWAYS DEFINE HERE
+        valid_selected = [
+            c for c in selected
+            if c in series.columns
+        ]
+
+        if not valid_selected:
+            st.warning("⚠️ No valid indicators to plot.")
+            st.stop()
+
         chart_df = series.loc[:, ["time"] + valid_selected].copy()
-        
-        # 2️⃣ dropna-г COLUMN-ООС ХАМААРУУЛАЛГҮЙ болгоно
-        # 👉 зөвхөн "time" хоосон мөрийг л хаяна
         chart_df = chart_df.dropna(subset=["time"])
-        
-        # 3️⃣ indicator бүгд NaN мөрүүдийг АЮУЛГҮЙ устгана
-        if valid_selected:
-            chart_df = chart_df.loc[
-                ~chart_df[valid_selected].isna().all(axis=1)
-            ]
-        
-        # 4️⃣ сорт (хамгийн сүүлд!)
+
+        chart_df = chart_df.loc[
+            ~chart_df[valid_selected].isna().all(axis=1)
+        ]
+
         chart_df = chart_df.sort_values("time")
+
 
 
 
