@@ -431,7 +431,22 @@ with right:
         st.subheader("📈 Main chart (Advanced)")
 
         chart_df = series[["time"] + selected].copy()
-        chart_df = chart_df.dropna(subset=selected, how="all")
+        # ✅ зөвхөн chart_df-д реально байгаа indicator-ууд
+        valid_selected = [
+            c for c in selected
+            if c in chart_df.columns
+        ]
+        
+        # хэрвээ хоосон бол
+        if not valid_selected:
+            st.warning("⚠️ No valid indicators to plot.")
+            st.stop()
+        
+        # зөвхөн өгөгдөлтэй мөрүүд
+        chart_df = chart_df.dropna(
+            subset=valid_selected,
+            how="all"
+        )
 
         # 🔒 TIME сорт
         chart_df = chart_df.sort_values("time")
