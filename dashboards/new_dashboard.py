@@ -485,7 +485,7 @@ with right:
                 last_value = float(raw_val)
             except:
                 continue
-            last_date  = series.loc[last_valid_idx, "time"]
+            last_date = str(series.loc[last_valid_idx, "time"])
             
             stats.append({
                 "Indicator": ind,
