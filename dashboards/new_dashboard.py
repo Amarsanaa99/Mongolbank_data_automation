@@ -426,7 +426,6 @@ if series["time"].isna().all():
 # MAIN CHART (STABLE)
 # ======================
 import altair as alt
-
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart (Advanced)")
@@ -441,12 +440,23 @@ with right:
             st.warning("⚠️ No valid indicators to plot.")
             st.stop()
 
-        chart_df = series.loc[:, ["time"] + valid_selected].copy()
-        chart_df = chart_df.dropna(subset=["time"])
+        # 🔥 ЭХЛЭЭД "time" багана байгаа эсэхийг шалгах
+        if "time" not in series.columns:
+            st.error("❌ 'time' column not found in series. Check Year/Month/Quarter logic.")
+            st.stop()
 
-        chart_df = chart_df.loc[
-            ~chart_df[valid_selected].isna().all(axis=1)
-        ]
+        chart_df = series.loc[:, ["time"] + valid_selected].copy()
+        
+        # 🔥 БАЙГАА эсэхийг шалгаад dropna хийх
+        if "time" in chart_df.columns:
+            chart_df = chart_df.dropna(subset=["time"])
+        # Хэрэв "time" байхгүй бол алдаа өгөхгүй, зүгээр үргэлжлүүлэх
+
+        # 🔥 valid_selected баганууд байгаа эсэхийг шалгах
+        if valid_selected and all(col in chart_df.columns for col in valid_selected):
+            chart_df = chart_df.loc[
+                ~chart_df[valid_selected].isna().all(axis=1)
+            ]
 
         chart_df = chart_df.sort_values("time")
 
