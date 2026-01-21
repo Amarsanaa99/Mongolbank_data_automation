@@ -376,7 +376,11 @@ with left:
 # Сонгосон үзүүлэлтүүдийг нэмэх
 for indicator in selected:
     if (group, indicator) in df_data.columns:
-        series[indicator] = df_data[(group, indicator)].values
+        series[indicator] = pd.Series(
+            df_data[(group, indicator)].values,
+            index=series.index
+        )
+
     else:
         st.warning(f"Indicator '{indicator}' not found in data")
 
@@ -440,7 +444,13 @@ with right:
 
         # 2️⃣ ОДОО chart_df-ийг үүсгэнэ
         chart_df = series[["time"] + valid_selected].copy()
+        safe_subset = [c for c in valid_selected if c in chart_df.columns]
 
+        if safe_subset:
+            chart_df = chart_df.dropna(
+                subset=safe_subset,
+                how="all"
+            )
         # 3️⃣ өгөгдөлтэй мөрүүд
         chart_df = chart_df.dropna(
             subset=valid_selected,
