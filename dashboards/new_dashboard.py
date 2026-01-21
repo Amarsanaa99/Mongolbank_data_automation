@@ -288,6 +288,11 @@ else:
     st.error("❌ No valid time columns found")
     st.stop()
 # ======================
+# ✅ YEAR LABEL (GLOBAL X AXIS)
+# ======================
+series["year_label"] = series["Year"].astype(int).astype(str)
+
+# ======================
 # ⏳ TIME RANGE (MAIN CHART ONLY)
 # ======================
 with left:
@@ -368,39 +373,10 @@ if series["time"].isna().all():
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-        # ===== 1️⃣ X-axis (Year / Month / Quarter)
-        if "Month" in df_time.columns:
-            chart_df = series[["Year", "Month"] + selected].copy()    
-            year = chart_df["Year"]
-            month = chart_df["Month"]
-        
-            # 🔒 ХОЁУЛАНГ НЬ ЗААВАЛ SERIES БОЛГОНО
-            if isinstance(year, pd.DataFrame):
-                year = year.iloc[:, 0]
-        
-            if isinstance(month, pd.DataFrame):
-                month = month.iloc[:, 0]
-                    
-            chart_df["x"] = chart_df["Year"].astype(int).astype(str)
+        # ===== 1️⃣ DATA
+        chart_df = series[["year_label"] + selected].copy()
+        chart_df = chart_df.rename(columns={"year_label": "x"})
 
-    
-        elif "Quarter" in df_time.columns:
-            chart_df = series[["Year", "Quarter"] + selected].copy()
-        
-            year = chart_df["Year"]
-            quarter = chart_df["Quarter"]
-        
-            if isinstance(year, pd.DataFrame):
-                year = year.iloc[:, 0]
-        
-            if isinstance(quarter, pd.DataFrame):
-                quarter = quarter.iloc[:, 0]
-        
-            chart_df["x"] = (
-                year.astype(int).astype(str)
-                + "-Q"
-                + quarter.astype(int).astype(str)
-            )
 
         else:
             chart_df = series[["Year"] + selected].copy()
@@ -410,8 +386,8 @@ with right:
         # ⏳ APPLY TIME RANGE (MAIN CHART ONLY)
         # ======================
         chart_df = chart_df[
-            (chart_df["x"] >= start_time) &
-            (chart_df["x"] <= end_time)
+            (chart_df["x"].astype(int) >= int(start_time[:4])) &
+            (chart_df["x"].astype(int) <= int(end_time[:4]))
         ]
     
         # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
@@ -934,19 +910,12 @@ def group_chart(group_name):
         if col[0] == group_name and not pd.isna(col[1])
     ]
 
-    # 2️⃣ суурь dataframe (БҮХ ОНУУД)
+    # 2️⃣ суурь dataframe (YEAR-LEVEL, STABLE)
     gdf = pd.DataFrame({
+        "year": series["year_label"].values,
         "time": series["time"].values
     })
 
-    # 3️⃣ indicator-уудыг нэмэх
-    for ind in inds:
-        if (group_name, ind) in df_data.columns:
-            gdf[ind] = df_data[(group_name, ind)].values
-
-    # 4️⃣ TIME FILTER (дараа нь!)
-    gdf = gdf[gdf["time"] >= "2020"]
-    gdf["year"] = gdf["time"].str.slice(0, 4)
 
     # ✅ 5️⃣ өгөгдөлтэй indicator-ууд
     valid_inds = [
@@ -960,7 +929,7 @@ def group_chart(group_name):
             "year:N",
             title=None,
             axis=alt.Axis(
-                labelAngle=-45,
+                labelAngle=0,
                 grid=False,
                 titleFontSize=12,
                 labelFontSize=11
