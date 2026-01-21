@@ -299,7 +299,12 @@ with left:
         st.subheader("⏳ Time range")
 
         # 🔹 YEAR (ALWAYS)
-        years = sorted(series["Year"].dropna().astype(int).unique())
+        years = sorted(
+            pd.Series(series["Year"])
+            .dropna()
+            .astype(int)
+            .unique()
+        )
 
         start_year, end_year = st.select_slider(
             "Year",
@@ -309,7 +314,12 @@ with left:
 
         # 🔹 MONTH or QUARTER (CONDITIONAL)
         if freq == "Monthly":
-            months = sorted(series["Month"].dropna().astype(int).unique())
+            months = sorted(
+                pd.Series(series["Month"])
+                .dropna()
+                .astype(int)
+                .unique()
+            )
             start_sub, end_sub = st.select_slider(
                 "Month",
                 options=months,
@@ -317,7 +327,12 @@ with left:
             )
 
         elif freq == "Quarterly":
-            quarters = sorted(series["Quarter"].dropna().astype(int).unique())
+            quarters = sorted(
+                pd.Series(series["Quarter"])
+                .dropna()
+                .astype(int)
+                .unique()
+            )
             start_sub, end_sub = st.select_slider(
                 "Quarter",
                 options=quarters,
