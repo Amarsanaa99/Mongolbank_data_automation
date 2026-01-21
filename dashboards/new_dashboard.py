@@ -960,7 +960,7 @@ def group_chart(group_name):
     base = alt.Chart(gdf).encode(
         x=alt.X(
             "time:N",
-            title="Date",
+            title=None,
             axis=alt.Axis(
                 labelAngle=-45,
                 grid=False,
@@ -1017,7 +1017,7 @@ def group_chart(group_name):
     ).mark_line(strokeWidth=2).encode(
         y=alt.Y(
             "Value:Q",
-            title="Value",
+            title=None,
             axis=alt.Axis(
                 grid=True,
                 gridColor="#334155",   # 🔥 GRID COLOR (slate-700)
@@ -1047,7 +1047,7 @@ def group_chart(group_name):
             )
         ),
         tooltip=[
-            alt.Tooltip("time:N", title="Date"),
+            alt.Tooltip("time:N"),
             alt.Tooltip("Indicator:N"),
             alt.Tooltip("Value:Q", format=",.2f")
         ]
