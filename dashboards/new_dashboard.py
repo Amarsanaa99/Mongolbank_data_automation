@@ -427,25 +427,27 @@ with right:
     with st.container(border=True):
         st.subheader("📈 Main chart (Advanced)")
 
-        # ✅ зөвхөн chart_df-д реально байгаа indicator-ууд
+        # 1️⃣ chart_df ЭХЭЛЖ
+        chart_df = series[["time"] + selected].copy()
+
+        # 2️⃣ зөвхөн реально байгаа indicator
         valid_selected = [
             c for c in selected
             if c in chart_df.columns
         ]
-        
-        # хэрвээ хоосон бол
+
         if not valid_selected:
             st.warning("⚠️ No valid indicators to plot.")
             st.stop()
-            
-        # зөвхөн өгөгдөлтэй мөрүүд
+
+        # 3️⃣ өгөгдөлтэй мөрүүд
         chart_df = chart_df.dropna(
             subset=valid_selected,
             how="all"
         )
 
-        # 🔒 TIME сорт
         chart_df = chart_df.sort_values("time")
+
 
         # ======================
         # 🔍 BRUSH (X-AXIS ZOOM)
