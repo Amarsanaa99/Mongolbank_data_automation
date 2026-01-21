@@ -446,13 +446,18 @@ with right:
         
         # 3️⃣ dropna — 100% SAFE (АЛДАА ГАРАХГҮЙ)
         # safe_subset-ыг тодорхойлох (зөвхөн байгаа баганууд)
-        safe_subset = [col for col in valid_selected if col in chart_df.columns]
+        # 🔒 DROPNA-гийн ӨМНӨ FINAL CHECK
+        safe_subset = [
+            c for c in valid_selected
+            if c in chart_df.columns and not chart_df[c].isna().all()
+        ]
         
-        if safe_subset:  # Хэрэв ядаж нэг багана байвал
+        if safe_subset:
             chart_df = chart_df.dropna(
                 subset=safe_subset,
                 how="all"
             )
+
         # Хэрэв safe_subset хоосон бол dropna хийх шаардлагагүй
         
         # 4️⃣ time сорт (ЗААВАЛ СҮҮЛД)
