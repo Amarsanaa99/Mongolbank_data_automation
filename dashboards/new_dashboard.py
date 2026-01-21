@@ -422,93 +422,128 @@ if series["time"].isna().all():
     st.stop()
 
 # ======================
-# MAIN CHART (ADVANCED: ZOOM + PAN enabled)
+# MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-        
-        # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
+
+        # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
-        
-        # ⏳ APPLY TIME RANGE (STRING-SAFE)
+
+        # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
             (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
         ]
-        
-        # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
+
+        # ===== 2️⃣ VALID INDICATORS ONLY
         valid_indicators = [
-            col for col in selected
-            if col in chart_df.columns and not chart_df[col].isna().all()
+            c for c in selected
+            if c in chart_df.columns and not chart_df[c].isna().all()
         ]
-        
+
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
-        
-        # ===== 3️⃣ ADVANCED INTERACTIVE CHART (ZOOM & PAN)
+
         import altair as alt
-        
-        # BASE CHART with transform_fold
-        base = alt.Chart(chart_df).transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).encode(
-            x=alt.X(
-                "time:N",
-                title=None,
-                sort="ascending",
-                axis=alt.Axis(
-                    labelAngle=0,
-                    labelFontSize=11,
-                    grid=False,
-                    labelExpr="substring(datum.value, 0, 4)"
-                )
-            ),
-            y=alt.Y(
-                "Value:Q",
-                title=None,
-                axis=alt.Axis(
-                    labelFontSize=11,
-                    grid=True,
-                    gridColor="#94a3b8",
-                    gridOpacity=0.25,
-                    gridWidth=0.6,
-                    tickColor="#94a3b8",
-                    domain=False
-                )
-            ),
-            color=alt.Color(
-                "Indicator:N",
-                legend=alt.Legend(
+
+        # ===== 3️⃣ BASE CHART (shared X scale)
+        base = (
+            alt.Chart(chart_df)
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
+            )
+            .encode(
+                x=alt.X(
+                    "time:N",
                     title=None,
-                    orient="right"
-                )
-            ),
-            tooltip=[
-                alt.Tooltip("time:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
+                    sort="ascending",
+                    axis=alt.Axis(
+                        labelAngle=0,
+                        labelFontSize=11,
+                        grid=False,
+                        labelExpr="substring(datum.value, 0, 7)"
+                    )
+                ),
+                y=alt.Y(
+                    "Value:Q",
+                    title=None,
+                    axis=alt.Axis(
+                        grid=True,
+                        gridOpacity=0.25,
+                        domain=False,
+                        labelFontSize=11
+                    )
+                ),
+                color=alt.Color(
+                    "Indicator:N",
+                    legend=alt.Legend(
+                        title=None,
+                        orient="right"
+                    )
+                ),
+                tooltip=[
+                    alt.Tooltip("time:N", title="Time"),
+                    alt.Tooltip("Indicator:N"),
+                    alt.Tooltip("Value:Q", format=",.2f")
+                ]
+            )
         )
-        
-        # MAIN LINE CHART
-        lines = base.mark_line(
-            strokeWidth=2.2,
-            interpolate="linear"
-        ).properties(
-            height=340,
-            background="transparent"
+
+        # ===== 4️⃣ MAIN LINE (ZOOM + PAN ENABLED)
+        main_chart = (
+            base
+            .mark_line(strokeWidth=2.4)
+            .properties(
+                height=360,
+                background="transparent"
+            )
+            .interactive(bind="scales")  # 🔥 MOUSE ZOOM + PAN
         )
-        
-        # 🔥 ZOOM & PAN боломжтой болгох
-        interactive_chart = lines.interactive()
-        
+
+        # ===== 5️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
+        brush = alt.selection_interval(encodings=["x"])
+
+        mini_chart = (
+            base
+            .mark_line(strokeWidth=1.2)
+            .encode(
+                y=alt.Y(
+                    "Value:Q",
+                    title=None,
+                    axis=alt.Axis(
+                        labels=False,
+                        ticks=False,
+                        grid=False,
+                        domain=False
+                    )
+                ),
+                color=alt.Color("Indicator:N", legend=None)
+            )
+            .properties(
+                height=70,
+                background="transparent"
+            )
+            .add_selection(brush)
+        )
+
+        # ===== 6️⃣ LINK MAIN ↔ MINI
+        final_chart = alt.vconcat(
+            main_chart.transform_filter(brush),
+            mini_chart,
+            spacing=10
+        ).resolve_scale(
+            color="shared"
+        )
+
         st.altair_chart(
-            interactive_chart,
+            final_chart,
             use_container_width=True
         )
+
     
     def compute_group_kpis(df, indicators):
         stats = []
