@@ -456,15 +456,19 @@ with right:
             name='brush'
         )
         
-        # BASE CHART
-        base = alt.Chart(chart_df).transform_fold(
+        # MAIN LINE CHART with ZOOM enabled
+        lines = alt.Chart(chart_df).transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
+        ).mark_line(
+            strokeWidth=2.2,
+            interpolate="linear"
         ).encode(
             x=alt.X(
                 "time:N",
                 title=None,
                 sort="ascending",
+                scale=alt.Scale(domain={'selection': brush, 'encoding': 'x'}),
                 axis=alt.Axis(
                     labelAngle=0,
                     labelFontSize=11,
@@ -502,23 +506,52 @@ with right:
             background="transparent"
         )
         
-        # MAIN LINE CHART with ZOOM enabled
-        lines = base.mark_line(
-            strokeWidth=2.2,
-            interpolate="linear"
+        # MINI CONTEXT CHART (OVERVIEW)
+        mini = alt.Chart(chart_df).transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_line(
+            strokeWidth=1.5
+        ).encode(
+            x=alt.X(
+                "time:N",
+                title=None,
+                sort="ascending",
+                axis=alt.Axis(
+                    labelAngle=0,
+                    labelFontSize=9,
+                    grid=False,
+                    labelExpr="substring(datum.value, 0, 4)"
+                )
+            ),
+            y=alt.Y(
+                "Value:Q",
+                title=None,
+                axis=alt.Axis(
+                    labels=False,
+                    ticks=False,
+                    domain=False,
+                    grid=False
+                )
+            ),
+            color=alt.Color(
+                "Indicator:N",
+                legend=None
+            )
+        ).properties(
+            height=60,
+            background="transparent"
         ).add_selection(
             brush
-        ).encode(
-            opacity=alt.condition(brush, alt.value(1), alt.value(0.3))
         )
         
-        # MINI CONTEXT CHART (OVERVIEW)
-        mini = base.mark_line(
-            strokeWidth=1.5
-        ).properties(
-            height=60
-        ).add_selection(
-            brush
+        # COMBINE: Main chart + mini overview
+        final_chart = alt.vconcat(
+            lines,
+            mini,
+            spacing=10
+        ).resolve_scale(
+            color='shared'
         )
         
         st.altair_chart(
