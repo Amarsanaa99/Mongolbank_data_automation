@@ -476,9 +476,10 @@ with right:
         main = (
             alt.Chart(chart_df)
             .transform_fold(
-                selected,
+                valid_selected,
                 as_=["Indicator", "Value"]
             )
+
             .mark_line(strokeWidth=2.5)
             .encode(
                 x=alt.X(
@@ -522,7 +523,7 @@ with right:
         timeline = (
             alt.Chart(chart_df)
             .transform_fold(
-                selected,
+                valid_selected,   # 🔥 ЗӨВ
                 as_=["Indicator", "Value"]
             )
             .mark_line(opacity=0.5)
