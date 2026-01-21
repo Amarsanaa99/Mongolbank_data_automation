@@ -913,6 +913,8 @@ def group_chart(group_name):
     for ind in inds:
         if (group_name, ind) in df_data.columns:
             gdf[ind] = df_data[(group_name, ind)].values
+    # ⛔ SMALL CHART — 2020 оноос хойш
+    gdf = gdf[gdf["time"] >= "2020"]
 
 
 
