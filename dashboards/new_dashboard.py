@@ -479,7 +479,12 @@ with right:
             if last_valid_idx is None:
                 continue
             
-            last_value = series.loc[last_valid_idx, ind]
+            raw_val = series.loc[last_valid_idx, ind]
+
+            try:
+                last_value = float(raw_val)
+            except:
+                continue
             last_date  = series.loc[last_valid_idx, "time"]
             
             stats.append({
@@ -606,7 +611,7 @@ with right:
     with cols[0]:
         kpi_card(
             "LAST VALUE",
-            f"{row['Last']:.2f}",
+            f"{float(row['Last']):.2f}",
             row["Last date"]
         )
         
