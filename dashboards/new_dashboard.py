@@ -905,11 +905,17 @@ def group_chart(group_name):
         if col[0] == group_name and not pd.isna(col[1])
     ]
 
-    # 2️⃣ суурь dataframe (YEAR-LEVEL, STABLE)
+    # 2️⃣ суурь dataframe (YEAR + INDICATORS)
     gdf = pd.DataFrame({
         "year": series["year_label"].values,
         "time": series["time"].values
     })
+    
+    # 🔥 indicator-уудыг НЭМНЭ
+    for ind in inds:
+        if (group_name, ind) in df_data.columns:
+            gdf[ind] = df_data[(group_name, ind)].values
+
 
 
     # ✅ 5️⃣ өгөгдөлтэй indicator-ууд
