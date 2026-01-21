@@ -473,16 +473,21 @@ with right:
                 continue
     
             series = df[["time", ind]].copy()
-            series = series.reset_index(drop=True)   # 🔥 FIX №2
             series[ind] = pd.to_numeric(series[ind], errors="coerce")
-            
+    
             last_valid_idx = series[ind].last_valid_index()
             if last_valid_idx is None:
                 continue
-            
-            last_value = float(series.loc[last_idx, ind])
-            last_date  = str(series.loc[last_idx, "time"])   
-            
+    
+            raw_val = series.loc[last_valid_idx, ind]
+    
+            try:
+                last_value = float(raw_val)
+            except:
+                continue
+    
+            last_date = str(series.loc[last_valid_idx, "time"])
+    
             stats.append({
                 "Indicator": ind,
                 "Min": series[ind].min(),
@@ -491,10 +496,11 @@ with right:
                 "Median": series[ind].median(),
                 "Std": series[ind].std(),
                 "Last": last_value,
-                "Last date": last_date     # ✅ ШИНЭ
+                "Last date": last_date
             })
-
+    
         return pd.DataFrame(stats)
+
 
     # ======================
     # 📊 KPI CALCULATION (INDICATOR LEVEL)
