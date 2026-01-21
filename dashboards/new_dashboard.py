@@ -473,19 +473,15 @@ with right:
                 continue
     
             series = df[["time", ind]].copy()
+            series = series.reset_index(drop=True)   # 🔥 FIX №2
             series[ind] = pd.to_numeric(series[ind], errors="coerce")
             
             last_valid_idx = series[ind].last_valid_index()
             if last_valid_idx is None:
                 continue
             
-            raw_val = series.loc[last_valid_idx, ind]
-
-            try:
-                last_value = float(raw_val)
-            except:
-                continue
-            last_date = str(series.loc[last_valid_idx, "time"])
+            last_value = float(series.loc[last_idx, ind])
+            last_date  = str(series.loc[last_idx, "time"])   
             
             stats.append({
                 "Indicator": ind,
