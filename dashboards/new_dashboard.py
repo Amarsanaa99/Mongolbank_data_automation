@@ -422,12 +422,6 @@ if series["time"].isna().all():
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-        # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
-        chart_df = series[["time"] + selected].copy()
-        # ⏳ APPLY TIME RANGE (STRING-SAFE) - ЭНГИЙН АРГА
-        chart_df = chart_df[
-            (chart_df["time"] >= start_time) &
-            (chart_df["time"] <= end_time)
         ]
         # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
