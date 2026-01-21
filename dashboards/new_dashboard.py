@@ -373,17 +373,15 @@ if series["time"].isna().all():
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-        # ===== 1️⃣ DATA
-        chart_df = series[["year_label"] + selected].copy()
-        chart_df = chart_df.rename(columns={"year_label": "x"})
+        # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
+        chart_df = series[["time"] + selected].copy()
         
-        # ======================
-        # ⏳ APPLY TIME RANGE (MAIN CHART ONLY)
-        # ======================
+        # ⏳ APPLY TIME RANGE (STRING-SAFE)
         chart_df = chart_df[
-            (chart_df["x"].astype(int) >= int(start_time[:4])) &
-            (chart_df["x"].astype(int) <= int(end_time[:4]))
+            (chart_df["time"] >= start_time) &
+            (chart_df["time"] <= end_time)
         ]
+
     
         # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
         valid_indicators = [
@@ -400,13 +398,14 @@ with right:
     
         base = alt.Chart(chart_df).encode(
             x=alt.X(
-                "x:N",
+                "time:N",
                 title=None,
+                sort="ascending",
                 axis=alt.Axis(
                     labelAngle=0,
                     labelFontSize=11,
-                    labelLimit=140,
-                    grid=False
+                    grid=False,
+                    labelExpr="substring(datum.value, 0, 4)"
                 )
             )
         ).properties(
@@ -442,7 +441,7 @@ with right:
                 )
             ),
             tooltip=[
-                alt.Tooltip("x:N"),
+                alt.Tooltip("x:N", title="Time" ),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
@@ -907,7 +906,6 @@ def group_chart(group_name):
 
     # 2️⃣ суурь dataframe (YEAR + INDICATORS)
     gdf = pd.DataFrame({
-        "year": series["year_label"].values,
         "time": series["time"].values
     })
     
@@ -927,13 +925,14 @@ def group_chart(group_name):
     # 6️⃣ BASE CHART (үргэлж харагдана)
     base = alt.Chart(gdf).encode(
         x=alt.X(
-            "year:N",
+            "time:N",
             title=None,
+            sort="ascending",
             axis=alt.Axis(
                 labelAngle=0,
                 grid=False,
-                titleFontSize=12,
-                labelFontSize=11
+                labelFontSize=11,
+                labelExpr="substring(datum.value, 0, 4)"
             )
         )
     ).properties(
