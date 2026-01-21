@@ -464,7 +464,7 @@ with right:
             lines.properties(height=340).interactive(),
             width="stretch"
         )
-
+    
     def compute_group_kpis(df, indicators):
         stats = []
     
@@ -474,13 +474,19 @@ with right:
     
             series = df[["time", ind]].copy()
             series[ind] = pd.to_numeric(series[ind], errors="coerce")
-            series = series.dropna(subset=[ind])
     
-            if series.empty:
+            last_valid_idx = series[ind].last_valid_index()
+            if last_valid_idx is None:
                 continue
     
-            last_value = float(series[ind].iloc[-1])
-            last_date  = series["time"].iloc[-1]   # ✅ ЭНД
+            raw_val = series.loc[last_valid_idx, ind]
+    
+            try:
+                last_value = float(raw_val)
+            except:
+                continue
+    
+            last_date = str(series.loc[last_valid_idx, "time"])
     
             stats.append({
                 "Indicator": ind,
@@ -494,7 +500,6 @@ with right:
             })
     
         return pd.DataFrame(stats)
-
 
 
     # ======================
@@ -611,16 +616,10 @@ with right:
     cols = st.columns(6)
     
     with cols[0]:
-        last_date_val = row["Last date"]
-        
-        # 🔒 Хэрвээ Series байвал scalar болгоно
-        if isinstance(last_date_val, pd.Series):
-            last_date_val = last_date_val.iloc[0]
-        
         kpi_card(
             "LAST VALUE",
             f"{float(row['Last']):.2f}",
-            str(last_date_val)
+            str(row["Last date"].iloc[0] if hasattr(row["Last date"], 'iloc') else row["Last date"])
         )
         
     with cols[1]:
