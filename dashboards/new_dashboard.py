@@ -442,23 +442,25 @@ with right:
             st.warning("⚠️ No valid indicators to plot.")
             st.stop()
 
-        # 2️⃣ ОДОО chart_df-ийг үүсгэнэ
+        # 2️⃣ chart_df үүсгэнэ (зөвхөн бодит баганууд)
         chart_df = series[["time"] + valid_selected].copy()
-        safe_subset = [c for c in valid_selected if c in chart_df.columns]
 
+        # 3️⃣ SAFE subset (ганц үнэн эх сурвалж)
+        safe_subset = [
+            c for c in valid_selected
+            if c in chart_df.columns
+        ]
+
+        # 4️⃣ dropna — ЗӨВХӨН НЭГ УДАА
         if safe_subset:
             chart_df = chart_df.dropna(
                 subset=safe_subset,
                 how="all"
             )
-        # 3️⃣ өгөгдөлтэй мөрүүд
-        chart_df = chart_df.dropna(
-            subset=valid_selected,
-            how="all"
-        )
 
-        # 4️⃣ time сорт
+        # 5️⃣ time сорт (dropna-гийн ДАРАА)
         chart_df = chart_df.sort_values("time")
+
 
 
         # ======================
