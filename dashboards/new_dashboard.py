@@ -298,26 +298,44 @@ with left:
     with st.container(border=True):
         st.subheader("⏳ Time range")
 
-        all_time = (
-            series["time"]
-            .dropna()
-            .astype(str)
-            .unique()
-            .tolist()
-        )
-        all_time = sorted(all_time)
-
-        start_time = st.selectbox(
-            "Start",
-            options=all_time,
-            index=0
-        )
-
-        end_time = st.selectbox(
-            "End",
-            options=all_time,
-            index=len(all_time) - 1
-        )
+        # Жилийн сонголт
+        years = sorted(series["Year"].dropna().unique().astype(int).tolist())
+        
+        # Эхлэл ба төгсгөлийн жилийг сонгох
+        col1, col2 = st.columns(2)
+        with col1:
+            start_year = st.selectbox("Start Year", years, index=0)
+        with col2:
+            end_year = st.selectbox("End Year", years, index=len(years)-1)
+        
+        # Сар эсвэл улирлыг сонгох
+        if "Month" in series.columns:
+            # Сар сонгох
+            months = sorted(series["Month"].dropna().unique().astype(int).tolist())
+            col3, col4 = st.columns(2)
+            with col3:
+                start_month = st.selectbox("Start Month", months, index=0)
+            with col4:
+                end_month = st.selectbox("End Month", months, index=len(months)-1)
+            
+            # time стринг үүсгэх
+            start_time = f"{start_year}-{start_month:02d}"
+            end_time = f"{end_year}-{end_month:02d}"
+        elif "Quarter" in series.columns:
+            # Улирлыг сонгох
+            quarters = sorted(series["Quarter"].dropna().unique().astype(int).tolist())
+            col3, col4 = st.columns(2)
+            with col3:
+                start_quarter = st.selectbox("Start Quarter", quarters, index=0)
+            with col4:
+                end_quarter = st.selectbox("End Quarter", quarters, index=len(quarters)-1)
+            
+            start_time = f"{start_year}-Q{start_quarter}"
+            end_time = f"{end_year}-Q{end_quarter}"
+        else:
+            # Зөвхөн жилтэй бол
+            start_time = str(start_year)
+            end_time = str(end_year)
 
 
 # Сонгосон үзүүлэлтүүдийг нэмэх
