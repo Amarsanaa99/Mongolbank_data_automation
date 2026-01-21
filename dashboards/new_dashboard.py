@@ -523,10 +523,9 @@ with right:
                 color=alt.Color("Indicator:N", legend=None)
             )
             .properties(
-                height=70,
-                background="transparent"
+                height=70
             )
-            .add_selection(brush)
+            .add_params(brush)
         )
 
         # ===== 6️⃣ LINK MAIN ↔ MINI
