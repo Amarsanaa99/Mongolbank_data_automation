@@ -443,16 +443,18 @@ with right:
 
         # 2️⃣ chart_df үүсгэнэ (зөвхөн бодит баганууд)
         chart_df = series[["time"] + valid_selected].copy()
-
+        
         # 3️⃣ dropna — 100% SAFE (АЛДАА ГАРАХГҮЙ)
-        common_cols = chart_df.columns.intersection(valid_selected)
-
-        if len(common_cols) > 0:
+        # safe_subset-ын оронд valid_selected-ээс chart_df-д байгаа багануудыг шүүнэ
+        safe_subset = [col for col in valid_selected if col in chart_df.columns]
+        
+        if safe_subset:  # Хэрэв ядаж нэг багана байвал
             chart_df = chart_df.dropna(
-                subset=list(common_cols),
+                subset=safe_subset,
                 how="all"
             )
-
+        # Хэрэв safe_subset хоосон бол dropna хийх шаардлагагүй
+        
         # 4️⃣ time сорт (ЗААВАЛ СҮҮЛД)
         chart_df = chart_df.sort_values("time")
 
