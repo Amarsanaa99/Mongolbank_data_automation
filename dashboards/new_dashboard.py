@@ -291,6 +291,10 @@ else:
 # ======================
 series["year_label"] = series["Year"].astype(int).astype(str)
 
+for col in ["Year", "Month", "Quarter"]:
+    if col in series.columns:
+        series[col] = as_series(series[col])
+
 # ======================
 # ⏳ TIME RANGE (MAIN CHART ONLY)
 # ======================
@@ -300,11 +304,12 @@ with left:
 
         # 🔹 YEAR (ALWAYS)
         years = sorted(
-            pd.Series(series["Year"])
-            .dropna()
-            .astype(int)
-            .unique()
+        as_series(series["Year"])
+        .dropna()
+        .astype(int)
+        .unique()
         )
+
 
         start_year, end_year = st.select_slider(
             "Year",
@@ -315,7 +320,7 @@ with left:
         # 🔹 MONTH or QUARTER (CONDITIONAL)
         if freq == "Monthly":
             months = sorted(
-                pd.Series(series["Month"])
+                as_series(series["Month"])
                 .dropna()
                 .astype(int)
                 .unique()
@@ -328,11 +333,12 @@ with left:
 
         elif freq == "Quarterly":
             quarters = sorted(
-                pd.Series(series["Quarter"])
+                as_series(series["Quarter"])
                 .dropna()
                 .astype(int)
                 .unique()
             )
+
             start_sub, end_sub = st.select_slider(
                 "Quarter",
                 options=quarters,
