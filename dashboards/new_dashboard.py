@@ -431,37 +431,26 @@ with right:
     with st.container(border=True):
         st.subheader("📈 Main chart (Advanced)")
 
-        # 1️⃣ series-д реально байгаа indicator-ууд
-        valid_selected = [
-            c for c in selected
-            if c in series.columns
-        ]
-
-        if not valid_selected:
-            st.warning("⚠️ No valid indicators to plot.")
-            st.stop()
-
-        # 2️⃣ chart_df үүсгэнэ (зөвхөн бодит баганууд)
-        chart_df = series[["time"] + valid_selected].copy()
+        # ======================
+        # MAIN CHART DATA (HARD SAFE)
+        # ======================
         
-        # 3️⃣ dropna — 100% SAFE (АЛДАА ГАРАХГҮЙ)
-        # safe_subset-ыг тодорхойлох (зөвхөн байгаа баганууд)
-        # 🔒 DROPNA-гийн ӨМНӨ FINAL CHECK
-        safe_subset = [
-            c for c in valid_selected
-            if c in chart_df.columns and not chart_df[c].isna().all()
-        ]
+        # 1️⃣ chart_df-г дахин баталгаатай үүсгэнэ
+        chart_df = series.loc[:, ["time"] + valid_selected].copy()
         
-        if safe_subset:
-            chart_df = chart_df.dropna(
-                subset=safe_subset,
-                how="all"
-            )
-
-        # Хэрэв safe_subset хоосон бол dropna хийх шаардлагагүй
+        # 2️⃣ dropna-г COLUMN-ООС ХАМААРУУЛАЛГҮЙ болгоно
+        # 👉 зөвхөн "time" хоосон мөрийг л хаяна
+        chart_df = chart_df.dropna(subset=["time"])
         
-        # 4️⃣ time сорт (ЗААВАЛ СҮҮЛД)
+        # 3️⃣ indicator бүгд NaN мөрүүдийг АЮУЛГҮЙ устгана
+        if valid_selected:
+            chart_df = chart_df.loc[
+                ~chart_df[valid_selected].isna().all(axis=1)
+            ]
+        
+        # 4️⃣ сорт (хамгийн сүүлд!)
         chart_df = chart_df.sort_values("time")
+
 
 
 
