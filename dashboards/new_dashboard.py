@@ -298,63 +298,74 @@ for col in ["Year", "Month", "Quarter"]:
 # ======================
 # ⏳ TIME RANGE (MAIN CHART ONLY)
 # ======================
+# ======================
+# ⏳ TIME RANGE (MAIN CHART ONLY)
+# ======================
 with left:
     with st.container(border=True):
         st.subheader("⏳ Time range")
     
-        years = sorted(
-            as_series(series["Year"])
-            .dropna()
-            .astype(int)
-            .unique()
-            .tolist()
+        # Жилийн сонголт
+        years = sorted(series["Year"].dropna().unique().astype(int).tolist())
+        
+        # Эхлэх жил
+        start_year = st.selectbox(
+            "Start Year",
+            years,
+            index=0
         )
-    
-        min_year, max_year = min(years), max(years)
-    
-        # 🔵 SLIDER (drag)
-        year_range = st.slider(
-            "Year range",
-            min_value=min_year,
-            max_value=max_year,
-            value=(min_year, max_year),
-            step=1
+        
+        # Дуусах жил
+        end_year = st.selectbox(
+            "End Year",
+            years,
+            index=len(years)-1
         )
-    
-        # 🔢 NUMBER INPUT (type)
-        col1, col2 = st.columns(2)
-        with col1:
-            year_start = st.number_input(
-                "Start",
-                min_value=min_year,
-                max_value=max_year,
-                value=year_range[0],
-                step=1
-            )
-        with col2:
-            year_end = st.number_input(
-                "End",
-                min_value=min_year,
-                max_value=max_year,
-                value=year_range[1],
-                step=1
-            )
-    
-        # 🔹 MONTH / QUARTER
+        
+        # Сар эсвэл улирлын сонголт
         if freq == "Monthly":
-            start_sub, end_sub = st.slider(
-                "Month range",
-                1, 12,
-                (1, 12)
+            months = list(range(1, 13))
+            
+            # Эхлэх сар
+            start_month = st.selectbox(
+                "Start Month",
+                months,
+                index=0,
+                format_func=lambda x: f"{x:02d}"
             )
-    
-        if freq == "Quarterly":
-            start_sub, end_sub = st.slider(
-                "Quarter range",
-                1, 4,
-                (1, 4)
+            
+            # Дуусах сар
+            end_month = st.selectbox(
+                "End Month",
+                months,
+                index=len(months)-1,
+                format_func=lambda x: f"{x:02d}"
             )
-
+            
+            # time string үүсгэх
+            start_time = f"{start_year}-{start_month:02d}"
+            end_time = f"{end_year}-{end_month:02d}"
+            
+        elif freq == "Quarterly":
+            quarters = [1, 2, 3, 4]
+            
+            # Эхлэх улирал
+            start_quarter = st.selectbox(
+                "Start Quarter",
+                quarters,
+                index=0
+            )
+            
+            # Дуусах улирал
+            end_quarter = st.selectbox(
+                "End Quarter",
+                quarters,
+                index=len(quarters)-1
+            )
+            
+            # time string үүсгэх
+            start_time = f"{start_year}-Q{start_quarter}"
+            end_time = f"{end_year}-Q{end_quarter}"
 
 
 
