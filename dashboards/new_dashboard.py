@@ -631,17 +631,23 @@ with right:
     # ======================
     st.markdown("### 📉 Change summary")
     
-    group_indicators = [
-        col[1] for col in df_data.columns
-        if col[0] == group and not pd.isna(col[1])
-    ]
+    # 🔥 Change summary-д ашиглах indicator-ууд
+    if selected:
+        change_indicators = selected
+    else:
+        # fallback: group-level (хэрвээ юу ч сонгоогүй бол)
+        change_indicators = [
+            col[1] for col in df_data.columns
+            if col[0] == group and not pd.isna(col[1])
+        ]
+
     
     if not group_indicators:
         st.caption("No indicators in this group.")
     else:
         cards_html = ""
     
-        for ind in group_indicators:
+        for ind in change_indicators:
             tmp = pd.DataFrame({
                 "x": series["time"],
                 ind: df_data[(group, ind)].values
