@@ -756,20 +756,28 @@ with right:
         font-weight: 600;
         color: #3b82f6;
     }
+    .kpi-sub {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-top: -2px;
+    }
+
     </style>
     """, unsafe_allow_html=True)
 
     # ===== KPI CARD HELPER (OUTSIDE BLOCK)
-    def kpi_card(label, value):
+    def kpi_card(label, value, sublabel=None):
         st.markdown(
             f"""
             <div class="kpi-card">
                 <div class="kpi-label">{label}</div>
                 <div class="kpi-value">{value}</div>
+                {f"<div class='kpi-sub'>{sublabel}</div>" if sublabel else ""}
             </div>
             """,
             unsafe_allow_html=True
         )
+
         
     # 🔥 HEADER ROW — INLINE
     st.markdown(
@@ -798,12 +806,17 @@ with right:
         st.stop()
         
     row = kpi_main.iloc[0]   # ✅ row ЭНД Л ҮҮСНЭ
-    
+    last_time = chart_df["time"].dropna().iloc[-1]
+
     # 🔽 KPI CARDS (ӨМНӨХӨӨРӨӨ)
     cols = st.columns(6)
     
     with cols[0]:
-        kpi_card("LAST VALUE", f"{row['Last']:.2f}")
+        kpi_card(
+            "LAST VALUE",
+            f"{row['Last']:.2f}",
+            last_time
+        )
         
     with cols[1]:
         kpi_card("MEAN", f"{row['Mean']:.2f}")
