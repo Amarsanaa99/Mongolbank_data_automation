@@ -433,7 +433,7 @@ with right:
         base = alt.Chart(chart_df).encode(
             x=alt.X(
                 "x:N",
-                title="Date",
+                title=None,
                 axis=alt.Axis(
                     labelAngle=-45,
                     labelFontSize=11,
@@ -455,7 +455,7 @@ with right:
         ).encode(
             y=alt.Y(
                 "Value:Q",
-                title="Value",
+                title=None,
                 axis=alt.Axis(
                     labelFontSize=11,
                     grid=True,
