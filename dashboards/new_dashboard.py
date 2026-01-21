@@ -306,7 +306,13 @@ with left:
         st.subheader("⏳ Time range")
     
         # Жилийн сонголт
-        years = sorted(series["Year"].dropna().unique().astype(int).tolist())
+        year_s = series["Year"]
+        if isinstance(year_s, pd.DataFrame):
+            year_s = year_s.iloc[:, 0]
+        
+        years = sorted(
+            year_s.dropna().astype(int).unique().tolist()
+        )
         
         # Эхлэх жил
         start_year = st.selectbox(
@@ -489,7 +495,7 @@ with right:
                 )
             ),
             tooltip=[
-                alt.Tooltip("x:N", title="Time" ),
+                alt.Tooltip("time:N", title="Time"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
