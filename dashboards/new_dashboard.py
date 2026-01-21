@@ -400,27 +400,31 @@ with right:
         st.subheader("📈 Main chart")
         # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
-        
+
+        # 🔒 Series болгох (ЗААВАЛ)
+        year_s = series["Year"].squeeze()
+        month_s = series["Month"].squeeze() if "Month" in series.columns else None
+        quarter_s = series["Quarter"].squeeze() if "Quarter" in series.columns else None
+
         # ⏳ APPLY TIME RANGE (STRING-SAFE)
         mask = (
-            (series["Year"] >= start_year) &
-            (series["Year"] <= end_year)
+            (year_s >= start_year) &
+            (year_s <= end_year)
         )
         
-        if freq == "Monthly":
+        if freq == "Monthly" and month_s is not None:
             mask &= (
-                (series["Month"] >= start_sub) &
-                (series["Month"] <= end_sub)
+                (month_s >= start_sub) &
+                (month_s <= end_sub)
             )
         
-        elif freq == "Quarterly":
+        elif freq == "Quarterly" and quarter_s is not None:
             mask &= (
-                (series["Quarter"] >= start_sub) &
-                (series["Quarter"] <= end_sub)
+                (quarter_s >= start_sub) &
+                (quarter_s <= end_sub)
             )
-        
-        chart_df = chart_df[mask]
 
+        chart_df = chart_df.loc[mask]
     
         # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
         valid_indicators = [
