@@ -440,31 +440,40 @@ with right:
             st.warning("⚠️ No valid indicators to plot.")
             st.stop()
 
-        # 🔥 ЭХЛЭЭД "time" багана байгаа эсэхийг шалгах
+        # 🔥 ЭХЛЭЭД "time" багана series-д байгаа эсэхийг шалгах
         if "time" not in series.columns:
             st.error("❌ 'time' column not found in series. Check Year/Month/Quarter logic.")
             st.stop()
 
-        chart_df = series.loc[:, ["time"] + valid_selected].copy()
-        
-        # 🔥 БАЙГАА эсэхийг шалгаад dropna хийх
-        if "time" in chart_df.columns:
-            chart_df = chart_df.dropna(subset=["time"])
-        # Хэрэв "time" байхгүй бол алдаа өгөхгүй, зүгээр үргэлжлүүлэх
+        # chart_df үүсгэх
+        try:
+            chart_df = series.loc[:, ["time"] + valid_selected].copy()
+        except KeyError as e:
+            st.error(f"❌ Error creating chart_df: {e}. Check if 'time' and selected indicators exist in series.")
+            st.stop()
+
+        # chart_df хоосон эсэхийг шалгах
+        if chart_df.empty:
+            st.warning("⚠️ chart_df is empty. No data to plot.")
+            st.stop()
+
+        # 🔥 "time" багана chart_df-д байгаа эсэхийг шалгах
+        if "time" not in chart_df.columns:
+            st.error("❌ 'time' column not found in chart_df. This is unexpected.")
+            st.stop()
+
+        # "time" баганын NaN утгуудыг устгах
+        chart_df = chart_df.dropna(subset=["time"])
 
         # 🔥 valid_selected баганууд байгаа эсэхийг шалгах
-        if valid_selected and all(col in chart_df.columns for col in valid_selected):
+        # Зөвхөн chart_df-д байгаа багануудыг ашиглах
+        existing_cols = [col for col in valid_selected if col in chart_df.columns]
+        if existing_cols:
             chart_df = chart_df.loc[
-                ~chart_df[valid_selected].isna().all(axis=1)
+                ~chart_df[existing_cols].isna().all(axis=1)
             ]
 
         chart_df = chart_df.sort_values("time")
-
-
-
-
-
-
 
         # ======================
         # 🔍 BRUSH (X-AXIS ZOOM)
