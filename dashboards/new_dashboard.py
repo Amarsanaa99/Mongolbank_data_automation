@@ -429,31 +429,15 @@ with right:
             (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
         ]
-        # 🔒 Series болгох (ЗААВАЛ)
-        year_s = series["Year"].squeeze()
-        month_s = series["Month"].squeeze() if "Month" in series.columns else None
-        quarter_s = series["Quarter"].squeeze() if "Quarter" in series.columns else None
-
-        # ⏳ APPLY TIME RANGE (STRING-SAFE)
-        mask = (
-            (year_s >= year_start) &
-            (year_s <= year_end)
-        )
+        # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
+        chart_df = series[["time"] + selected].copy()
         
-        if freq == "Monthly" and month_s is not None:
-            mask &= (
-                (month_s >= start_sub) &
-                (month_s <= end_sub)
-            )
-        
-        elif freq == "Quarterly" and quarter_s is not None:
-            mask &= (
-                (quarter_s >= start_sub) &
-                (quarter_s <= end_sub)
-            )
+        # ⏳ APPLY TIME RANGE (STRING-SAFE) — ЗӨВ, ХАНГАЛТТАЙ
+        chart_df = chart_df[
+            (chart_df["time"] >= start_time) &
+            (chart_df["time"] <= end_time)
+        ]
 
-        chart_df = chart_df.loc[mask]
-    
         # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
         valid_indicators = [
             col for col in selected
