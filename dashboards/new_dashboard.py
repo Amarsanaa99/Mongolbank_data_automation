@@ -508,31 +508,22 @@ with right:
         )
         
         # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
-        # Үндсэн шугам – зөвхөн line chart
+        # Hover сонголтыг үндсэн шугам дээр “байршуулна”
         line = base.mark_line(strokeWidth=2.4).add_params(hover)
         
-        # Хөндлөн огтлолцох дугуй ЦЭГ – зөвхөн hover үед
+        # Хөндлөн огтлолцох дугуй цэг — зөвхөн hover үед л зурна
         points = (
             base
             .mark_circle(
-                size=70,
+                size=65,
                 filled=True,
                 color="#ffffff",   # дотор нь цагаан
-                stroke="#1f77b4",  # гадна хүрээ (line‑ийн өнгө)
+                stroke="#1f77b4",  # гадна хүрээ core line‑ийн өнгө
                 strokeWidth=2
             )
-            .transform_filter(hover)     # hover байхгүй үед цэг байхгүй
+            .transform_filter(hover)    # ← hover байхгүй үед ЦЭГ БАЙХГҮЙ
         )
         
-        # Босоо шулуун – зөвхөн hover үед
-        vline = (
-            base
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
-            .encode(x="time:T")
-            .transform_filter(hover)
-        )
-        
-        # Гол график: LINE + hover line + hover circle
         main_chart = (
             alt.layer(
                 line,
@@ -541,12 +532,12 @@ with right:
             )
             .properties(
                 height=450,
-                width="container"
+                width='container'
             )
             .interactive()   # zoom + pan хэвээр
         )
         
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) — өөрчлөх шаардлагагүй
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
         
         mini_chart = (
@@ -565,22 +556,26 @@ with right:
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(height=70)
+            .properties(
+                height=70
+            )
             .add_params(brush)
         )
         
-        # ===== 7️⃣ LINK MAIN ↔ MINI
+        # ===== 7️⃣ LINK MAIN ↔ MINI (brush өмнөх шигээ)
         final_chart = (
             alt.vconcat(
                 main_chart.add_params(brush),
                 mini_chart,
                 spacing=20
             )
-            .properties(background="transparent")
-            # Зөвхөн Y‑ийн хэвтээ grid үлдээнэ
+            .properties(
+                background="transparent"
+            )
+            # Y тэнхлэг дээрх хэвтээ grid л үлдээнэ
             .configure_axisY(
                 grid=True,
-                gridColor="#e0e0e0",
+                gridColor='#e0e0e0',
                 gridOpacity=0.25
             )
             # X тэнхлэгийн бүх босоо grid‑ийг унтраана
