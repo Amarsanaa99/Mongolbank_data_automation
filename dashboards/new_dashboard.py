@@ -449,9 +449,10 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING - PANDAS DATETIME БОЛГОХ
+        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
+        # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
         chart_df = chart_df.copy()
-        chart_df["time"] = pd.to_datetime(chart_df["time"])
+        chart_df['time_detailed'] = chart_df['time'].astype(str)
         
         # ===== 4️⃣ BASE CHART (shared X scale)
         base = (
@@ -462,18 +463,16 @@ with right:
             )
             .encode(
                 x=alt.X(
-                    "time:T",  # 🔥 ТӨРӨЛӨӨ Temporal болгох (N биш!)
+                    'time:T',  # 🔥 ТӨРӨЛӨӨ Temporal болгож өөрчиллөө (zoom дэлгэрэнгүй болгох)
                     title=None,
                     axis=alt.Axis(
-                        format="%Y-%m",  # 🔥 ЭНД ЛАВЛАГАА ӨӨРЧЛӨГДӨНӨ
+                        format='%Y-%m',  # 🔥 ОЙРТУУЛАХАД ӨӨРЧЛӨГДӨХ ФОРМАТ
                         labelAngle=0,
                         labelFontSize=11,
                         grid=False,
-                        labelOverlap=True,  # 🔥 ТЭМДЭГЛЭГЭЭГ АВТОМАТААР ЗОХИЦУУЛНА
-                        labelSeparation=10,
-                        tickCount={"interval": "year", "step": 1}  # 🔥 ЖИЛ БҮРЭЭС ТЭМДЭГЛЭНЭ
+                        labelExpr="timeFormat(datum.value, '%Y-%m')"  # 🔥 Жил-Сар харагдана
                     ),
-                    scale=alt.Scale(zero=False)
+                    scale=alt.Scale(zero=False)  # 🔥 ТЭГЭЭС ЭХЭЛЖ БАЙХГҮЙ
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -493,120 +492,68 @@ with right:
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip("time:T", title="Time", format="%Y-%m-%d"),  # 🔥 ТӨРӨЛ Т Temporal
+                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),  # 🔥 TOOLTIP ДЭЛГЭРЭНГҮЙ
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
         )
-        
-        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
+    
+        # ===== 5️⃣ BRUSH (CONTEXT WINDOW)
+        brush = alt.selection_interval(
+            encodings=["x"],
+            translate=True,   # 🔥 хоёр тийш гүйлгэнэ
+            zoom=False        # 🔥 mini дээр zoom хийхгүй
+        )
+
+        # ===== 6️⃣ MAIN LINE (ZOOM via MINI)
         main_chart = (
             base
             .mark_line(strokeWidth=2.4)
-            .properties(
-                height=360
-            )
-            .interactive(bind_x=True)  # 🔥 ЗӨВХӨН Х ТЭНХЛЭГТ ZOOM+PAN
-        )
-        
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) - ГҮЙЛГЭХ БААР
-        # 🔥 ХЯЛБАРЧИЛСАН SCROLL BAR (date axis-гүй)
-        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=False)  # 🔥 ZOOM ХИЙГДЭХГҮЙ
-        
-        mini_chart = (
-            alt.Chart(chart_df)
-            .mark_rect(
-                color="lightgray",
-                height=20,
-                opacity=0.7
-            )
             .encode(
                 x=alt.X(
-                    "time:T",
-                    axis=None  # 🔥 ТЭНХЛЭГИЙГ НУУХ
+                    'time:T',
+                    scale=alt.Scale(domain=brush)  # 🔥 MINI-ИЙН СОНГОЛТ MAIN-Д НӨЛӨӨЛНӨ
+                )
+            )
+            .properties(height=360)
+        )
+
+
+        # ===== 7️⃣ MINI OVERVIEW (NAVIGATOR)
+        mini_chart = (
+            base
+            .mark_line(strokeWidth=1.2)
+            .encode(
+                y=alt.Y(
+                    "Value:Q",
+                    title=None,
+                    axis=alt.Axis(
+                        labels=False,
+                        ticks=False,
+                        grid=False,
+                        domain=False
+                    )
                 ),
-                x2=alt.X2("time_end:T") if "time_end" in chart_df.columns else alt.value(None)
+                color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(
-                height=20
-            )
-            .add_params(brush)
+            .properties(height=70)
+            .add_params(brush)  # 🔥 ЭНД Л BRUSH БАЙРЛАНА
         )
-        
-        # Хэрэглэгчийн сонгосон хүрээг харуулах тэгш өнцөгт
-        if "time_end" not in chart_df.columns:
-            # Өгөгдөл бэлтгэх
-            time_range_df = pd.DataFrame({
-                "start": [chart_df["time"].min()],
-                "end": [chart_df["time"].max()]
-            })
-            
-            range_rect = (
-                alt.Chart(time_range_df)
-                .mark_rect(
-                    color="#1f77b4",
-                    opacity=0.5,
-                    height=20
-                )
-                .encode(
-                    x="start:T",
-                    x2="end:T"
-                )
-            )
-            
-            mini_chart = (mini_chart + range_rect)
-        
-        # ===== 7️⃣ LINK MAIN ↔ MINI
-        final_chart = (
-            alt.vconcat(
-                main_chart.transform_filter(brush),
-                mini_chart,
-                spacing=5  # 🔥 ЗАЙГ БАГАСГАХ
-            )
-            .resolve_scale(x="shared")  # 🔥 Х ТЭНХЛЭГИЙГ ХОЛБОНО
-            .configure_view(stroke=None)  # 🔥 ХҮРЭЭГ НУУХ
+
+        final_chart = alt.vconcat(
+            main_chart,
+            mini_chart,
+            spacing=10
+        ).properties(
+            background="transparent"
         )
+
         
         st.altair_chart(
             final_chart,
-            use_container_width=True,
-            theme=None
+            use_container_width=True
         )
-        
-        # ===== 8️⃣ ХҮРТЭЭМЖИЙГ САЙЖРУУЛАХ CSS
-        st.markdown("""
-        <style>
-        /* Графикийн хэсгийг гүйлгэх боломжтой болгох */
-        div[data-testid="stVerticalBlock"] {
-            overflow-x: auto !important;
-        }
-        
-        /* Altair график дээр гүйлгэх боломжийг нэмэх */
-        .vega-embed {
-            min-width: 800px;
-        }
-        
-        /* Scrollbar стиль */
-        ::-webkit-scrollbar {
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        </style>
-        """, unsafe_allow_html=True)
         
     
     def compute_group_kpis(df, indicators):
