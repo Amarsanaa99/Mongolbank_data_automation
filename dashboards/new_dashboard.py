@@ -423,9 +423,8 @@ if series["time"].isna().all():
 # ======================
 with right:
     with st.container(border=True):
+        
         st.subheader("📈 Main chart")
-
-        st.markdown('<div class="main-chart-frame">', unsafe_allow_html=True)
         
         # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
