@@ -428,9 +428,12 @@ st.markdown("""
     border-radius: 16px;
     padding: 14px 14px 10px 14px;
     background: rgba(15, 23, 42, 0.45);
-    overflow: hidden;   /* 🔥 ХАМГИЙН ЧУХАЛ */
-    max-width: 100%;    /* Шинээр нэмэх: хамгийн их өргөн */
-    box-sizing: border-box; /* Шинээр нэмэх: padding-ийг өргөнд оруулах */
+    overflow-x: auto;  /* Хэвтээ гүйлгэх боломжтой болгох */
+    overflow-y: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+    /* Дэлгэцийн өргөнийг автоматаар авах */
+    width: 100% !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -556,7 +559,7 @@ with right:
             )
             .properties(
                 height=400,
-                width=900
+                width='container'
             )
             .interactive()   # zoom + pan хэвээр
         )
@@ -609,8 +612,7 @@ with right:
         
         st.altair_chart(
             final_chart,
-            use_container_width=False,
-            width=900
+            use_container_width=True
         )
 
         st.markdown('</div>', unsafe_allow_html=True)
