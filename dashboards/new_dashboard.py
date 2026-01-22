@@ -713,7 +713,7 @@ with right:
             raw_val = series.loc[last_valid_idx, ind]
     
             try:
-                last_value = float(raw_val)
+                last_value = float(raw_val.iloc[0]) if isinstance(raw_val, pd.Series) else float(raw_val)
             except:
                 continue
     
