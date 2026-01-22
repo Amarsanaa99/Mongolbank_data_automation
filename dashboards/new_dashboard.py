@@ -538,10 +538,10 @@ with right:
                 mini_chart,
                 spacing=10
             )
-            .properties(
-                background="transparent"
-            )
+            .resolve_scale(x="shared")
+            .properties(background="transparent")
         )
+
 
         st.altair_chart(
             final_chart,
