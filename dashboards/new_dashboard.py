@@ -487,10 +487,7 @@ with right:
                     "Indicator:N",
                     legend=alt.Legend(
                         title=None,
-                        orient="top-left",
-                        offset=5,
-                        symbolType="stroke",
-                        labelFontsize=11
+                        orient="right"
                     )
                 ),
                 tooltip=[
@@ -577,11 +574,9 @@ with right:
                 mini_chart,
                 spacing=20
             )
-            .resolve_scale(x='shared') # <--- Энэ кодыг нэмэх (X тэнхлэгийг яг тааруулна)
             .properties(
                 background="transparent"
             )
-            .configure_view(stroke=None) # Графикийн гаднах хүрээний шугамыг арилгаж "эвтэйхэн" болгоно
             .configure_axis(
                 grid=True,
                 gridColor='#e0e0e0'
