@@ -435,31 +435,27 @@ with right:
             (chart_df["time"] <= end_time)
         ]
 
-        # ===== 2️⃣ Баганы нэрсийг хялбарчилж string болгох
-        # chart_df.columns-г хялбар string болгох
-        if isinstance(chart_df.columns, pd.MultiIndex):
-            # MultiIndex бол эхний түвшний нэрсийг авах
+        # ===== 2️⃣ Баганы нэрсийг FIX - tuple-ээс string болгох
+        # DataFrame-ийн баганы нэрсийг шалгаж, tuple байвал string болгоно
+        if chart_df.columns.nlevels > 1:
+            # MultiIndex байвал
             chart_df.columns = chart_df.columns.get_level_values(0)
-        else:
-            # Tuple байвал эхний элементүүдийг авах
-            new_columns = []
-            for col in chart_df.columns:
-                if isinstance(col, tuple):
-                    # Tuple-ээс эхний хоосон биш элементийг авах
-                    new_col = next((item for item in col if item), str(col))
-                    new_columns.append(new_col)
+        
+        # Баганы нэрсийг string болгох
+        new_columns = []
+        for col in chart_df.columns:
+            if isinstance(col, tuple):
+                # Tuple-ээс эхний хоосон биш элементийг авах
+                if col[0]:  # Эхний элемент хоосон биш бол
+                    new_columns.append(col[0])
+                elif len(col) > 1 and col[1]:  # Хоёр дахь элемент
+                    new_columns.append(col[1])
                 else:
-                    new_columns.append(col)
-            chart_df.columns = new_columns
-        
-        # Одоо 'time' багануудыг баталгаажуулах
-        if 'time' not in chart_df.columns:
-            # Хэрэв байхгүй бол аль нэгийг нь 'time' болгохыг оролдох
-            for col in chart_df.columns:
-                if col == 'time' or col == ('time', '') or col == ('time',):
-                    chart_df = chart_df.rename(columns={col: 'time'})
-                    break
-        
+                    new_columns.append(str(col))
+            else:
+                new_columns.append(str(col))
+        chart_df.columns = new_columns
+
         # ===== 3️⃣ Valid indicators
         valid_indicators = [
             col for col in selected
@@ -470,11 +466,19 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        # ===== 4️⃣ ALTAIR CHART (ЭНГИЙН ХЭЛБЭРТЭЭ БУЦААХ)
+        # ===== 4️⃣ ALTAIR CHART
         import altair as alt
         
-        # ----- Шугамын график -----
-        # Шууд fold хийхгүй, base ашиглан
+        # ----- Chart үүсгэх -----
+        # Hover selection
+        hover = alt.selection_single(
+            fields=['time'],
+            nearest=True,
+            on='mouseover',
+            empty='none'
+        )
+        
+        # Base chart
         base = alt.Chart(chart_df).encode(
             x=alt.X(
                 "time:N",
@@ -493,14 +497,6 @@ with right:
         folded = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
-        )
-        
-        # Hover selection
-        hover = alt.selection_point(
-            fields=["time"],
-            nearest=True,
-            on="mouseover",
-            empty=False
         )
         
         # Шугамууд
@@ -562,8 +558,8 @@ with right:
             background="transparent"
         ).interactive()
         
-        st.altair_chart(chart, use_container_width=True)
-
+        # Streamlit-д харуулах (deprecation warning-аас зайлсхийх)
+        st.altair_chart(chart, width="stretch")
 
 
 
