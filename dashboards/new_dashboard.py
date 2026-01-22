@@ -450,7 +450,7 @@ with right:
 
         base = alt.Chart(chart_df).encode(
             x=alt.X(
-                "time:N",
+                "time:T",
                 title=None,
                 sort="ascending",
                 axis=alt.Axis(
@@ -470,10 +470,18 @@ with right:
 
         # ===== 5️⃣ Hover selection
         hover = alt.selection_point(
-            fields=["time"],
+            encodings=["x"],    # 🔥 fields БИШ
             nearest=True,
             on="mouseover",
-            empty=False
+            empty="none"
+        )
+        # ===== 5️⃣.1️⃣ Invisible selector layer (FRED-style hover trigger)
+        selectors = base.mark_point(
+            opacity=0
+        ).encode(
+            x="time:T"
+        ).add_params(
+            hover
         )
 
         # ===== 6️⃣ Lines
@@ -508,38 +516,44 @@ with right:
         )
 
         # ===== 7️⃣ Vertical line
-        vline = folded.mark_rule(
+        vline = alt.Chart(chart_df).mark_rule(
             color="#64748b",
             strokeWidth=1.2
         ).encode(
-            x="time:N"
-        ).transform_filter(
-            hover          # ✅ ЗӨВХӨН hover болсон time дээр л rule харагдана
+            x="time:T",
+            opacity=alt.condition(hover, alt.value(1), alt.value(0))
         )
+
 
 
 
         # ===== 8️⃣ Hover points + tooltip
         hover_points = folded.mark_point(
-            size=70
+            size=70,
+            filled=False,
+            strokeWidth=2
         ).encode(
-            x="time:N",
+            x="time:T",
             y="Value:Q",
             opacity=alt.condition(hover, alt.value(1), alt.value(0)),
             tooltip=[
-                alt.Tooltip("time:N", title="Date"),
+                alt.Tooltip("time:T", title="Date"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
 
+
         # ===== 9️⃣ Layered chart (padding болон height энд өгнө)
-        chart = (lines + vline + hover_points).properties(
+        chart = (
+            lines
+            + vline
+            + hover_points
+            + selectors     # 🔥 СҮҮЛД НЭМНЭ
+        ).properties(
             height=340,
             padding={"bottom": 5},
             background="transparent"
-        ).add_params(
-            hover
         )
         
         st.altair_chart(chart, width="stretch")
