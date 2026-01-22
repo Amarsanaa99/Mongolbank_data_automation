@@ -519,9 +519,14 @@ with right:
         
         # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
         vline = (
-            base.mark_rule(color="#aaaaaa", strokeWidth=1.2)
-            .encode(x='time:T')
-            .transform_filter(hover) # <--- Энэ шүүлтүүр одоо hover selection-той зөв холбогдоно
+            alt.Chart(chart_df) # <--- base биш chart_df ашигласнаар бүтэн зурагдана
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
+            .encode(
+                x='time:T',
+                # opacity-г энд нэмж өгснөөр хулгана байхгүй үед харагдахгүй
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            )
+            .transform_filter(hover)
         )
         
         main_chart = (
