@@ -538,11 +538,12 @@ with right:
             y="Value:Q",
             opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
             tooltip=[
-                alt.Tooltip("time:N", title="Time"),
+                alt.Tooltip("time:T", title="Time"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
-        )
+        ).add_params(nearest)   # ← 🔴 ЭНЭ МӨР ДУТУУ БАЙСАН
+
 
         st.altair_chart(
             alt.layer(
