@@ -508,30 +508,31 @@ with right:
         )
         
         # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
-        # Hover сонголтыг үндсэн шугам дээр “байршуулна”
+        # Үндсэн шугам – зөвхөн line chart
         line = base.mark_line(strokeWidth=2.4).add_params(hover)
         
-        # Хөндлөн огтлолцох дугуй цэг — зөвхөн hover үед л зурна
+        # Хөндлөн огтлолцох дугуй ЦЭГ – зөвхөн hover үед
         points = (
             base
             .mark_circle(
-                size=65,
+                size=70,
                 filled=True,
                 color="#ffffff",   # дотор нь цагаан
-                stroke="#1f77b4",  # гадна хүрээ
+                stroke="#1f77b4",  # гадна хүрээ (line‑ийн өнгө)
                 strokeWidth=2
             )
-            .transform_filter(hover)    # hover байхгүй үед ЦЭГ БАЙХГҮЙ
+            .transform_filter(hover)     # hover байхгүй үед цэг байхгүй
         )
         
-        # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
+        # Босоо шулуун – зөвхөн hover үед
         vline = (
             base
             .mark_rule(color="#aaaaaa", strokeWidth=1.2)
-            .encode(x='time:T')
+            .encode(x="time:T")
             .transform_filter(hover)
         )
         
+        # Гол график: LINE + hover line + hover circle
         main_chart = (
             alt.layer(
                 line,
@@ -540,7 +541,7 @@ with right:
             )
             .properties(
                 height=450,
-                width='container'
+                width="container"
             )
             .interactive()   # zoom + pan хэвээр
         )
@@ -564,9 +565,7 @@ with right:
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(
-                height=70
-            )
+            .properties(height=70)
             .add_params(brush)
         )
         
@@ -577,15 +576,14 @@ with right:
                 mini_chart,
                 spacing=20
             )
-            .properties(
-                background="transparent"
-            )
-            # Зөвхөн Y‑ийн grid үлдээнэ, X‑ийн босоог унтраана
+            .properties(background="transparent")
+            # Зөвхөн Y‑ийн хэвтээ grid үлдээнэ
             .configure_axisY(
                 grid=True,
-                gridColor='#e0e0e0',
+                gridColor="#e0e0e0",
                 gridOpacity=0.25
             )
+            # X тэнхлэгийн бүх босоо grid‑ийг унтраана
             .configure_axisX(
                 grid=False
             )
