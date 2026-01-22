@@ -450,6 +450,31 @@ with right:
         # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
+        # ===== 3️⃣.1️⃣ CREATE REAL DATETIME COLUMN (FOR ALTAIR) =====
+        if freq == "Monthly":
+            # "2020-01" → 2020-01-01
+            chart_df["time_dt"] = pd.to_datetime(
+                chart_df["time"],
+                format="%Y-%m",
+                errors="coerce"
+            )
+        
+        elif freq == "Quarterly":
+            # "2020-Q1" → 2020-01-01, "2020-Q2" → 2020-04-01
+            chart_df["time_dt"] = (
+                pd.PeriodIndex(chart_df["time"], freq="Q")
+                .to_timestamp()
+            )
+        
+        else:
+            st.error("❌ Unknown frequency")
+            st.stop()
+        
+        # 🔒 HARD CHECK
+        if chart_df["time_dt"].isna().all():
+            st.error("❌ Failed to convert time → datetime")
+            st.stop()
+
         
         # ===== 3.5️⃣ X-AXIS CONFIGURATION (ЭНД НЭМЭХ ХЭСЭГ) =====
         # start_year, end_year-ыг integer болгох
@@ -480,15 +505,12 @@ with right:
             )
             .encode(
                 x=alt.X(
-                    'time:T',
+                    "time_dt:T",
                     title=None,
                     axis=axis_config,
-                    scale=alt.Scale(
-                        zero=False,
-                        # Графикийн хүрээг тогтоох
-                        domain=[start_time, end_time]
-                    )
+                    scale=alt.Scale(zero=False)
                 ),
+
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -510,7 +532,11 @@ with right:
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m' if freq == "Monthly" else '%Y-Q%q'),
+                    alt.Tooltip(
+                        "time_dt:T",
+                        title="Time",
+                        format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
+                    ),
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
