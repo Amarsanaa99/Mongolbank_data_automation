@@ -447,7 +447,7 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING =====
+        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis =====
         chart_df = chart_df.copy()
         
         if freq == "Monthly":
@@ -470,50 +470,49 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
 
-        # ===== 4️⃣ X-AXIS CONFIGURATION =====
+        # ===== 4️⃣ X-AXIS CONFIGURATION (ЖИЛЭЭР ХАРУУЛАХ) =====
         # Жилийн тооцоо
         start_year_int = int(start_year) if isinstance(start_year, str) else start_year
         end_year_int = int(end_year) if isinstance(end_year, str) else end_year
         year_count = end_year_int - start_year_int + 1
         
-        # ✅ ЯГ ӨМНӨХ ШИГЭЭ: 2 ЖИЛИЙН ИНТЕРВАЛТАЙ ШОШГО
-        # Хэрэв year_count 12-оос их бол 2 жил тутамд, бага бол жил бүр
-        if year_count > 12:
-            tick_step = 2
+        # Жилийн интервалыг тохируулах
+        if year_count <= 8:
+            year_step = 1  # 8 жилээс бага бол жил бүр
+        elif year_count <= 16:
+            year_step = 2  # 16 жилээс бага бол 2 жилд нэг
         else:
-            tick_step = 1
+            year_step = max(1, year_count // 8)  # 8 шошготой байх
         
-        # X тэнхлэгийн тохируулга - ЯГ ӨМНӨХ ШИГ
+        # X тэнхлэгийн тохируулга
         x_axis = alt.Axis(
             title=None,
-            format="%Y",  # ЖИЛ ХАРУУЛАХ
+            format="%Y",  # ЗӨВХӨН ЖИЛ ХАРУУЛАХ
             labelAngle=0,
             labelFontSize=11,
-            grid=False,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ grid ХИЙГҮЙ
-            tickCount={'interval': 'year', 'step': tick_step},
+            grid=True,
+            gridOpacity=0.1,
+            tickCount={'interval': 'year', 'step': year_step},
             domain=True,
-            orient='bottom',
-            offset=0
+            orient='bottom'
         )
         
-        # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
+        # ===== 5️⃣ LEGEND ТОХИРУУЛГА (ГРАФИК ДОТОР) =====
         legend_config = alt.Legend(
             title=None,
-            orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
-            offset=0,
-            padding=0,
+            orient='top-right',  # ДЭЭД БАРУУН БУЛАНД
+            offset=10,
+            padding=10,
             labelFontSize=11,
             symbolType="stroke",
-            symbolSize=80,
+            symbolSize=100,
             direction='vertical',
-            # ✅ ЯГ ӨМНӨХ ШИГЭЭ ДЭВСГЭРГҮЙ, ЦЭВЭР
-            fillColor=None,
-            strokeColor=None,
-            cornerRadius=0,
-            labelLimit=180
+            fillColor='rgba(255, 255, 255, 0.8)',  # Цэвэр цагаан дэвсгэр
+            strokeColor='rgba(200, 200, 200, 0.5)',
+            cornerRadius=8
         )
         
-        # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
+        # ===== 6️⃣ BASE CHART =====
         base = (
             alt.Chart(chart_df)
             .transform_fold(
@@ -525,7 +524,7 @@ with right:
                     "time_dt:T",
                     title=None,
                     axis=x_axis,
-                    scale=alt.Scale(zero=False)  # ✅ ЯГ ӨМНӨХ ШИГ
+                    scale=alt.Scale(zero=False)
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -533,20 +532,20 @@ with right:
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
-                        domain=True,  # ✅ ЯГ ӨМНӨХ ШИГ
+                        domain=True,
                         labelFontSize=11,
                         offset=5
                     )
                 ),
                 color=alt.Color(
                     "Indicator:N",
-                    legend=legend_config  # ✅ ЯГ ӨМНӨХ ШИГЭЭ LEGEND
+                    legend=legend_config
                 ),
                 tooltip=[
                     alt.Tooltip(
                         "time_dt:T",
                         title="Time",
-                        format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
+                        format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"  # Tooltip-д нарийвчилсан цаг
                     ),
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
@@ -554,7 +553,7 @@ with right:
             )
         )
         
-        # ===== 7️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
+        # ===== 7️⃣ HOVER СОНГОЛТ =====
         hover = alt.selection_single(
             fields=["time_dt"],
             nearest=True,
@@ -563,16 +562,16 @@ with right:
             clear="mouseout"
         )
         
-        # ===== 8️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
-        line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
+        # ===== 8️⃣ ГРАФИК ЭЛЕМЕНТҮҮД =====
+        line = base.mark_line(strokeWidth=2.4)
         
         points = (
             base
             .mark_circle(
-                size=65,  # ✅ ЯГ ӨМНӨХ ШИГ (65)
+                size=50,
                 filled=True,
                 stroke="#ffffff",
-                strokeWidth=2  # ✅ ЯГ ӨМНӨХ ШИГ
+                strokeWidth=1.5
             )
             .encode(
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
@@ -580,18 +579,18 @@ with right:
             .add_params(hover)
         )
 
-        # Босоо шулуун - ЯГ ӨМНӨХ ШИГ
+        # Босоо шулуун
         vline = (
             alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  # ✅ ЯГ ӨМНӨХ ШИГ
+            .mark_rule(color="#888888", strokeWidth=1)
             .encode(
                 x='time_dt:T',
-                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+                opacity=alt.condition(hover, alt.value(0.7), alt.value(0))
             )
             .transform_filter(hover)
         )
         
-        # ===== 9️⃣ ҮНДСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # ===== 9️⃣ ҮНДСЭН ГРАФИК =====
         main_chart = (
             alt.layer(
                 line,
@@ -599,18 +598,18 @@ with right:
                 points
             )
             .properties(
-                height=400,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 400
+                height=350,  # ӨНДРИЙГ БАГАСГАХ
                 width="container"
             )
             .interactive()
         )
         
-        # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # ===== 🔟 MINI OVERVIEW =====
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
         
         mini_chart = (
             base
-            .mark_line(strokeWidth=1.2)  # ✅ ЯГ ӨМНӨХ ШИГ
+            .mark_line(strokeWidth=1)
             .encode(
                 x=alt.X(
                     "time_dt:T",
@@ -630,26 +629,24 @@ with right:
                 color=alt.Color("Indicator:N", legend=None)
             )
             .properties(
-                height=60,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 60
-                width="container"
+                height=40
             )
             .add_params(brush)
         )
         
-        # ===== 1️⃣1️⃣ НЭГТГЭСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ПАРАМЕТРҮҮД =====
+        # ===== 1️⃣1️⃣ НЭГТГЭСЭН ГРАФИК =====
         final_chart = (
             alt.vconcat(
                 main_chart,
                 mini_chart,
-                spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
+                spacing=5  # ЗАЙГ БАГАСГАХ
             )
             .resolve_scale(
                 x='shared',
                 color='shared'
             )
             .properties(
-                # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
-                padding={"left": 50, "top": 20, "right": 20, "bottom": 50}
+                padding={"left": 40, "right": 40, "top": 30, "bottom": 40}
             )
             .configure_view(
                 strokeWidth=0
@@ -657,7 +654,7 @@ with right:
             .configure_axis(
                 grid=True,
                 gridColor='#e0e0e0',
-                gridOpacity=0.3
+                gridOpacity=0.2
             )
         )
 
