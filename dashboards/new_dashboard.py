@@ -373,6 +373,21 @@ with left:
             start_time = f"{start_year}-Q{start_quarter}"
             end_time = f"{end_year}-Q{end_quarter}"
 
+# ======================
+# 🔧 FIX: start_time / end_time → DATETIME
+# ======================
+if freq == "Monthly":
+    start_time = pd.to_datetime(start_time + "-01")
+    end_time   = pd.to_datetime(end_time + "-01")
+
+elif freq == "Quarterly":
+    # Quarter → сарын эх болгоно (Altair-д ойлгомжтой)
+    start_time = pd.Period(start_time, freq="Q").to_timestamp()
+    end_time   = pd.Period(end_time, freq="Q").to_timestamp()
+
+else:
+    start_time = pd.to_datetime(start_time)
+    end_time   = pd.to_datetime(end_time)
 
 
 
@@ -430,7 +445,7 @@ with right:
 
         # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
-
+        chart_df["time"] = pd.to_datetime(chart_df["time"])
         # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
             (chart_df["time"] >= start_time) &
