@@ -489,17 +489,18 @@ with right:
         else:
             st.error("❌ 'time_dt' column was not created successfully.")
             st.stop()
-
-
-        # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS SAFELY =====
-        # chart_df-д байгаа valid багануудыг л ашиглана
+            
+        # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS SAFELY (SAFE VERSION) =====
+        # chart_df-д байгаа valid багануудыг шалгана
         existing_valid_indicators = [c for c in valid_indicators if c in chart_df.columns]
         
         if existing_valid_indicators:
+            # Хоосон багануудыг dropna-д оруулахгүйгээр filter
             chart_df = chart_df.dropna(subset=existing_valid_indicators, how='all')
         else:
             st.warning("⚠️ No valid indicators exist in the data after filtering")
             st.stop()
+
 
         # 🔒 HARD CHECK
         if chart_df["time_dt"].isna().all():
