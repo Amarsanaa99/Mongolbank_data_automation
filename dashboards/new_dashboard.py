@@ -449,38 +449,30 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING
+        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
+        # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
         chart_df = chart_df.copy()
-        chart_df['time'] = pd.to_datetime(chart_df['time'])
+        chart_df['time_detailed'] = chart_df['time'].astype(str)
         
-        # ===== 4️⃣ BRUSH SELECTION - ЗӨВШӨӨРӨЛТӨЙ ХЭЛБЭР
-        brush = alt.selection_interval(
-            encodings=['x'],
-            name='brush',
-            translate=False,  # 🔥 ЧИРЖ ШИЛЖҮҮЛЭХГҮЙ
-            zoom=False,       # 🔥 ZOOM ХИЙХГҮЙ
-            mark=alt.BrushConfig(fill='gray', fillOpacity=0.3, stroke='gray')  # 🔥 ХЭРХЭН ХАРАГДАХЫГ ТОДОРХОЙЛОХ
-        )
-        
-        # ===== 5️⃣ ГОЛ ГРАФИК
-        # Гол графикийн үндсэн бүтэц
-        main_chart = (
+        # ===== 4️⃣ BASE CHART (shared X scale)
+        base = (
             alt.Chart(chart_df)
             .transform_fold(
                 valid_indicators,
                 as_=["Indicator", "Value"]
             )
-            .mark_line(strokeWidth=2.4)
             .encode(
                 x=alt.X(
-                    'time:T',
+                    'time:T',  # 🔥 ТӨРӨЛӨӨ Temporal болгож өөрчиллөө (zoom дэлгэрэнгүй болгох)
                     title=None,
                     axis=alt.Axis(
-                        format='%Y-%m',
+                        format='%Y-%m',  # 🔥 ОЙРТУУЛАХАД ӨӨРЧЛӨГДӨХ ФОРМАТ
                         labelAngle=0,
                         labelFontSize=11,
-                        grid=False
-                    )
+                        grid=False,
+                        labelExpr="timeFormat(datum.value, '%Y-%m')"  # 🔥 Жил-Сар харагдана
+                    ),
+                    scale=alt.Scale(zero=False)  # 🔥 ТЭГЭЭС ЭХЭЛЖ БАЙХГҮЙ
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -490,8 +482,7 @@ with right:
                         gridOpacity=0.25,
                         domain=False,
                         labelFontSize=11
-                    ),
-                    scale=alt.Scale(zero=False)  # 🔥 Y ТЭНХЛЭГ ТЭГЭЭС ЭХЭЛЭХГҮЙ
+                    )
                 ),
                 color=alt.Color(
                     "Indicator:N",
@@ -501,132 +492,70 @@ with right:
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),
+                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),  # 🔥 TOOLTIP ДЭЛГЭРЭНГҮЙ
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
-            .properties(height=360)
-            .transform_filter(brush)  # BRUSH-аар шүүгдэнэ
-            .interactive()  # ZOOM/PAN боломжтой
         )
         
-        # ===== 6️⃣ МИНИ ГРАФИК (SCROLL BAR) - ШИНЭЧЛЭЛТЭЙ
-        # Мини графикт зөвхөн нэг индикаторыг харуулъя (хэрэв олон байвал эхнийхийг)
-        if valid_indicators:
-            # Зөвхөн эхний индикаторыг ашиглах
-            first_indicator = valid_indicators[0]
-            mini_data = chart_df[['time', first_indicator]].copy()
-            mini_data = mini_data.rename(columns={first_indicator: 'value'})
-        else:
-            mini_data = pd.DataFrame()
-        
-        # Мини графикийг бүтээх (энгийн хэлбэрээр)
-        mini_chart = (
-            alt.Chart(mini_data)
-            .mark_area(
-                opacity=0.5,
-                line=True,
-                color='lightgray'
+        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
+        main_chart = (
+            base
+            .mark_line(strokeWidth=2.4)
+            .properties(
+                height=360,
+                # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
             )
+            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
+        )
+        
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
+        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
+        
+        mini_chart = (
+            base
+            .mark_line(strokeWidth=1.2)
             .encode(
-                x=alt.X(
-                    'time:T',
+                y=alt.Y(
+                    "Value:Q",
                     title=None,
                     axis=alt.Axis(
-                        labels=False,  # 🔥 ТЭМДЭГЛЭГЭЭГ НУУХ
+                        labels=False,
                         ticks=False,
-                        grid=False
+                        grid=False,
+                        domain=False
                     )
                 ),
-                y=alt.Y(
-                    'value:Q',
-                    title=None,
-                    axis=None  # 🔥 Y ТЭНХЛЭГИЙГ БҮРЭМ НУУХ
-                )
+                color=alt.Color("Indicator:N", legend=None)
             )
             .properties(
-                height=40,  # 🔥 БАГА ӨНДӨР
-                width=400   # 🔥 ӨРГӨН ӨНДӨР (гүйлгэх боломжтой болгох)
+                height=70
             )
-            .add_params(brush)  # 🔥 BRUSH SELECTION нэмэх
+            .add_params(brush)
         )
         
-        # ===== 7️⃣ ХОЁР ГРАФИКИЙГ ХОЛБОХ
-        # Хоёр графикийг босоо байдлаар нэгтгэх
-        final_chart = alt.vconcat(
-            main_chart,
-            mini_chart,
-            spacing=5
-        ).resolve_scale(
-            x='shared'  # 🔥 Х ТЭНХЛЭГИЙГ ХОЛБОНО
+        # ===== 7️⃣ LINK MAIN ↔ MINI
+        final_chart = (
+            alt.vconcat(
+                main_chart.add_params(brush),  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
+                mini_chart,
+                spacing=10
+            )
+            .properties(
+                background="transparent"
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0'
+            )
         )
-        
-        # ===== 8️⃣ CSS СТИЛЬ НЭМЭХ (ГҮЙЛГЭХ БААРЫГ САЙЖРУУЛАХ)
-        st.markdown("""
-        <style>
-        /* Мини графикийг гүйлгэх боломжтой болгох */
-        .vega-embed {
-            overflow-x: auto !important;
-            min-width: 600px;
-        }
-        
-        /* График дээр гүйлгэх үед курсорыг өөрчлөх */
-        .vega-embed .mark-rect.background {
-            cursor: grab !important;
-        }
-        
-        .vega-embed .mark-rect.background:active {
-            cursor: grabbing !important;
-        }
-        
-        /* Мини графикийн өнгө өөрчлөх */
-        .vega-embed .marks .mark-area path {
-            fill: #f0f0f0 !important;
-            stroke: #ccc !important;
-        }
-        
-        /* Brush selection-ийн өнгө */
-        .vega-embed .brush .selection {
-            fill: #1f77b4 !important;
-            fill-opacity: 0.3 !important;
-            stroke: #1f77b4 !important;
-        }
-        
-        /* Scrollbar стиль */
-        ::-webkit-scrollbar {
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        # ===== 9️⃣ ГРАФИКИЙГ ХЭРЭГЛЭХ ЗААВАР
-        st.caption("""
-        🔍 **Хэрхэн ашиглах:** 
-        - **Ойртуулах:** График дээр дарж сунгах/шахах эсвэл хулганы дугуй ашиглах
-        - **Гүйлгэх:** Мини график дээрх саарал хэсгийг чирж шилжүүлэх
-        - **Хоёр тал руу гүйлгэх:** Мини графикийн brush-ыг чирж хоёр тийш нь гүйлгэх
-        - **Автомат масштаб:** Ойртуулахад график автоматаар сунагдаж, нарийн мэдээлэл харуулна
-        """)
         
         st.altair_chart(
             final_chart,
             use_container_width=True
         )
+
     
     def compute_group_kpis(df, indicators):
         stats = []
