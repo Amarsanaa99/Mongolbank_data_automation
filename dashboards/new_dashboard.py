@@ -506,9 +506,6 @@ with right:
             labelFontSize=11,
             symbolType="stroke",
             symbolSize=100,
-            # Legend-ийг график дотор оруулах
-            legendX=0,
-            legendY=0,
             direction='vertical',
             fillColor='rgba(255, 255, 255, 0.8)',  # Цэвэр цагаан дэвсгэр
             strokeColor='rgba(200, 200, 200, 0.5)',
@@ -602,16 +599,7 @@ with right:
             )
             .properties(
                 height=350,  # ӨНДРИЙГ БАГАСГАХ
-                width="container",
-                padding={"left": 40, "right": 40, "top": 30, "bottom": 40}  # PADDING ТОХИРУУЛГА
-            )
-            .configure_view(
-                strokeWidth=0
-            )
-            .configure_axis(
-                grid=True,
-                gridColor='#e0e0e0',
-                gridOpacity=0.2
+                width="container"
             )
             .interactive()
         )
@@ -657,8 +645,16 @@ with right:
                 x='shared',
                 color='shared'
             )
+            .properties(
+                padding={"left": 40, "right": 40, "top": 30, "bottom": 40}
+            )
             .configure_view(
                 strokeWidth=0
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0',
+                gridOpacity=0.2
             )
         )
 
