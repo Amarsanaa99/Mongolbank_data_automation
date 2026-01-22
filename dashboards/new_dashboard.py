@@ -418,7 +418,6 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-# ======================
 # MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
@@ -427,7 +426,35 @@ with right:
         st.subheader("📈 Main chart")
         
         # ===== 1️⃣ DATA (NO AGGREGATION)
+        
+        # ДЕБАГ: series багануудыг шалгах
+        st.write("🔍 DEBUG: series columns", series.columns.tolist())
+        st.write("🔍 DEBUG: selected indicators", selected)
+        
+        # 'time' багана байгаа эсэхийг шалгах
+        if "time" not in series.columns:
+            st.error(f"❌ 'time' column not found in series DataFrame!")
+            st.write("Available columns in series:", series.columns.tolist())
+            
+            # Индекс шалгах
+            st.write("Series index:", series.index.name)
+            st.write("Series index type:", type(series.index))
+            
+            # Хэрэв индекс нь дататай бол
+            if hasattr(series.index, 'dtype'):
+                st.write("Series index dtype:", series.index.dtype)
+                
+            # Хэрэв индекс нь цаг хугацаа бол дараахыг хийж болно
+            if series.index.name is not None:
+                st.write(f"Index name: {series.index.name} - maybe this should be 'time'?")
+            
+            st.stop()
+        
         chart_df = series[["time"] + selected].copy()
+        
+        # ДЕБАГ: chart_df-ийн эхний хэдэн мөр
+        st.write("🔍 DEBUG: chart_df head", chart_df.head())
+        st.write("🔍 DEBUG: chart_df columns", chart_df.columns.tolist())
         
         # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
@@ -441,6 +468,8 @@ with right:
             if c in chart_df.columns and not chart_df[c].isna().all()
         ]
         
+        st.write("🔍 DEBUG: valid_indicators", valid_indicators)
+        
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
@@ -450,62 +479,65 @@ with right:
         # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
-
         
         # ===== 3️⃣.1️⃣ CREATE REAL DATETIME COLUMN (FOR ALTAIR) =====
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
         
         # Анхны багана үүсгэх
-        chart_df['time_dt'] = pd.NaT
+        chart_df['time_dt'] = pd.NaT  
+        
+        st.write("🔍 DEBUG: time column sample", chart_df['time'].head().tolist())
+        st.write("🔍 DEBUG: freq value", freq)
         
         try:
             if freq == "Monthly":
                 # "%Y-%m" форматад хувиргах
+                st.write("🔄 Converting Monthly format...")
                 chart_df['time_dt'] = pd.to_datetime(
                     chart_df['time'], 
                     format="%Y-%m", 
-                    errors='coerce'
+                    errors='coerce'  # Хувиргах боломжгүй бол NaT болгоно
                 )
             elif freq == "Quarterly":
                 # Q-формат (e.g., 2023-Q1)
-                # Эхлээд string-ийг Period болгох
+                st.write("🔄 Converting Quarterly format...")
                 chart_df['time_dt'] = pd.PeriodIndex(
                     chart_df['time'], 
-                    freq='Q'
+                    freq="Q"
                 ).to_timestamp()
             else:
                 st.error(f"❌ Unknown frequency: {freq}")
                 st.stop()
         except Exception as e:
             st.error(f"❌ Failed to create 'time_dt': {e}")
-            st.stop()
-        
-        # Шууд 'time_dt' багана байгаа эсэхийг шалгах
-        if 'time_dt' not in chart_df.columns:
-            st.error(f"❌ 'time_dt' column was not created. Available columns: {chart_df.columns.tolist()}")
-            st.stop()
-        
-        # Хэрэв бүх утгууд NaT бол
-        if chart_df['time_dt'].isna().all():
-            st.error("❌ All 'time_dt' values are NaT. Check the 'time' column format.")
+            st.write("Time values that failed:", chart_df['time'].head(10).tolist())
             st.stop()
         
         # ===== 3️⃣.2️⃣ REMOVE NaT VALUES SAFELY =====
-        try:
-            # dropna-г ашиглахаас өмнө багана байгаа эсэхийг дахин шалгах
-            if 'time_dt' not in chart_df.columns:
-                st.error(f"❌ 'time_dt' column missing before dropna. Columns: {chart_df.columns.tolist()}")
-                st.stop()
+        # 'time_dt' багана байгаа эсэхийг шалгана
+        st.write("🔍 DEBUG: 'time_dt' in columns?", 'time_dt' in chart_df.columns)
+        st.write("🔍 DEBUG: All columns in chart_df", chart_df.columns.tolist())
+        
+        if 'time_dt' in chart_df.columns:
+            # NaT бүх мөрүүдийг устгана
+            st.write(f"🔍 DEBUG: time_dt sample values: {chart_df['time_dt'].head().tolist()}")
+            st.write(f"🔍 DEBUG: Number of NaT values: {chart_df['time_dt'].isna().sum()}")
             
             chart_df = chart_df.dropna(subset=['time_dt'])
-        except KeyError as e:
-            st.error(f"❌ Error in dropna for 'time_dt': {e}. Available columns: {chart_df.columns.tolist()}")
+            
+            if chart_df.empty:
+                st.error("❌ 'time_dt' exists but all values are NaT after conversion")
+                st.write("Check time format. Expected formats:")
+                st.write("- Monthly: '2023-01', '2023-12'")
+                st.write("- Quarterly: '2023-Q1', '2023-Q4'")
+                st.stop()
+        else:
+            st.error("❌ 'time_dt' column was not created successfully.")
+            st.write("Available columns:", chart_df.columns.tolist())
             st.stop()
         
-        if chart_df.empty:
-            st.error("❌ No data left after dropping NaT in 'time_dt'")
-            st.stop()
+        # Дараагийн код үргэлжлүүлнэ...
         
         # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS =====
         if valid_indicators:  # Хоосон жагсаалт биш эсэхийг шалгах
