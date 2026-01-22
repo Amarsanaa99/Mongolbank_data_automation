@@ -450,26 +450,29 @@ with right:
         # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
+
         
         # ===== 3️⃣.1️⃣ CREATE REAL DATETIME COLUMN (FOR ALTAIR) =====
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
         
         # Анхны багана үүсгэх
-        if 'time_dt' not in chart_df.columns:
-            chart_df['time_dt'] = pd.NaT  
+        chart_df['time_dt'] = pd.NaT
         
         try:
             if freq == "Monthly":
+                # "%Y-%m" форматад хувиргах
                 chart_df['time_dt'] = pd.to_datetime(
                     chart_df['time'], 
                     format="%Y-%m", 
-                    errors='coerce'  # Хувиргах боломжгүй бол NaT болгоно
+                    errors='coerce'
                 )
             elif freq == "Quarterly":
+                # Q-формат (e.g., 2023-Q1)
+                # Эхлээд string-ийг Period болгох
                 chart_df['time_dt'] = pd.PeriodIndex(
                     chart_df['time'], 
-                    freq="Q"
+                    freq='Q'
                 ).to_timestamp()
             else:
                 st.error(f"❌ Unknown frequency: {freq}")
@@ -478,31 +481,44 @@ with right:
             st.error(f"❌ Failed to create 'time_dt': {e}")
             st.stop()
         
-        # ===== 3️⃣.2️⃣ REMOVE NaT VALUES SAFELY =====
-        if 'time_dt' in chart_df.columns:
-            # chart_df-д NaT байвал устгана
-            chart_df = chart_df.loc[chart_df['time_dt'].notna()]
-            
-            if chart_df.empty:
-                st.error("❌ 'time_dt' exists but all values are NaT after conversion")
-                st.stop()
-        else:
-            st.error("❌ 'time_dt' column was not created successfully.")
+        # Шууд 'time_dt' багана байгаа эсэхийг шалгах
+        if 'time_dt' not in chart_df.columns:
+            st.error(f"❌ 'time_dt' column was not created. Available columns: {chart_df.columns.tolist()}")
             st.stop()
-            
-        # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS SAFELY (SAFE VERSION) =====
-        # chart_df-д байгаа valid багануудыг шалгана
-        existing_valid_indicators = [c for c in valid_indicators if c in chart_df.columns]
         
-        if existing_valid_indicators:
-            # Хоосон багануудыг dropna-д оруулахгүйгээр filter
-            chart_df = chart_df.dropna(subset=existing_valid_indicators, how='all')
-        else:
-            st.warning("⚠️ No valid indicators exist in the data after filtering")
+        # Хэрэв бүх утгууд NaT бол
+        if chart_df['time_dt'].isna().all():
+            st.error("❌ All 'time_dt' values are NaT. Check the 'time' column format.")
             st.stop()
-
-
+        
+        # ===== 3️⃣.2️⃣ REMOVE NaT VALUES SAFELY =====
+        try:
+            # dropna-г ашиглахаас өмнө багана байгаа эсэхийг дахин шалгах
+            if 'time_dt' not in chart_df.columns:
+                st.error(f"❌ 'time_dt' column missing before dropna. Columns: {chart_df.columns.tolist()}")
+                st.stop()
+            
+            chart_df = chart_df.dropna(subset=['time_dt'])
+        except KeyError as e:
+            st.error(f"❌ Error in dropna for 'time_dt': {e}. Available columns: {chart_df.columns.tolist()}")
+            st.stop()
+        
+        if chart_df.empty:
+            st.error("❌ No data left after dropping NaT in 'time_dt'")
+            st.stop()
+        
+        # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS =====
+        if valid_indicators:  # Хоосон жагсаалт биш эсэхийг шалгах
+            chart_df = chart_df.dropna(subset=valid_indicators, how='all')
+        else:
+            st.error("❌ No valid indicators selected")
+            st.stop()
+        
         # 🔒 HARD CHECK
+        if "time_dt" not in chart_df.columns:
+            st.error("❌ 'time_dt' column missing after cleaning")
+            st.stop()
+        
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
