@@ -499,139 +499,60 @@ with right:
             )
         )
         
-        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) бүрэн орлуулах
-        
-        # Hover цэгийн selection үүсгэх
-        hover = alt.selection_point(
-            fields=['time'],
+        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
+        main_chart = (
+            base
+            .mark_line(strokeWidth=2.4)
+            .properties(
+                height=360,
+                # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
+            )
+            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
+        )
+        # ===== 5.1️⃣ HOVER RULE + CIRCLE
+        hover = alt.selection_single(
+            fields=["time"],
             nearest=True,
-            on='mouseover',
-            empty=False,
-            clear='mouseout'
+            on="mouseover",
+            empty="none",
+            clear="mouseout"
         )
         
-        # Base чарийг шинэчлэх
-        base = (
+        # Шулуун шугам
+        hover_rule = (
             alt.Chart(chart_df)
+            .mark_rule(color="gray", strokeWidth=1, opacity=0.6)
+            .encode(
+                x="time:T"
+            )
+            .add_selection(hover)
+        )
+        
+        # Цэг
+        hover_point = (
+            alt.Chart(chart_df)
+            .mark_circle(size=80, color="red", opacity=0.8)
+            .encode(
+                x="time:T",
+                y=alt.Y("Value:Q"),
+                tooltip=[
+                    alt.Tooltip("time:T", title="Time", format="%Y-%m-%d"),
+                    alt.Tooltip("Indicator:N"),
+                    alt.Tooltip("Value:Q", format=", .2f")
+                ]
+            )
             .transform_fold(
                 valid_indicators,
                 as_=["Indicator", "Value"]
             )
-            .encode(
-                x=alt.X(
-                    'time:T',
-                    title=None,
-                    axis=alt.Axis(
-                        format='%Y-%m',
-                        labelAngle=0,
-                        labelFontSize=11,
-                        grid=False,
-                        labelExpr="timeFormat(datum.value, '%Y-%m')"
-                    ),
-                    scale=alt.Scale(zero=False)
-                ),
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=alt.Axis(
-                        grid=True,
-                        gridOpacity=0.25,
-                        domain=False,
-                        labelFontSize=11
-                    )
-                ),
-                color=alt.Color(
-                    "Indicator:N",
-                    legend=alt.Legend(
-                        title=None,
-                        orient="right"
-                    )
-                ),
-                tooltip=[
-                    alt.Tooltip('time:T', title="Date", format='%Y-%m'),
-                    alt.Tooltip("Indicator:N", title="Indicator"),
-                    alt.Tooltip("Value:Q", title="Value", format=",.2f")
-                ]
-            )
-        )
-        
-        # 1. Гол шугам
-        line_chart = base.mark_line(strokeWidth=2.4)
-        
-        # 2. Hover үед бүх шугамын хувьд босоо шугам (FRED-ийн адил)
-        vertical_rule = (
-            alt.Chart(chart_df)
-            .mark_rule(color='gray', strokeWidth=1, strokeDash=[5, 5])
-            .encode(
-                x='time:T',
-                opacity=alt.condition(hover, alt.value(0.8), alt.value(0))
-            )
-            .add_params(hover)
-        )
-        
-        # 3. Hover цэг дээрх дугуй цагираг (индикатор тус бүрийн хувьд)
-        hover_points = (
-            base
-            .mark_circle(size=60, opacity=1, strokeWidth=2)
-            .encode(
-                opacity=alt.condition(hover, alt.value(1), alt.value(0)),
-                stroke=alt.Color("Indicator:N", legend=None),
-                strokeWidth=alt.value(2)
-            )
-            .add_params(hover)
-        )
-        
-        # 4. Hover үед утгыг харуулах текст (багана бүрийн хувьд)
-        hover_text = (
-            base
-            .mark_text(
-                align='left',
-                dx=5,
-                dy=-15,
-                fontSize=11,
-                fontWeight='bold'
-            )
-            .encode(
-                text=alt.condition(
-                    hover,
-                    alt.Text('Value:Q', format='.2f'),
-                    alt.value('')
-                ),
-                opacity=alt.condition(hover, alt.value(0.9), alt.value(0))
-            )
-            .add_params(hover)
-        )
-        
-        # 5. Hover үед огноо харуулах текст (зөвхөн нэг удаа)
-        date_text = (
-            alt.Chart(chart_df)
-            .mark_text(
-                align='center',
-                dy=30,
-                fontSize=11,
-                fontWeight=500
-            )
-            .encode(
-                x='time:T',
-                text=alt.condition(
-                    hover,
-                    alt.Text('time:T', format='%Y-%m'),
-                    alt.value('')
-                ),
-                opacity=alt.condition(hover, alt.value(0.9), alt.value(0))
-            )
             .transform_filter(hover)
-            .add_params(hover)
         )
         
-        # Бүх chart-уудыг нэгтгэх
-        main_chart = (
-            (line_chart + vertical_rule + hover_points + hover_text + date_text)
-            .properties(height=360)
-            .interactive()
-        )
+        # MAIN CHART-ыг шинэ hover нэмэлттэйгээр
+        main_chart_hover = main_chart + hover_rule + hover_point
+
         
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) - ӨӨРЧЛӨЛТГҮЙ хэвээр үлдээх
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
         
         mini_chart = (
@@ -650,22 +571,32 @@ with right:
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(height=70)
+            .properties(
+                height=70
+            )
             .add_params(brush)
         )
         
-        # ===== 7️⃣ LINK MAIN ↔ MINI - ӨӨРЧЛӨЛТГҮЙ
+        # ===== 7️⃣ LINK MAIN ↔ MINI
         final_chart = (
             alt.vconcat(
-                main_chart.add_params(brush),
+                main_chart_hover.add_params(brush),  # hover нэмэгдсэн
                 mini_chart,
                 spacing=10
             )
-            .properties(background="transparent")
-            .configure_axis(grid=True, gridColor='#e0e0e0')
+            .properties(
+                background="transparent"
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0'
+            )
         )
         
-        st.altair_chart(final_chart, use_container_width=True)
+        st.altair_chart(
+            final_chart,
+            use_container_width=True
+        )
 
     
     def compute_group_kpis(df, indicators):
