@@ -435,7 +435,32 @@ with right:
             (chart_df["time"] <= end_time)
         ]
 
-        # ===== 2️⃣ Valid indicators
+        # ===== 2️⃣ Баганы нэрсийг хялбарчилж string болгох
+        # chart_df.columns-г хялбар string болгох
+        if isinstance(chart_df.columns, pd.MultiIndex):
+            # MultiIndex бол эхний түвшний нэрсийг авах
+            chart_df.columns = chart_df.columns.get_level_values(0)
+        else:
+            # Tuple байвал эхний элементүүдийг авах
+            new_columns = []
+            for col in chart_df.columns:
+                if isinstance(col, tuple):
+                    # Tuple-ээс эхний хоосон биш элементийг авах
+                    new_col = next((item for item in col if item), str(col))
+                    new_columns.append(new_col)
+                else:
+                    new_columns.append(col)
+            chart_df.columns = new_columns
+        
+        # Одоо 'time' багануудыг баталгаажуулах
+        if 'time' not in chart_df.columns:
+            # Хэрэв байхгүй бол аль нэгийг нь 'time' болгохыг оролдох
+            for col in chart_df.columns:
+                if col == 'time' or col == ('time', '') or col == ('time',):
+                    chart_df = chart_df.rename(columns={col: 'time'})
+                    break
+        
+        # ===== 3️⃣ Valid indicators
         valid_indicators = [
             col for col in selected
             if col in chart_df.columns and not chart_df[col].isna().all()
@@ -445,48 +470,12 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        # ===== 3️⃣ ALTAIR CHART
+        # ===== 4️⃣ ALTAIR CHART (ЭНГИЙН ХЭЛБЭРТЭЭ БУЦААХ)
         import altair as alt
         
         # ----- Шугамын график -----
-        # Fold data - 'time' баганыг шалгах
-        if 'time' not in chart_df.columns:
-            st.error("'time' column not found in data.")
-            st.stop()
-            
-        # chart_df хоосон эсэхийг шалгах
-        if chart_df.empty:
-            st.warning("No data available for the selected time range.")
-            st.stop()
-            
-        # Melt хийхээс өмнө багануудыг шалгах
-        available_indicators = [col for col in valid_indicators if col in chart_df.columns]
-        if not available_indicators:
-            st.warning("No indicators with data available.")
-            st.stop()
-        
-        # Одоо melt хийх
-        try:
-            chart_data = chart_df.melt(
-                id_vars=["time"], 
-                value_vars=available_indicators,
-                var_name="Indicator", 
-                value_name="Value"
-            )
-        except KeyError as e:
-            st.error(f"Error melting data: {e}. Available columns: {chart_df.columns.tolist()}")
-            st.stop()
-        
-        # Hover selection
-        hover = alt.selection_point(
-            fields=["time"],
-            nearest=True,
-            on="mouseover",
-            empty=False
-        )
-        
-        # Base chart
-        base = alt.Chart(chart_data).encode(
+        # Шууд fold хийхгүй, base ашиглан
+        base = alt.Chart(chart_df).encode(
             x=alt.X(
                 "time:N",
                 title=None,
@@ -497,7 +486,28 @@ with right:
                     grid=False,
                     labelExpr="substring(datum.value, 0, 4)"
                 )
-            ),
+            )
+        )
+        
+        # Folded data
+        folded = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        )
+        
+        # Hover selection
+        hover = alt.selection_point(
+            fields=["time"],
+            nearest=True,
+            on="mouseover",
+            empty=False
+        )
+        
+        # Шугамууд
+        lines = folded.mark_line(
+            strokeWidth=2.2,
+            interpolate="linear"
+        ).encode(
             y=alt.Y(
                 "Value:Q",
                 title=None,
@@ -514,14 +524,7 @@ with right:
             color=alt.Color(
                 "Indicator:N",
                 legend=alt.Legend(title=None, orient="right")
-            )
-        )
-        
-        # Шугамууд
-        lines = base.mark_line(
-            strokeWidth=2.2,
-            interpolate="linear"
-        ).encode(
+            ),
             tooltip=[
                 alt.Tooltip("time:N", title="Date"),
                 alt.Tooltip("Indicator:N"),
@@ -530,7 +533,7 @@ with right:
         )
         
         # Босоо шугам (зөвхөн hover үед)
-        vertical_rule = alt.Chart(chart_data).mark_rule(
+        vertical_rule = folded.mark_rule(
             color="#64748b",
             strokeWidth=1
         ).encode(
@@ -539,10 +542,12 @@ with right:
         ).add_params(hover)
         
         # Харагдахгүй цэгүүд (hover-д зориулсан)
-        points = base.mark_point(
+        points = folded.mark_point(
             opacity=0,
             size=60
         ).encode(
+            x="time:N",
+            y="Value:Q",
             tooltip=[
                 alt.Tooltip("time:N", title="Date"),
                 alt.Tooltip("Indicator:N"),
