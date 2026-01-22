@@ -486,7 +486,7 @@ with right:
                 title=None,
                 axis=alt.Axis(
                     labelFontSize=11,
-                    grid=False,
+                    grid=True,
                     gridColor="#94a3b8",
                     gridOpacity=0.25,
                     gridWidth=0.6,
