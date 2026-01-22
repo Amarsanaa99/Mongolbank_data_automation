@@ -453,13 +453,9 @@ with right:
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
         
-        # ===== 4️⃣ BASE CHART (shared X scale)
-        base = (
+        # ===== 4️⃣ BASE CHART (WITHOUT FOLD for hover)
+        line_base = (
             alt.Chart(chart_df)
-            .transform_fold(
-                valid_indicators,
-                as_=["Indicator", "Value"]
-            )
             .encode(
                 x=alt.X(
                     'time:T',
@@ -483,13 +479,7 @@ with right:
                         labelFontSize=11
                     )
                 ),
-                color=alt.Color(
-                    "Indicator:N",
-                    legend=alt.Legend(
-                        title=None,
-                        orient="right"
-                    )
-                ),
+                color=alt.Color("Indicator:N", legend=alt.Legend(title=None, orient="right")),
                 tooltip=[
                     alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),
                     alt.Tooltip("Indicator:N"),
@@ -497,6 +487,71 @@ with right:
                 ]
             )
         )
+        
+        # Fold only for line marks
+        line_chart = line_base.transform_fold(valid_indicators, as_=['Indicator', 'Value']).mark_line(strokeWidth=2.4)
+        
+        # Hover selection
+        hover = alt.selection_single(
+            nearest=True,
+            on='mouseover',
+            fields=['time'],
+            empty='none'
+        )
+        
+        # Vertical rule
+        vertical_rule = (
+            alt.Chart(chart_df)
+            .mark_rule(color='gray', strokeWidth=1, strokeDash=[5,5])
+            .encode(x='time:T')
+            .add_selection(hover)
+        )
+        
+        # Hover points (folded for multi-line)
+        hover_points = (
+            alt.Chart(chart_df)
+            .transform_fold(valid_indicators, as_=['Indicator', 'Value'])
+            .mark_circle(size=60, opacity=1, strokeWidth=2)
+            .encode(
+                x='time:T',
+                y='Value:Q',
+                stroke=alt.Color('Indicator:N', legend=None),
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            )
+            .transform_filter(hover)
+        )
+        
+        # Hover text
+        hover_text = (
+            alt.Chart(chart_df)
+            .transform_fold(valid_indicators, as_=['Indicator', 'Value'])
+            .mark_text(align='left', dx=5, dy=-15, fontSize=11, fontWeight='bold')
+            .encode(
+                x='time:T',
+                y='Value:Q',
+                text=alt.condition(hover, alt.Text('Value:Q', format='.2f'), alt.value('')),
+                opacity=alt.condition(hover, alt.value(0.9), alt.value(0))
+            )
+            .transform_filter(hover)
+        )
+        
+        # Date text
+        date_text = (
+            alt.Chart(chart_df)
+            .mark_text(align='center', dy=30, fontSize=11, fontWeight=500)
+            .encode(
+                x='time:T',
+                text=alt.condition(hover, alt.Text('time:T', format='%Y-%m'), alt.value('')),
+                opacity=alt.condition(hover, alt.value(0.9), alt.value(0))
+            )
+            .transform_filter(hover)
+        )
+        
+        # Combine main chart
+        main_chart = (
+            line_chart + vertical_rule + hover_points + hover_text + date_text
+        ).properties(height=360).interactive()
+
         
         # ===== 5️⃣ HOVER EFFECT (FRED style)
         # Hover selection үүсгэх
