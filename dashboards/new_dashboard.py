@@ -507,33 +507,37 @@ with right:
             clear="mouseout"
         )
         
-        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) - HOVER энгийн болгох
+        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
         line = base.mark_line(strokeWidth=2.4)
         
-        # hover эффектийг хялбарчил
-        hover = alt.selection_single(
-            fields=["time"],
-            nearest=True,
-            on="mouseover",
-            empty="none"
+        # Хөндлөн огтлолцох дугуй цэг
+        points = (
+            base.mark_circle(size=65, filled=True, color="##1f77b4", stroke="#ffffff", strokeWidth=2)
+            .encode(opacity=alt.condition(hover, alt.value(1), alt.value(0)))
+            .add_params(hover)
         )
         
-        points = base.mark_circle(size=0).add_params(hover)
-        
+        # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
         vline = (
             alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1, strokeDash=[3,3])
-            .encode(x='time:T')
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
+            .encode(
+                x='time:T'
+            )
             .transform_filter(hover)
         )
         
         main_chart = (
-            alt.layer(line, vline, points)
+            alt.layer(
+                line,
+                vline,
+                points
+            )
             .properties(
                 height=450,
                 width='container'
             )
-            .interactive()
+            .interactive()   # zoom + pan хэвээр
         )
         
         # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) — өөрчлөх шаардлагагүй
@@ -553,18 +557,7 @@ with right:
                         domain=False
                     )
                 ),
-                color=alt.Color(
-                    "Indicator:N",
-                    legend=alt.Legend(
-                        title=None,
-                        orient="right",
-                        labelLimit=120,  # Шошгын уртыг хязгаарлах
-                        columns=1,       # Нэг баганад харуулах
-                        columnPadding=5,
-                        labelFontSize=11,
-                        symbolSize=150   # Тэмдгийн хэмжээ
-                    )
-                ),
+                color=alt.Color("Indicator:N", legend=None)
             )
             .properties(
                 height=70
@@ -590,8 +583,7 @@ with right:
         
         st.altair_chart(
             final_chart,
-            use_container_width=True,
-            theme=None
+            use_container_width=True
         )
 
     
