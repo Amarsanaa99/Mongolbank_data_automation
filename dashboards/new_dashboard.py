@@ -508,11 +508,11 @@ with right:
         # ===== 7️⃣ Vertical line
         vline = folded.mark_rule(
             color="#64748b",
-            strokeWidth=1,
-            strokeDash=[4, 4]
+            strokeWidth=1.2     # бага зэрэг тод
         ).encode(
             x="time:N"
         ).add_params(hover)
+
 
         # ===== 8️⃣ Hover points + tooltip
         hover_points = folded.mark_point(
