@@ -493,7 +493,10 @@ with right:
             labelFontSize=11,
             grid=False,
             # Жилийн интервалаар шошго харуулах
-            tickCount={'interval': 'year', 'step': max(1, year_count // 12)}
+            tickCount={'interval': 'year', 'step': max(1, year_count // 8)},  # Интервалыг багасгах
+            # Тэнхлэгийн padding-ыг тохируулах
+            offset=0,
+            padding=0
         )
         
         # ===== 4️⃣ BASE CHART (shared X scale) =====
@@ -508,9 +511,16 @@ with right:
                     "time_dt:T",
                     title=None,
                     axis=axis_config,
-                    scale=alt.Scale(zero=False)
+                    # X тэнхлэгийн масштабыг сонгосон мужанд тохируулах
+                    scale=alt.Scale(
+                        domain=[
+                            pd.to_datetime(start_time, format="%Y-%m" if freq=="Monthly" else "%Y-Q%q"),
+                            pd.to_datetime(end_time, format="%Y-%m" if freq=="Monthly" else "%Y-Q%q")
+                        ],
+                        zero=False
+                    )
                 ),
-
+                
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -590,17 +600,18 @@ with right:
                 points
             )
             .properties(
-                height=350
+                height=350,
+                width="container"
             )
             .interactive()   # zoom + pan хэвээр
         )
         
         # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) — өөрчлөх шаардлагагүй
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
-        
+       
         mini_chart = (
             base
-            .mark_line(strokeWidth=1.2)
+            .mark_line(strokeWidth=1)
             .encode(
                 y=alt.Y(
                     "Value:Q",
@@ -612,7 +623,19 @@ with right:
                         domain=False
                     )
                 ),
-                color=alt.Color("Indicator:N", legend=None)
+                color=alt.Color("Indicator:N", legend=None),
+                # Mini chart-ийн x тэнхлэгийг гол графиктай ижил масштабтай байлгах
+                x=alt.X(
+                    "time_dt:T",
+                    title=None,
+                    scale=alt.Scale(
+                        domain=[
+                            pd.to_datetime(start_time, format="%Y-%m" if freq=="Monthly" else "%Y-Q%q"),
+                            pd.to_datetime(end_time, format="%Y-%m" if freq=="Monthly" else "%Y-Q%q")
+                        ]
+                    ),
+                    axis=None
+                )
             )
             .properties(
                 height=40
@@ -625,12 +648,13 @@ with right:
             alt.vconcat(
                 main_chart,
                 mini_chart,
-                spacing=20
+                spacing=10
             )
             .resolve_scale(x='shared')
             .properties(
                 background="transparent",
-                padding={"left": 40, "top": 15, "right": 15, "bottom": 40}
+                # Зүүн ба баруун талын padding-ыг багасгах
+                padding={"left": 30, "top": 15, "right": 30, "bottom": 40}
             )
         )
 
