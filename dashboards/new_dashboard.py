@@ -429,7 +429,7 @@ with right:
         st.subheader("📈 Main chart")
 
         # ===== 1️⃣ DATA
-        chart_df = series[["time"] + selected].copy()
+        chart_df = series[["time", "time_dt"] + selected].copy()
         chart_df = chart_df[
             (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
@@ -450,17 +450,16 @@ with right:
 
         base = alt.Chart(chart_df).encode(
             x=alt.X(
-                "time:N",
+                "time_dt:T",
                 title=None,
-                sort="ascending",
                 axis=alt.Axis(
                     labelAngle=0,
                     labelFontSize=11,
-                    grid=False,
-                    labelExpr="substring(datum.value, 0, 4)"
+                    grid=False
                 )
             )
         )
+
 
         # ===== 4️⃣ Folded data
         folded = base.transform_fold(
@@ -479,53 +478,31 @@ with right:
         selectors = base.mark_point(
             opacity=0
         ).encode(
-            x="time:N"
+            x="time_dt:N"
         ).add_params(
             hover
         )
 
         # ===== 6️⃣ Lines
         lines = folded.mark_line(
-            strokeWidth=2.2,
-            interpolate="linear"
+            strokeWidth=2.2
         ).encode(
-            y=alt.Y(
-                "Value:Q",
-                title=None,
-                axis=alt.Axis(
-                    labelFontSize=11,
-                    grid=True,
-                    gridColor="#94a3b8",
-                    gridOpacity=0.25,
-                    gridWidth=0.6,
-                    tickColor="#94a3b8",
-                    domain=False
-                )
-            ),
-            color=alt.Color(
-                "Indicator:N",
-                legend=alt.Legend(title=None, orient="right")
-            ),
-            tooltip=[
-                alt.Tooltip("time:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
+            x="time_dt:T",
+            y="Value:Q",
+            color="Indicator:N"
         ).add_params(
-            hover        # ✅ 🔥 ЯГ ЭНД
+            hover
         )
+
 
         # ===== 7️⃣ Vertical line
         vline = alt.Chart(chart_df).mark_rule(
             color="#64748b",
             strokeWidth=1.2
         ).encode(
-            x="time:N",
+            x="time_dt:T",
             opacity=alt.condition(hover, alt.value(1), alt.value(0))
         )
-
-
-
 
         # ===== 8️⃣ Hover points + tooltip
         hover_points = folded.mark_point(
@@ -533,16 +510,15 @@ with right:
             filled=False,
             strokeWidth=2
         ).encode(
-            x="time:N",
+            x="time_dt:T",
             y="Value:Q",
             opacity=alt.condition(hover, alt.value(1), alt.value(0)),
             tooltip=[
-                alt.Tooltip("time:T", title="Date"),
+                alt.Tooltip("time:N", title="Time"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-
 
         # ===== 9️⃣ Layered chart (padding болон height энд өгнө)
         chart = (
