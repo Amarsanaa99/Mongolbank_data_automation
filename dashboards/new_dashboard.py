@@ -421,7 +421,6 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
@@ -450,15 +449,15 @@ with right:
         # ===== 3️⃣ WIDE → Altair (FRED STYLE)
         import altair as alt
         
-        # Хугацааг datetime болгох (дэлгэрэнгүй tooltip-д)
+        # Хугацааг datetime болгох
         chart_df = chart_df.copy()
         chart_df['time'] = pd.to_datetime(chart_df['time'])
         
-        # Selection үүсгэх (mouse очоход ажиллана)
+        # Selection point үүсгэх (mouse очоход ажиллана)
         nearest = alt.selection_point(
+            on='mouseover',
             encodings=['x'],
             nearest=True,
-            on='mouseover',
             empty='none'
         )
         
@@ -499,41 +498,39 @@ with right:
                     title=None,
                     orient="right"
                 )
-            ),
-            # Tooltip - шугам дээр mouse очоход үзүүлнэ
-            tooltip=[
-                alt.Tooltip('time:T', title='Огноо', format='%Y-%m-%d'),
-                alt.Tooltip('Indicator:N', title='Индикатор'),
-                alt.Tooltip('Value:Q', title='Утга', format=',.2f')
-            ]
+            )
         )
         
-        # Босоо шугам (vertical rule) - mouse очоход л харагдана
+        # 🔥 БОСОО ШУГАМ (vertical rule) - mouse очоход л харагдана
         rule = alt.Chart(chart_df).mark_rule(
-            color='#666',
-            strokeWidth=1,
-            opacity=0  # 🔥 Эхлээд харагдахгүй
+            color='black',
+            strokeWidth=1
         ).encode(
             x='time:T',
             opacity=alt.condition(nearest, alt.value(0.7), alt.value(0))
         )
         
-        # Цэгүүд - mouse очоход л харагдана
+        # 🔥 ДУГУЙ ЦЭГҮҮД - mouse очоход л харагдана
         points = alt.Chart(chart_df).transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
-        ).mark_point(
-            filled=True,
+        ).mark_circle(
             size=60,
-            opacity=0  # 🔥 Эхлээд харагдахгүй
+            opacity=0
         ).encode(
             x='time:T',
             y='Value:Q',
             color=alt.Color("Indicator:N", legend=None),
-            opacity=alt.condition(nearest, alt.value(0.8), alt.value(0))
+            opacity=alt.condition(nearest, alt.value(0.8), alt.value(0)),
+            # 🔥 TOOLTIP: Date: Value форматаар
+            tooltip=[
+                alt.Tooltip('time:T', title='Date', format='%Y-%m-%d'),
+                alt.Tooltip('Indicator:N', title='Indicator'),
+                alt.Tooltip('Value:Q', title='Value', format='.2f')
+            ]
         )
         
-        # 🔥 БҮХ ХЭСГИЙГ НЭГТГЭХ (LINES + RULE + POINTS)
+        # 🔥 БҮХ ХЭСГИЙГ НЭГТГЭХ
         chart = (lines + rule + points).add_params(nearest).properties(
             height=340
         ).interactive()
@@ -542,7 +539,6 @@ with right:
             chart,
             use_container_width=True
         )
-
 
     
     def compute_group_kpis(df, indicators):
