@@ -421,6 +421,7 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
+
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
@@ -446,39 +447,33 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
     
-        # ===== 3️⃣ WIDE → Altair (FRED STYLE)
+        # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
         import altair as alt
-        
-        # Хугацааг datetime болгох
-        chart_df = chart_df.copy()
-        chart_df['time'] = pd.to_datetime(chart_df['time'])
-        
-        # Selection point үүсгэх (mouse очоход ажиллана)
-        nearest = alt.selection_point(
-            on='mouseover',
-            encodings=['x'],
-            nearest=True,
-            empty='none'
+    
+        base = alt.Chart(chart_df).encode(
+            x=alt.X(
+                "time:N",
+                title=None,
+                sort="ascending",
+                axis=alt.Axis(
+                    labelAngle=0,
+                    labelFontSize=11,
+                    grid=False,
+                    labelExpr="substring(datum.value, 0, 4)"
+                )
+            )
+        ).properties(
+            padding={"bottom": 5},   
+            background="transparent"
         )
         
-        # Үндсэн шугамын график
-        lines = alt.Chart(chart_df).transform_fold(
+        lines = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         ).mark_line(
             strokeWidth=2.2,
-            interpolate="linear"
+            interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
         ).encode(
-            x=alt.X(
-                'time:T',
-                title=None,
-                axis=alt.Axis(
-                    format='%Y',
-                    labelAngle=0,
-                    labelFontSize=11,
-                    grid=False
-                )
-            ),
             y=alt.Y(
                 "Value:Q",
                 title=None,
@@ -498,48 +493,32 @@ with right:
                     title=None,
                     orient="right"
                 )
-            )
-        )
-        
-        # 🔥 БОСОО ШУГАМ (vertical rule) - mouse очоход л харагдана
-        rule = alt.Chart(chart_df).mark_rule(
-            color='black',
-            strokeWidth=1
-        ).encode(
-            x='time:T',
-            opacity=alt.condition(nearest, alt.value(0.7), alt.value(0))
-        )
-        
-        # 🔥 ДУГУЙ ЦЭГҮҮД - mouse очоход л харагдана
-        points = alt.Chart(chart_df).transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_circle(
-            size=60,
-            opacity=0
-        ).encode(
-            x='time:T',
-            y='Value:Q',
-            color=alt.Color("Indicator:N", legend=None),
-            opacity=alt.condition(nearest, alt.value(0.8), alt.value(0)),
-            # 🔥 TOOLTIP: Date: Value форматаар
+            ),
             tooltip=[
-                alt.Tooltip('time:T', title='Date', format='%Y-%m-%d'),
-                alt.Tooltip('Indicator:N', title='Indicator'),
-                alt.Tooltip('Value:Q', title='Value', format='.2f')
+                alt.Tooltip("time:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-        
-        # 🔥 БҮХ ХЭСГИЙГ НЭГТГЭХ
-        chart = (lines + rule + points).add_params(nearest).properties(
-            height=340
-        ).interactive()
-        
-        st.altair_chart(
-            chart,
-            use_container_width=True
+        points = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_point(
+            opacity=0,
+            size=80
+        ).encode(
+            y="Value:Q",
+            tooltip=[
+                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
         )
 
+        st.altair_chart(
+            lines.properties(height=340).interactive(),
+            width="stretch"
+        )
     
     def compute_group_kpis(df, indicators):
         stats = []
