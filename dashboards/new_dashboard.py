@@ -373,13 +373,14 @@ with left:
             start_time = f"{start_year}-Q{start_quarter}"
             end_time = f"{end_year}-Q{end_quarter}"
 
-
-
-
 # Сонгосон үзүүлэлтүүдийг нэмэх
 for indicator in selected:
     if (group, indicator) in df_data.columns:
-        series[indicator] = df_data[(group, indicator)].values
+        series[indicator] = pd.Series(
+            df_data[(group, indicator)].values,
+            index=series.index
+        )
+
     else:
         st.warning(f"Indicator '{indicator}' not found in data")
 
@@ -421,58 +422,68 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
+# 🔥 Year + Month → time
+series["time"] = pd.to_datetime(
+    series["Year"].astype(str) + "-" +
+    series["Month"].astype(str).str.zfill(2),
+    format="%Y-%m"
+)
+
 # ======================
-# MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
+# MAIN CHART (STABLE)
 # ======================
+import altair as alt
 with right:
     with st.container(border=True):
-        st.subheader("📈 Main chart")
+        st.subheader("📈 Main chart (Advanced)")
 
-        # ===== 1️⃣ DATA (NO AGGREGATION)
-        chart_df = series[["time"] + selected].copy()
-        
-        # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
-        chart_df = chart_df[
-            (chart_df["time"] >= start_time) & 
-            (chart_df["time"] <= end_time)
-        ]
-        
-        # ===== 2️⃣ VALID INDICATORS ONLY
-        valid_indicators = [
-            c for c in selected
-            if c in chart_df.columns and not chart_df[c].isna().all()
-        ]
-        
-        if not valid_indicators:
-            st.warning("⚠️ No data available for selected indicator(s)")
+        # 1️⃣ ЗӨВХӨН series-д байгаа indicator
+        valid_selected = [c for c in selected if c in series.columns]
+
+        if not valid_selected:
+            st.warning("⚠️ No valid indicators to plot.")
             st.stop()
 
-        import altair as alt
-        
-        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
-        # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
-        chart_df = chart_df.copy()
-        chart_df['time_detailed'] = chart_df['time'].astype(str)
-        
-        # ===== 4️⃣ BASE CHART (shared X scale)
-        base = (
+        # 2️⃣ chart_df (time + valid indicators)
+        chart_df = series.loc[:, ["time"] + valid_selected].copy()
+
+        # 3️⃣ БҮХ indicator NA бол мөрийг хаяна
+        chart_df = chart_df.loc[
+            ~chart_df[valid_selected].isna().all(axis=1)
+        ]
+
+        # 4️⃣ time сорт
+        chart_df = chart_df.sort_values("time")
+
+        # ======================
+        # 🔍 BRUSH (X-AXIS ZOOM)
+        # ======================
+        brush = alt.selection_interval(
+            encodings=["x"],
+            name="brush"
+        )
+
+        # ======================
+        # 📈 MAIN (TOP) CHART
+        # ======================
+        main = (
             alt.Chart(chart_df)
             .transform_fold(
-                valid_indicators,
+                valid_selected,
                 as_=["Indicator", "Value"]
             )
+
+            .mark_line(strokeWidth=2.5)
             .encode(
                 x=alt.X(
-                    'time:T',  # 🔥 ТӨРӨЛӨӨ Temporal болгож өөрчиллөө (zoom дэлгэрэнгүй болгох)
+                    "time:N",
                     title=None,
                     axis=alt.Axis(
-                        format='%Y-%m',  # 🔥 ОЙРТУУЛАХАД ӨӨРЧЛӨГДӨХ ФОРМАТ
                         labelAngle=0,
                         labelFontSize=11,
-                        grid=False,
-                        labelExpr="timeFormat(datum.value, '%Y-%m')"  # 🔥 Жил-Сар харагдана
+                        grid=False
                     ),
-                    scale=alt.Scale(zero=False)  # 🔥 ТЭГЭЭС ЭХЭЛЖ БАЙХГҮЙ
+                    scale=alt.Scale(domain=brush)
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -480,81 +491,71 @@ with right:
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
-                        domain=False,
-                        labelFontSize=11
+                        domain=False
                     )
                 ),
                 color=alt.Color(
                     "Indicator:N",
-                    legend=alt.Legend(
-                        title=None,
-                        orient="right"
-                    )
+                    legend=alt.Legend(title=None, orient="right")
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),  # 🔥 TOOLTIP ДЭЛГЭРЭНГҮЙ
+                    alt.Tooltip("time:N", title="Time"),
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
-        )
-        
-        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
-        main_chart = (
-            base
-            .mark_line(strokeWidth=2.4)
             .properties(
                 height=360,
-                # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
+                background="transparent"
             )
-            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
         )
-        
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
-        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
-        
-        mini_chart = (
-            base
-            .mark_line(strokeWidth=1.2)
+
+        # ======================
+        # ⏳ BRUSH (BOTTOM) CHART
+        # ======================
+        timeline = (
+            alt.Chart(chart_df)
+            .transform_fold(
+                valid_selected,   # 🔥 ЗӨВ
+                as_=["Indicator", "Value"]
+            )
+            .mark_line(opacity=0.5)
             .encode(
-                y=alt.Y(
-                    "Value:Q",
+                x=alt.X(
+                    "time:N",
                     title=None,
                     axis=alt.Axis(
                         labels=False,
                         ticks=False,
-                        grid=False,
-                        domain=False
+                        grid=False
                     )
+                ),
+                y=alt.Y(
+                    "Value:Q",
+                    title=None,
+                    axis=None
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
+            .add_selection(brush)
             .properties(
-                height=70
-            )
-            .add_params(brush)
-        )
-        
-        # ===== 7️⃣ LINK MAIN ↔ MINI
-        final_chart = (
-            alt.vconcat(
-                main_chart.add_params(brush),  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
-                mini_chart,
-                spacing=10
-            )
-            .properties(
+                height=90,
                 background="transparent"
             )
-            .configure_axis(
-                grid=True,
-                gridColor='#e0e0e0'
-            )
         )
-        
-        st.altair_chart(
-            final_chart,
-            use_container_width=True
+
+        # ======================
+        # 🧩 COMBINE
+        # ======================
+        final_chart = alt.vconcat(
+            main,
+            timeline,
+            spacing=10
+        ).resolve_scale(
+            y="independent"
         )
+
+        st.altair_chart(final_chart, use_container_width=True)
 
     
     def compute_group_kpis(df, indicators):
