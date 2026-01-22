@@ -417,7 +417,7 @@ if "time" not in series.columns:
 if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
-
+        
 # ======================
 # MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
@@ -449,7 +449,7 @@ with right:
         
         # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
         chart_df = chart_df.copy()
-        chart_df['time_detailed'] = chart_df['time'].astype(str)
+        
         # ===== 3️⃣.1️⃣ CREATE REAL DATETIME COLUMN (FOR ALTAIR) =====
         if freq == "Monthly":
             # "2020-01" → 2020-01-01
@@ -458,6 +458,9 @@ with right:
                 format="%Y-%m",
                 errors="coerce"
             )
+            # Сонгосон мужийн эхлэл, төгсгөлийг datetime болгох
+            start_dt = pd.to_datetime(start_time, format="%Y-%m")
+            end_dt = pd.to_datetime(end_time, format="%Y-%m")
         
         elif freq == "Quarterly":
             # "2020-Q1" → 2020-01-01, "2020-Q2" → 2020-04-01
@@ -465,6 +468,9 @@ with right:
                 pd.PeriodIndex(chart_df["time"], freq="Q")
                 .to_timestamp()
             )
+            # Сонгосон мужийн эхлэл, төгсгөлийг datetime болгох
+            start_dt = pd.to_datetime(start_time.replace("Q", ""), format="%Y-%m")
+            end_dt = pd.to_datetime(end_time.replace("Q", ""), format="%Y-%m")
         
         else:
             st.error("❌ Unknown frequency")
@@ -475,8 +481,7 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
 
-        
-        # ===== 3.5️⃣ X-AXIS CONFIGURATION (ЭНД НЭМЭХ ХЭСЭГ) =====
+        # ===== 3.5️⃣ X-AXIS CONFIGURATION =====
         # start_year, end_year-ыг integer болгох
         try:
             start_year_int = int(start_year) if isinstance(start_year, str) else start_year
@@ -487,16 +492,26 @@ with right:
             end_year_int = 2025
             year_count = 26
         
+        # X тэнхлэгийн шошгоны тохируулга
+        # Жилийн тооноос хамаарч шошгоны тоог тохируулах
+        if year_count <= 10:
+            tick_step = 1  # 10 жилээс бага бол жил бүр шошго
+        elif year_count <= 20:
+            tick_step = 2  # 20 жилээс бага бол 2 жилд нэг шошго
+        else:
+            tick_step = max(1, year_count // 10)  # 10 шошготой байх
+        
         # Тохируулсан форматтай axis үүсгэх
         axis_config = alt.Axis(
             labelAngle=0,
             labelFontSize=11,
-            grid=False,
+            grid=True,
+            gridOpacity=0.1,
             # Жилийн интервалаар шошго харуулах
-            tickCount={'interval': 'year', 'step': max(1, year_count // 8)},  # Интервалыг багасгах
-            # Тэнхлэгийн padding-ыг тохируулах
-            offset=0,
-            padding=0
+            tickCount={'interval': 'year', 'step': tick_step},
+            # Тэнхлэгийн padding-ыг багасгах
+            offset=5,
+            domain=True
         )
         
         # ===== 4️⃣ BASE CHART (shared X scale) =====
@@ -511,24 +526,22 @@ with right:
                     "time_dt:T",
                     title=None,
                     axis=axis_config,
-                    # X тэнхлэгийн масштабыг сонгосон мужанд тохируулах
+                    # ТОДОРХОЙ DOMAIN ЗААЖ ӨГӨХ - ЭНЭ НЬ ХАМГИйн ЧУХАЛ
                     scale=alt.Scale(
-                        domain=[
-                            pd.to_datetime(start_time, format="%Y-%m" if freq=="Monthly" else "%Y-Q%q"),
-                            pd.to_datetime(end_time, format="%Y-%m" if freq=="Monthly" else "%Y-Q%q")
-                        ],
-                        zero=False
+                        domain=[start_dt, end_dt],
+                        zero=False,
+                        nice=False  # Алгоритмын автоматаар тохируулгыг идэвхгүй болгох
                     )
                 ),
-                
                 y=alt.Y(
                     "Value:Q",
                     title=None,
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
-                        domain=False,
-                        labelFontSize=11
+                        domain=True,
+                        labelFontSize=11,
+                        offset=5
                     )
                 ),
                 color=alt.Color(
@@ -563,7 +576,7 @@ with right:
         )
         
         # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
-        line = base.mark_line(strokeWidth=2)
+        line = base.mark_line(strokeWidth=2.4)
         
         # Хөндлөн огтлолцох дугуй цэг
         points = (
@@ -580,14 +593,12 @@ with right:
             .add_params(hover)
         )
 
-        
         # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
         vline = (
-            alt.Chart(chart_df) # <--- base биш chart_df ашигласнаар бүтэн зурагдана
+            alt.Chart(chart_df)
             .mark_rule(color="#aaaaaa", strokeWidth=1.2)
             .encode(
                 x='time_dt:T',
-                # opacity-г энд нэмж өгснөөр хулгана байхгүй үед харагдахгүй
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
             )
             .transform_filter(hover)
@@ -600,19 +611,26 @@ with right:
                 points
             )
             .properties(
-                height=350,
+                height=400,
+                # ӨРГӨНИЙГ ТОДОРХОЙЛОХ
                 width="container"
             )
             .interactive()   # zoom + pan хэвээр
         )
         
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) — өөрчлөх шаардлагагүй
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
-       
+        
         mini_chart = (
             base
-            .mark_line(strokeWidth=1)
+            .mark_line(strokeWidth=1.2)
             .encode(
+                x=alt.X(
+                    "time_dt:T",
+                    title=None,
+                    axis=None,
+                    scale=alt.Scale(domain=[start_dt, end_dt])
+                ),
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -623,22 +641,11 @@ with right:
                         domain=False
                     )
                 ),
-                color=alt.Color("Indicator:N", legend=None),
-                # Mini chart-ийн x тэнхлэгийг гол графиктай ижил масштабтай байлгах
-                x=alt.X(
-                    "time_dt:T",
-                    title=None,
-                    scale=alt.Scale(
-                        domain=[
-                            pd.to_datetime(start_time, format="%Y-%m" if freq=="Monthly" else "%Y-Q%q"),
-                            pd.to_datetime(end_time, format="%Y-%m" if freq=="Monthly" else "%Y-Q%q")
-                        ]
-                    ),
-                    axis=None
-                )
+                color=alt.Color("Indicator:N", legend=None)
             )
             .properties(
-                height=40
+                height=60,
+                width="container"
             )
             .add_params(brush)
         )
@@ -648,16 +655,21 @@ with right:
             alt.vconcat(
                 main_chart,
                 mini_chart,
-                spacing=10
+                spacing=10  # Зайг багасгах
             )
-            .resolve_scale(x='shared')
-            .properties(
-                background="transparent",
-                # Зүүн ба баруун талын padding-ыг багасгах
-                padding={"left": 30, "top": 15, "right": 30, "bottom": 40}
+            .resolve_scale(
+                x='shared',
+                color='shared'
+            )
+            .configure_view(
+                strokeWidth=0
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0',
+                gridOpacity=0.3
             )
         )
-
 
         st.altair_chart(final_chart, use_container_width=True)
 
