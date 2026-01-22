@@ -527,8 +527,8 @@ with right:
             strokeWidth=1
         ).encode(
             opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-        ).add_params(nearest)
-
+        )
+        
         hover_points = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
@@ -542,8 +542,7 @@ with right:
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
-        ).add_params(nearest)   # ← 🔴 ЭНЭ МӨР ДУТУУ БАЙСАН
-
+        )
 
         st.altair_chart(
             alt.layer(
