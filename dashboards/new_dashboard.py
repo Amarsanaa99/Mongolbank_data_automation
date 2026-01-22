@@ -447,31 +447,20 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
+        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis =====
         chart_df = chart_df.copy()
         
-        # ===== 3️⃣.1️⃣ CREATE REAL DATETIME COLUMN (FOR ALTAIR) =====
         if freq == "Monthly":
-            # "2020-01" → 2020-01-01
             chart_df["time_dt"] = pd.to_datetime(
                 chart_df["time"],
                 format="%Y-%m",
                 errors="coerce"
             )
-            # Сонгосон мужийн эхлэл, төгсгөлийг datetime болгох
-            start_dt = pd.to_datetime(start_time, format="%Y-%m")
-            end_dt = pd.to_datetime(end_time, format="%Y-%m")
-        
         elif freq == "Quarterly":
-            # "2020-Q1" → 2020-01-01, "2020-Q2" → 2020-04-01
             chart_df["time_dt"] = (
                 pd.PeriodIndex(chart_df["time"], freq="Q")
                 .to_timestamp()
             )
-            # Сонгосон мужийн эхлэл, төгсгөлийг datetime болгох
-            start_dt = pd.to_datetime(start_time.replace("Q", ""), format="%Y-%m")
-            end_dt = pd.to_datetime(end_time.replace("Q", ""), format="%Y-%m")
-        
         else:
             st.error("❌ Unknown frequency")
             st.stop()
@@ -481,40 +470,52 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
 
-        # ===== 3.5️⃣ X-AXIS CONFIGURATION =====
-        # start_year, end_year-ыг integer болгох
-        try:
-            start_year_int = int(start_year) if isinstance(start_year, str) else start_year
-            end_year_int = int(end_year) if isinstance(end_year, str) else end_year
-            year_count = end_year_int - start_year_int + 1
-        except:
-            start_year_int = 2000
-            end_year_int = 2025
-            year_count = 26
+        # ===== 4️⃣ X-AXIS CONFIGURATION (ЖИЛЭЭР ХАРУУЛАХ) =====
+        # Жилийн тооцоо
+        start_year_int = int(start_year) if isinstance(start_year, str) else start_year
+        end_year_int = int(end_year) if isinstance(end_year, str) else end_year
+        year_count = end_year_int - start_year_int + 1
         
-        # X тэнхлэгийн шошгоны тохируулга
-        # Жилийн тооноос хамаарч шошгоны тоог тохируулах
-        if year_count <= 10:
-            tick_step = 1  # 10 жилээс бага бол жил бүр шошго
-        elif year_count <= 20:
-            tick_step = 2  # 20 жилээс бага бол 2 жилд нэг шошго
+        # Жилийн интервалыг тохируулах
+        if year_count <= 8:
+            year_step = 1  # 8 жилээс бага бол жил бүр
+        elif year_count <= 16:
+            year_step = 2  # 16 жилээс бага бол 2 жилд нэг
         else:
-            tick_step = max(1, year_count // 10)  # 10 шошготой байх
+            year_step = max(1, year_count // 8)  # 8 шошготой байх
         
-        # Тохируулсан форматтай axis үүсгэх
-        axis_config = alt.Axis(
+        # X тэнхлэгийн тохируулга
+        x_axis = alt.Axis(
+            title=None,
+            format="%Y",  # ЗӨВХӨН ЖИЛ ХАРУУЛАХ
             labelAngle=0,
             labelFontSize=11,
             grid=True,
             gridOpacity=0.1,
-            # Жилийн интервалаар шошго харуулах
-            tickCount={'interval': 'year', 'step': tick_step},
-            # Тэнхлэгийн padding-ыг багасгах
-            offset=5,
-            domain=True
+            tickCount={'interval': 'year', 'step': year_step},
+            domain=True,
+            orient='bottom'
         )
         
-        # ===== 4️⃣ BASE CHART (shared X scale) =====
+        # ===== 5️⃣ LEGEND ТОХИРУУЛГА (ГРАФИК ДОТОР) =====
+        legend_config = alt.Legend(
+            title=None,
+            orient='top-right',  # ДЭЭД БАРУУН БУЛАНД
+            offset=10,
+            padding=10,
+            labelFontSize=11,
+            symbolType="stroke",
+            symbolSize=100,
+            # Legend-ийг график дотор оруулах
+            legendX=0,
+            legendY=0,
+            direction='vertical',
+            fillColor='rgba(255, 255, 255, 0.8)',  # Цэвэр цагаан дэвсгэр
+            strokeColor='rgba(200, 200, 200, 0.5)',
+            cornerRadius=8
+        )
+        
+        # ===== 6️⃣ BASE CHART =====
         base = (
             alt.Chart(chart_df)
             .transform_fold(
@@ -525,13 +526,8 @@ with right:
                 x=alt.X(
                     "time_dt:T",
                     title=None,
-                    axis=axis_config,
-                    # ТОДОРХОЙ DOMAIN ЗААЖ ӨГӨХ - ЭНЭ НЬ ХАМГИйн ЧУХАЛ
-                    scale=alt.Scale(
-                        domain=[start_dt, end_dt],
-                        zero=False,
-                        nice=False  # Алгоритмын автоматаар тохируулгыг идэвхгүй болгох
-                    )
+                    axis=x_axis,
+                    scale=alt.Scale(zero=False)
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -546,19 +542,13 @@ with right:
                 ),
                 color=alt.Color(
                     "Indicator:N",
-                    legend=alt.Legend(
-                        title=None,
-                        orient="right",
-                        offset=10,
-                        labelFontSize=11,
-                        symbolType="stroke"
-                    )
+                    legend=legend_config
                 ),
                 tooltip=[
                     alt.Tooltip(
                         "time_dt:T",
                         title="Time",
-                        format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
+                        format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"  # Tooltip-д нарийвчилсан цаг
                     ),
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
@@ -566,7 +556,7 @@ with right:
             )
         )
         
-        # ========== ★ HOVER СОНГОЛТ (FRED style) ==========
+        # ===== 7️⃣ HOVER СОНГОЛТ =====
         hover = alt.selection_single(
             fields=["time_dt"],
             nearest=True,
@@ -575,17 +565,16 @@ with right:
             clear="mouseout"
         )
         
-        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
+        # ===== 8️⃣ ГРАФИК ЭЛЕМЕНТҮҮД =====
         line = base.mark_line(strokeWidth=2.4)
         
-        # Хөндлөн огтлолцох дугуй цэг
         points = (
             base
             .mark_circle(
-                size=65,
+                size=50,
                 filled=True,
                 stroke="#ffffff",
-                strokeWidth=2
+                strokeWidth=1.5
             )
             .encode(
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
@@ -593,17 +582,18 @@ with right:
             .add_params(hover)
         )
 
-        # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
+        # Босоо шулуун
         vline = (
             alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
+            .mark_rule(color="#888888", strokeWidth=1)
             .encode(
                 x='time_dt:T',
-                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+                opacity=alt.condition(hover, alt.value(0.7), alt.value(0))
             )
             .transform_filter(hover)
         )
         
+        # ===== 9️⃣ ҮНДСЭН ГРАФИК =====
         main_chart = (
             alt.layer(
                 line,
@@ -611,25 +601,32 @@ with right:
                 points
             )
             .properties(
-                height=400,
-                # ӨРГӨНИЙГ ТОДОРХОЙЛОХ
-                width="container"
+                height=350,  # ӨНДРИЙГ БАГАСГАХ
+                width="container",
+                padding={"left": 40, "right": 40, "top": 30, "bottom": 40}  # PADDING ТОХИРУУЛГА
             )
-            .interactive()   # zoom + pan хэвээр
+            .configure_view(
+                strokeWidth=0
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0',
+                gridOpacity=0.2
+            )
+            .interactive()
         )
         
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
+        # ===== 🔟 MINI OVERVIEW =====
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
         
         mini_chart = (
             base
-            .mark_line(strokeWidth=1.2)
+            .mark_line(strokeWidth=1)
             .encode(
                 x=alt.X(
                     "time_dt:T",
                     title=None,
-                    axis=None,
-                    scale=alt.Scale(domain=[start_dt, end_dt])
+                    axis=None
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -644,18 +641,17 @@ with right:
                 color=alt.Color("Indicator:N", legend=None)
             )
             .properties(
-                height=60,
-                width="container"
+                height=40
             )
             .add_params(brush)
         )
         
-        # ===== 7️⃣ LINK MAIN ↔ MINI
+        # ===== 1️⃣1️⃣ НЭГТГЭСЭН ГРАФИК =====
         final_chart = (
             alt.vconcat(
                 main_chart,
                 mini_chart,
-                spacing=10  # Зайг багасгах
+                spacing=5  # ЗАЙГ БАГАСГАХ
             )
             .resolve_scale(
                 x='shared',
@@ -663,11 +659,6 @@ with right:
             )
             .configure_view(
                 strokeWidth=0
-            )
-            .configure_axis(
-                grid=True,
-                gridColor='#e0e0e0',
-                gridOpacity=0.3
             )
         )
 
