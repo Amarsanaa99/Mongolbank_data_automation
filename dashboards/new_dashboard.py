@@ -447,10 +447,21 @@ with right:
         # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
         
-        # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
+        # ❗ ШИНЭ: 'time' баганыг шүүлтүүр хийхээс өмнө хугацааны төрөл рүү хөрвүүлэх
+        # Энэ нь 2023-Q1 гэх мэт утгыг Altair болон Pandas-т зөв ойлгуулна
+        if freq == "Quarterly":
+            chart_df['time_dt'] = pd.to_datetime(chart_df['time'].str.replace('-Q', 'Q'))
+            start_dt = pd.to_datetime(start_time.replace('-Q', 'Q'))
+            end_dt = pd.to_datetime(end_time.replace('-Q', 'Q'))
+        else:
+            chart_df['time_dt'] = pd.to_datetime(chart_df['time'])
+            start_dt = pd.to_datetime(start_time)
+            end_dt = pd.to_datetime(end_time)
+
+        # ⏳ APPLY TIME RANGE (Одоо хугацаагаар нь шүүж байна)
         chart_df = chart_df[
-            (chart_df["time"] >= start_time) & 
-            (chart_df["time"] <= end_time)
+            (chart_df["time_dt"] >= start_dt) & 
+            (chart_df["time_dt"] <= end_dt)
         ]
         
         # ===== 2️⃣ VALID INDICATORS ONLY
@@ -478,14 +489,18 @@ with right:
             )
             .encode(
                 x=alt.X(
-                    'time:T',
+                x=alt.X(
+                    'time_dt:T', # time биш шинээр үүсгэсэн time_dt:T ашиглана
                     title=None,
                     axis=alt.Axis(
-                        format='%Y-%m',
+                        # labelExpr болон format-ыг устгаад доорхыг нэмнэ:
+                        domain=False,
+                        tickSize=5,
                         labelAngle=0,
-                        labelFontSize=11,
                         grid=False,
-                        labelExpr="timeFormat(datum.value, '%Y-%m')"
+                        # Ойртуулах (zoom) үед автомат форматыг ажиллуулах тохиргоо:
+                        formatType="time",
+                        tickCount="year" # Эхлээд жилээр харагдуулна
                     ),
                     scale=alt.Scale(zero=False)
                 ),
@@ -519,7 +534,7 @@ with right:
         
         # ========== ★ HOVER СОНГОЛТ (FRED style) ==========
         hover = alt.selection_single(
-            fields=["time"],
+            fields=["time_dt"],
             nearest=True,
             on="mouseover",
             empty=False,
@@ -541,7 +556,7 @@ with right:
             alt.Chart(chart_df) # <--- base биш chart_df ашигласнаар бүтэн зурагдана
             .mark_rule(color="#aaaaaa", strokeWidth=1.2)
             .encode(
-                x='time:T',
+                x='time_dt:T',
                 # opacity-г энд нэмж өгснөөр хулгана байхгүй үед харагдахгүй
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
             )
