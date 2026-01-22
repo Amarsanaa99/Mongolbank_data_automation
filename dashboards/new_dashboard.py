@@ -421,7 +421,6 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
@@ -493,31 +492,33 @@ with right:
                     title=None,
                     orient="right"
                 )
-            ),
-            tooltip=[
-                alt.Tooltip("time:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
-        )
-        points = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_point(
-            opacity=0,
-            size=80
-        ).encode(
-            y="Value:Q",
-            tooltip=[
-                alt.Tooltip("x:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
+            )
         )
 
+        # ✅ TOOLTIP-ийг ШУУД LINES дээр нэмнэ (МАРКЕРГҮЙ)
+        # Selection ашиглан хулганы байрлалыг мэдэх
+        nearest = alt.selection_single(
+            nearest=True,
+            on='mouseover',
+            fields=['time'],
+            empty='none'
+        )
+        
+        # Tooltip нэмэх
+        lines = lines.encode(
+            tooltip=[
+                alt.Tooltip("time:N", title="Date"),
+                alt.Tooltip("Indicator:N", title="Indicator"),
+                alt.Tooltip("Value:Q", format=",.2f", title="Value")
+            ]
+        ).add_selection(nearest)
+        
+        # ✅ Чарт үүсгэх
+        chart = lines.properties(height=340).interactive()
+
         st.altair_chart(
-            lines.properties(height=340).interactive(),
-            width="stretch"
+            chart,
+            use_container_width=True
         )
     
     def compute_group_kpis(df, indicators):
