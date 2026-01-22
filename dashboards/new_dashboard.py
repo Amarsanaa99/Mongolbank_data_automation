@@ -557,10 +557,19 @@ with right:
         
         # Хөндлөн огтлолцох дугуй цэг
         points = (
-            base.mark_circle(size=65, filled=True, color="#1f77b4", stroke="#ffffff", strokeWidth=2)
-            .encode(opacity=alt.condition(hover, alt.value(1), alt.value(0)))
+            base
+            .mark_circle(
+                size=65,
+                filled=True,
+                stroke="#ffffff",
+                strokeWidth=2
+            )
+            .encode(
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            )
             .add_params(hover)
         )
+
         
         # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
         vline = (
@@ -581,8 +590,7 @@ with right:
                 points
             )
             .properties(
-                height=400,
-                width='container'
+                height=400
             )
             .interactive()   # zoom + pan хэвээр
         )
@@ -614,36 +622,16 @@ with right:
         
         # ===== 7️⃣ LINK MAIN ↔ MINI
         final_chart = (
-            alt.vconcat(
-                main_chart.add_params(brush),
-                mini_chart,
-                spacing=20
-            )
+            alt.vconcat(...)
             .resolve_scale(x='shared')
             .properties(
                 background="transparent",
-                width='container',
-                height=400,
                 padding={"left": 50, "top": 20, "right": 20, "bottom": 50}
             )
-            .configure_view(
-                stroke=None,
-                strokeWidth=0,
-                fill="transparent"
-            )
-            .configure_axis(
-                grid=True,
-                gridColor='#e0e0e0',
-                domain=True,
-                domainWidth=1
-            )
-        )  # ✅ ЭНЭ ХААЛТ ДУТУУ БАЙСАН
-
-        
-        st.altair_chart(
-            final_chart,
-            use_container_width=True
         )
+
+        st.altair_chart(final_chart, use_container_width=True)
+
 
     
     def compute_group_kpis(df, indicators):
