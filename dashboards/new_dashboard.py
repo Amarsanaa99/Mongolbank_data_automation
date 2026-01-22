@@ -421,6 +421,7 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
+
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
@@ -449,9 +450,16 @@ with right:
         # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
         import altair as alt
     
+        nearest = alt.selection_point(   # ← ЭНД
+            nearest=True,
+            on="mouseover",
+            fields=["time"],
+            empty=False
+        )
+
         base = alt.Chart(chart_df).encode(
             x=alt.X(
-                "time:N",
+                "time:T",
                 title=None,
                 sort="ascending",
                 axis=alt.Axis(
@@ -466,13 +474,12 @@ with right:
             background="transparent"
         )
         
-        # ===== 4️⃣ ШУГАМУУД + TOOLTIP (ЗӨВХӨН ЭНЭ НЭГ ГРАФИК)
         lines = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         ).mark_line(
             strokeWidth=2.2,
-            interpolate="linear"
+            interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
         ).encode(
             y=alt.Y(
                 "Value:Q",
@@ -494,44 +501,57 @@ with right:
                     orient="right"
                 )
             ),
-            # 🔥 ЭНД TOOLTIP-ЫГ ШУУД ОРУУЛНА
             tooltip=[
-                alt.Tooltip("time:N", title="Огноо"),
-                alt.Tooltip("Indicator:N", title="Индикатор"),
-                alt.Tooltip("Value:Q", title="Утга", format=",.2f")
+                alt.Tooltip("time:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
             ]
-        ).interactive()  # 🔥 INTERACTIVE ЭНД НЭМНЭ
-        
-        # ===== 5️⃣ НЭМЭЛТ ЦЭГҮҮД (MOUSE ОЧИХОД ЦЭГ ҮҮСГЭХ)
-        # ЗӨВХӨН НЭМЭЛТ ҮЙЛЧИЛГЭЭ, ОНЦЛОХ ЦЭГҮҮД
+        )
         points = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         ).mark_point(
-            opacity=0,      # 🔥 ЭХЛЭЭД ХАРАГДАХГҮЙ
-            size=200        # 🔥 ТОМ ХӨРӨЛТӨЙ
+            opacity=0,
+            size=80
         ).encode(
             y="Value:Q",
-            color=alt.Color("Indicator:N", legend=None),
-            # 🔥 MOUSE ОЧИХОД OPACITY ӨӨРЧЛӨГДӨНӨ
-            opacity=alt.condition(
-                alt.datum.Value != 0,  # 🔥 УТГА БАЙГАА ТОХИОЛДОЛД
-                alt.value(0.7),        # 🔥 ХАРАГДАНА
-                alt.value(0)           # 🔥 ХАРАГДАХГҮЙ
-            ),
-            tooltip=[      # 🔥 ЦЭГ ДЭЭРХ TOOLTIP (ШУГАМНЫХТАЙ ИЖИЛ)
-                alt.Tooltip("time:N", title="Огноо"),
-                alt.Tooltip("Indicator:N", title="Индикатор"),
-                alt.Tooltip("Value:Q", title="Утга", format=",.2f")
+            tooltip=[
+                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-        
-        # ===== 6️⃣ ГРАФИКИЙГ НЭГТГЭХ
-        chart = (lines + points).properties(height=340)
-        
+        # ===== VERTICAL RULE (mouse hover line)
+        rule = base.mark_rule(
+            color="#111827",
+            strokeWidth=1
+        ).encode(
+            opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+        ).add_params(nearest)
+
+        hover_points = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_point(
+            size=70
+        ).encode(
+            y="Value:Q",
+            opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
+            tooltip=[
+                alt.Tooltip("time:T", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
+        ).add_params(nearest)   # ← 🔴 ЭНЭ МӨР ДУТУУ БАЙСАН
+
+
         st.altair_chart(
-            chart,
-            use_container_width=True
+            alt.layer(
+                lines,
+                rule,
+                hover_points
+            ).properties(height=340).interactive(),
+            width="stretch"
         )
 
     
