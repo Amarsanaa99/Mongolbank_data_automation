@@ -508,10 +508,13 @@ with right:
         # ===== 7️⃣ Vertical line
         vline = folded.mark_rule(
             color="#64748b",
-            strokeWidth=1.2     # бага зэрэг тод
+            strokeWidth=1.2
         ).encode(
             x="time:N"
-        ).add_params(hover)
+        ).transform_filter(
+            hover          # ✅ ЗӨВХӨН hover болсон time дээр л rule харагдана
+        )
+
 
 
         # ===== 8️⃣ Hover points + tooltip
