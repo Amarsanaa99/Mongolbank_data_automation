@@ -504,32 +504,35 @@ with right:
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-
-        # ===== 7️⃣ Vertical line
-        vline = folded.mark_rule(
-            color="#64748b",
-            strokeWidth=1,
-            strokeDash=[4, 4]
-        ).encode(
-            x="time:N"
-        ).add_params(hover)
-
-        # ===== 8️⃣ Hover points + tooltip
+        
+        # ===== 8️⃣ Hover points + tooltip (ДУГУЙ ЦАГИРАГ ДАГАЖ ГҮЙДЭГ ШУГАМ)
+        # Одоогийн hover_points-ыг өөрчлөх:
         hover_points = folded.mark_point(
-            size=70
+            size=70,
+            opacity=0  # Цэгүүд харагдахгүй болгох
         ).encode(
             x="time:N",
             y="Value:Q",
-            opacity=alt.condition(hover, alt.value(1), alt.value(0)),
             tooltip=[
                 alt.Tooltip("time:N", title="Date"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
-        )
+        ).add_params(hover)
 
-        # ===== 9️⃣ Layered chart (padding болон height энд өгнө)
-        chart = (lines + vline + hover_points).properties(
+        # ===== НЭМЭЛТ: БҮХ ӨНДӨРТӨЙ БОСОО ШУГАМ (VERTICAL RULE)
+        # Энэ нь зурагт үзүүлсэн шиг графикийн бүх өндрийг хамарна
+        vertical_rule = alt.Chart(chart_df).mark_rule(
+            color="#64748b",
+            strokeWidth=1,
+            opacity=0  # Эхлээд харагдахгүй
+        ).encode(
+            x=alt.X("time:N"),
+            opacity=alt.condition(hover, alt.value(0.7), alt.value(0))
+        ).add_params(hover)
+
+        # ===== 9️⃣ Layered chart 
+        chart = (lines + vertical_rule + hover_points).properties(
             height=340,
             padding={"bottom": 5},
             background="transparent"
