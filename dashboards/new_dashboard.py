@@ -492,10 +492,9 @@ with right:
             labelAngle=0,
             labelFontSize=11,
             grid=False,
-            format="%Y",                 # 🟢 Default = жил
-            labelOverlap=True
+            # Жилийн интервалаар шошго харуулах
+            tickCount={'interval': 'year', 'step': max(1, year_count // 12)}
         )
-
         
         # ===== 4️⃣ BASE CHART (shared X scale) =====
         base = (
@@ -630,11 +629,11 @@ with right:
             )
             .resolve_scale(x='shared')
             .properties(
-                width="container",        # ✅ ЭНЭ МАШ ЧУХАЛ
                 background="transparent",
-                padding={"left": 50, "top": 20, "right": 30, "bottom": 50}
+                padding={"left": 50, "top": 20, "right": 20, "bottom": 50}
             )
         )
+
 
         st.altair_chart(final_chart, use_container_width=True)
 
