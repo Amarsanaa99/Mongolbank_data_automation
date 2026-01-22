@@ -455,19 +455,23 @@ with right:
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
         
-        # Баталгаажуулах: 'time' байна уу?
-        if 'time' not in chart_df.columns:
-            st.error("❌ 'time' column missing in chart_df. Cannot create datetime.")
-            st.stop()
-        
-        # Try/except ашиглан datetime үүсгэх
-        chart_df['time_dt'] = pd.NaT  # Анхны багана үүсгэх
+        # Анхны багана үүсгэх
+        chart_df['time_dt'] = pd.NaT  
         
         try:
             if freq == "Monthly":
-                chart_df['time_dt'] = pd.to_datetime(chart_df['time'], format="%Y-%m", errors='coerce')
+                # "%Y-%m" форматад хувиргах
+                chart_df['time_dt'] = pd.to_datetime(
+                    chart_df['time'], 
+                    format="%Y-%m", 
+                    errors='coerce'  # Хувиргах боломжгүй бол NaT болгоно
+                )
             elif freq == "Quarterly":
-                chart_df['time_dt'] = pd.PeriodIndex(chart_df['time'], freq="Q").to_timestamp()
+                # Q-формат (e.g., 2023-Q1)
+                chart_df['time_dt'] = pd.PeriodIndex(
+                    chart_df['time'], 
+                    freq="Q"
+                ).to_timestamp()
             else:
                 st.error(f"❌ Unknown frequency: {freq}")
                 st.stop()
@@ -475,12 +479,19 @@ with right:
             st.error(f"❌ Failed to create 'time_dt': {e}")
             st.stop()
         
-        # ===== 3️⃣.2️⃣ REMOVE NaT VALUES =====
+        # ===== 3️⃣.2️⃣ REMOVE NaT VALUES SAFELY =====
+        # 'time_dt' багана байгаа эсэхийг шалгана
         if 'time_dt' in chart_df.columns:
+            # NaT бүх мөрүүдийг устгана
             chart_df = chart_df.dropna(subset=['time_dt'])
+            
+            if chart_df.empty:
+                st.error("❌ 'time_dt' exists but all values are NaT after conversion")
+                st.stop()
         else:
             st.error("❌ 'time_dt' column was not created successfully.")
             st.stop()
+
 
         
         # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS =====
