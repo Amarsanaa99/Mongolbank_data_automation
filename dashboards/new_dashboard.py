@@ -234,7 +234,6 @@ def render_change(label, value):
     )
 
 
-
 # Өгөгдлийг цуваа болгон нэгтгэх
 series = df_time.copy()
 # ======================
