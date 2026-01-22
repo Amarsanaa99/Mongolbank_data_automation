@@ -232,18 +232,22 @@ def render_change(label, value):
         f"{label}: {value:.2f}%"
         f"</span>"
     )
-
-
-
 # Өгөгдлийг цуваа болгон нэгтгэх
 series = df_time.copy()
+
 # ======================
 # HELPER: DataFrame → Series болгох
 # ======================
 def as_series(col):
     if isinstance(col, pd.DataFrame):
-        return col.iloc[:, 0]
-    return col
+        if col.shape[1] == 1:
+            return col.iloc[:, 0]
+        else:
+            return col.iloc[:, 0]
+    elif isinstance(col, pd.Series):
+        return col
+    else:
+        return pd.Series(col)
 
 # ======================
 # FIX: Year / Month / Quarter block structure
@@ -255,78 +259,132 @@ for col in ["Year", "Month", "Quarter"]:
 # Time багануудыг тоон утга болгох
 for col in ["Year", "Month", "Quarter"]:
     if col in series.columns:
-        # Баганын утгуудыг list болгон авах, дараа нь Series болгох
         values = series[col].values.tolist() if hasattr(series[col], 'values') else series[col]
-        # Хэрэв nested list байвал задлах
         if isinstance(values, list) and values and isinstance(values[0], list):
             values = [v[0] if isinstance(v, list) else v for v in values]
         series[col] = pd.to_numeric(pd.Series(values), errors='coerce')
+
 # ======================
 # CREATE TIME INDEX (FINAL, SAFE)
 # ======================
-year = as_series(series["Year"]) if "Year" in series.columns else None
-month = as_series(series["Month"]) if "Month" in series.columns else None
-quarter = as_series(series["Quarter"]) if "Quarter" in series.columns else None
+# re module импортлох
+import re
 
-if year is not None and month is not None:
-    series["time"] = (
-        year.astype(int).astype(str) + "-" +
-        month.astype(int).astype(str).str.zfill(2)
-    )
+# Багануудыг Series болгох
+if "Year" in series.columns:
+    year_series = as_series(series["Year"])
+else:
+    year_series = None
+    
+if "Month" in series.columns:
+    month_series = as_series(series["Month"])
+else:
+    month_series = None
+    
+if "Quarter" in series.columns:
+    quarter_series = as_series(series["Quarter"])
+else:
+    quarter_series = None
 
-elif year is not None and quarter is not None:
-    series["time"] = (
-        year.astype(int).astype(str) + "-Q" +
-        quarter.astype(int).astype(str)
-    )
+# Хэрэв Year багана байхгүй бол DataFrame-ийн эхний баганыг ашиглах
+if year_series is None and len(series.columns) > 0:
+    year_series = as_series(series.iloc[:, 0])
+    st.warning("⚠️ Year column not found - using first column as year")
 
-elif year is not None:
-    series["time"] = year.astype(int).astype(str)
+# time багана үүсгэх
+if year_series is not None and month_series is not None:
+    # NaN утгуудыг цэвэрлэх
+    mask = year_series.notna() & month_series.notna()
+    if mask.any():
+        series["time"] = (
+            year_series.astype(int).astype(str) + "-" +
+            month_series.astype(int).astype(str).str.zfill(2)
+        )
+    else:
+        st.error("❌ No valid Year and Month data found")
+        st.stop()
+
+elif year_series is not None and quarter_series is not None:
+    # NaN утгуудыг цэвэрлэх
+    mask = year_series.notna() & quarter_series.notna()
+    if mask.any():
+        series["time"] = (
+            year_series.astype(int).astype(str) + "-Q" +
+            quarter_series.astype(int).astype(str)
+        )
+    else:
+        st.error("❌ No valid Year and Quarter data found")
+        st.stop()
+
+elif year_series is not None:
+    # Зөвхөн жил байгаа тохиолдолд
+    mask = year_series.notna()
+    if mask.any():
+        series["time"] = year_series.astype(int).astype(str)
+    else:
+        st.error("❌ No valid Year data found")
+        st.stop()
 
 else:
     st.error("❌ No valid time columns found")
     st.stop()
 
-# ⚠️ ЭНД ШИНЭЭР НЭМЭХ КОД:
 # ======================
 # ✅ CREATE time_dt COLUMN FOR CHART
 # ======================
 def parse_time(time_str):
+    if pd.isna(time_str):
+        return pd.NaT
+        
     if isinstance(time_str, str):
-        if '-' in time_str:
-            parts = time_str.split('-')
-            if len(parts) == 2:
-                if len(parts[1]) == 2:  # Сар: "2020-01"
-                    try:
-                        year = int(parts[0])
-                        month = int(parts[1])
-                        return pd.Timestamp(year=year, month=month, day=1)
-                    except:
-                        pass
-                elif 'Q' in parts[1]:  # Улирал: "2020-Q1"
-                    try:
-                        year = int(parts[0])
-                        quarter = int(parts[1].replace('Q', ''))
-                        month = (quarter - 1) * 3 + 1
-                        return pd.Timestamp(year=year, month=month, day=1)
-                    except:
-                        pass
+        time_str = str(time_str).strip()
+        
+        # Сарны форматыг шалгах: "2020-01"
+        if re.match(r'^\d{4}-\d{2}$', time_str):
+            try:
+                year = int(time_str[:4])
+                month = int(time_str[5:7])
+                return pd.Timestamp(year=year, month=month, day=1)
+            except:
+                pass
+                
+        # Улирлын форматыг шалгах: "2020-Q1"
+        if re.match(r'^\d{4}-Q[1-4]$', time_str, re.IGNORECASE):
+            try:
+                year = int(time_str[:4])
+                quarter = int(time_str.split('-')[1][1:])
+                month = (quarter - 1) * 3 + 1
+                return pd.Timestamp(year=year, month=month, day=1)
+            except:
+                pass
+                
+        # Зөвхөн жил: "2020"
+        if re.match(r'^\d{4}$', time_str):
+            try:
+                year = int(time_str)
+                return pd.Timestamp(year=year, month=1, day=1)
+            except:
+                pass
+    
     return pd.NaT
 
 series["time_dt"] = series["time"].apply(parse_time)
 
+# Хэрэв time_dt үүсэхгүй бол энгийн datetime үүсгэх
 if series["time_dt"].isna().all():
-    series["time_dt"] = pd.to_datetime(series["time"], errors='coerce')
+    st.warning("⚠️ Could not parse time format - using sequential dates")
+    start_date = pd.Timestamp('2000-01-01')
+    series["time_dt"] = [start_date + pd.DateOffset(months=i) for i in range(len(series))]
 
 # ======================
 # ✅ YEAR LABEL (GLOBAL X AXIS)
 # ======================
-series["year_label"] = series["Year"].astype(int).astype(str)
+if "Year" in series.columns:
+    series["year_label"] = series["Year"].astype(int).astype(str)
 
 for col in ["Year", "Month", "Quarter"]:
     if col in series.columns:
         series[col] = as_series(series[col])
-
 # ======================
 # ⏳ TIME RANGE (MAIN CHART ONLY)
 # ======================
