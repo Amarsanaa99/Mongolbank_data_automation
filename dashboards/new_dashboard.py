@@ -449,18 +449,12 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING
+        # ===== 3️⃣ TIME FORMATTING - БҮХ ХУГАЦААНЫ ӨГӨГДЛИЙГ DATETIME БОЛГОХ
         chart_df = chart_df.copy()
         chart_df['time'] = pd.to_datetime(chart_df['time'])
         
-        # ===== 4️⃣ BRUSH SELECTION - ЗӨВШӨӨРӨЛТӨЙ ХЭЛБЭР
-        brush = alt.selection_interval(
-            encodings=['x'],
-            name='brush',
-            translate=False,  # 🔥 ЧИРЖ ШИЛЖҮҮЛЭХГҮЙ
-            zoom=False,       # 🔥 ZOOM ХИЙХГҮЙ
-            mark=alt.BrushConfig(fill='gray', fillOpacity=0.3, stroke='gray')  # 🔥 ХЭРХЭН ХАРАГДАХЫГ ТОДОРХОЙЛОХ
-        )
+        # ===== 4️⃣ BRUSH SELECTION
+        brush = alt.selection_interval(encodings=['x'], name='brush')
         
         # ===== 5️⃣ ГОЛ ГРАФИК
         # Гол графикийн үндсэн бүтэц
@@ -490,8 +484,7 @@ with right:
                         gridOpacity=0.25,
                         domain=False,
                         labelFontSize=11
-                    ),
-                    scale=alt.Scale(zero=False)  # 🔥 Y ТЭНХЛЭГ ТЭГЭЭС ЭХЭЛЭХГҮЙ
+                    )
                 ),
                 color=alt.Color(
                     "Indicator:N",
@@ -511,117 +504,71 @@ with right:
             .interactive()  # ZOOM/PAN боломжтой
         )
         
-        # ===== 6️⃣ МИНИ ГРАФИК (SCROLL BAR) - ШИНЭЧЛЭЛТЭЙ
-        # Мини графикт зөвхөн нэг индикаторыг харуулъя (хэрэв олон байвал эхнийхийг)
-        if valid_indicators:
-            # Зөвхөн эхний индикаторыг ашиглах
-            first_indicator = valid_indicators[0]
-            mini_data = chart_df[['time', first_indicator]].copy()
-            mini_data = mini_data.rename(columns={first_indicator: 'value'})
-        else:
-            mini_data = pd.DataFrame()
-        
-        # Мини графикийг бүтээх (энгийн хэлбэрээр)
-        mini_chart = (
-            alt.Chart(mini_data)
-            .mark_area(
-                opacity=0.5,
-                line=True,
-                color='lightgray'
+        # ===== 6️⃣ МИНИ ГРАФИК (SCROLL BAR)
+        # Мини графикийн шугамууд
+        mini_lines = (
+            alt.Chart(chart_df)
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
             )
+            .mark_line(strokeWidth=1, opacity=0.6)
             .encode(
                 x=alt.X(
                     'time:T',
                     title=None,
                     axis=alt.Axis(
-                        labels=False,  # 🔥 ТЭМДЭГЛЭГЭЭГ НУУХ
-                        ticks=False,
+                        format='%Y',
+                        labelAngle=0,
+                        labelFontSize=9,
                         grid=False
                     )
                 ),
                 y=alt.Y(
-                    'value:Q',
+                    "Value:Q",
                     title=None,
-                    axis=None  # 🔥 Y ТЭНХЛЭГИЙГ БҮРЭМ НУУХ
+                    axis=None
+                ),
+                color=alt.Color("Indicator:N", legend=None)
+            )
+            .properties(height=60)
+        )
+        
+        # Мини график дээрх сонгогдсон хэсгийг харуулах
+        # Энгийн бөгөөд алдаагүй арга:
+        if len(chart_df) > 0:
+            # Бүх хугацааны хүрээг тооцоолох
+            time_min = chart_df['time'].min()
+            time_max = chart_df['time'].max()
+            
+            # Энгийн тэгш өнцөгт үүсгэх (зурагны хамт ажиллах)
+            mini_selection = (
+                alt.Chart(pd.DataFrame({'start': [time_min], 'end': [time_max]}))
+                .mark_rect(opacity=0.3, color='gray', height=60)
+                .encode(
+                    x='start:T',
+                    x2='end:T'
                 )
             )
-            .properties(
-                height=40,  # 🔥 БАГА ӨНДӨР
-                width=400   # 🔥 ӨРГӨН ӨНДӨР (гүйлгэх боломжтой болгох)
-            )
-            .add_params(brush)  # 🔥 BRUSH SELECTION нэмэх
+        else:
+            # Хоосон өгөгдөл тохиолдолд
+            mini_selection = alt.Chart(pd.DataFrame()).mark_rect()
+        
+        # Мини графикийг нэгтгэх
+        mini_chart = (
+            (mini_lines + mini_selection)
+            .add_params(brush)  # BRUSH SELECTION нэмэх
         )
         
         # ===== 7️⃣ ХОЁР ГРАФИКИЙГ ХОЛБОХ
-        # Хоёр графикийг босоо байдлаар нэгтгэх
         final_chart = alt.vconcat(
             main_chart,
             mini_chart,
-            spacing=5
+            spacing=2
         ).resolve_scale(
-            x='shared'  # 🔥 Х ТЭНХЛЭГИЙГ ХОЛБОНО
+            x='shared',
+            color='shared'
         )
-        
-        # ===== 8️⃣ CSS СТИЛЬ НЭМЭХ (ГҮЙЛГЭХ БААРЫГ САЙЖРУУЛАХ)
-        st.markdown("""
-        <style>
-        /* Мини графикийг гүйлгэх боломжтой болгох */
-        .vega-embed {
-            overflow-x: auto !important;
-            min-width: 600px;
-        }
-        
-        /* График дээр гүйлгэх үед курсорыг өөрчлөх */
-        .vega-embed .mark-rect.background {
-            cursor: grab !important;
-        }
-        
-        .vega-embed .mark-rect.background:active {
-            cursor: grabbing !important;
-        }
-        
-        /* Мини графикийн өнгө өөрчлөх */
-        .vega-embed .marks .mark-area path {
-            fill: #f0f0f0 !important;
-            stroke: #ccc !important;
-        }
-        
-        /* Brush selection-ийн өнгө */
-        .vega-embed .brush .selection {
-            fill: #1f77b4 !important;
-            fill-opacity: 0.3 !important;
-            stroke: #1f77b4 !important;
-        }
-        
-        /* Scrollbar стиль */
-        ::-webkit-scrollbar {
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        # ===== 9️⃣ ГРАФИКИЙГ ХЭРЭГЛЭХ ЗААВАР
-        st.caption("""
-        🔍 **Хэрхэн ашиглах:** 
-        - **Ойртуулах:** График дээр дарж сунгах/шахах эсвэл хулганы дугуй ашиглах
-        - **Гүйлгэх:** Мини график дээрх саарал хэсгийг чирж шилжүүлэх
-        - **Хоёр тал руу гүйлгэх:** Мини графикийн brush-ыг чирж хоёр тийш нь гүйлгэх
-        - **Автомат масштаб:** Ойртуулахад график автоматаар сунагдаж, нарийн мэдээлэл харуулна
-        """)
         
         st.altair_chart(
             final_chart,
