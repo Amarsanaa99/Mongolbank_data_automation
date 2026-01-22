@@ -458,14 +458,18 @@ with right:
             )
             .encode(
                 x=alt.X(
-                    "time:N",
+                    "time:T",
                     title=None,
-                    sort="ascending",
                     axis=alt.Axis(
-                        labelAngle=0,
-                        labelFontSize=11,
                         grid=False,
-                        labelExpr="substring(datum.value, 0, 7)"
+                        tickCount=6,
+                        labelExpr="""
+                        timeFormat(datum.value,
+                          (timeUnitSpecifier(datum.value, 'year') == datum.value)
+                          ? '%Y'
+                          : '%b %Y'
+                        )
+                        """
                     )
                 ),
                 y=alt.Y(
@@ -486,7 +490,7 @@ with right:
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip("time:N", title="Time"),
+                    alt.Tooltip("time:T", title="Date"),
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
@@ -510,6 +514,7 @@ with right:
             base
             .mark_line(strokeWidth=1.2)
             .encode(
+                x=alt.X("time:T", title=None),
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -522,9 +527,7 @@ with right:
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(
-                height=70
-            )
+            .properties(height=70)
             .add_params(brush)
         )
 
