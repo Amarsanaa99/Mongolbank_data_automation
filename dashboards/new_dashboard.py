@@ -538,9 +538,12 @@ with right:
             height=340,
             padding={"bottom": 5},
             background="transparent"
-        ).interactive()
-
+        ).add_params(
+            hover
+        )
+        
         st.altair_chart(chart, width="stretch")
+
 
 
 
