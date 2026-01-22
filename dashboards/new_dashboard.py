@@ -649,7 +649,7 @@ with right:
             )
             .properties(
                 # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
-                padding={"left": 0, "top": 20, "right": 200, "bottom": 20}
+                padding={"left": 0, "top": 20, "right": 500, "bottom": 20}
             )
             .configure_view(
                 strokeWidth=0
