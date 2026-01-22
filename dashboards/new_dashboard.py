@@ -533,100 +533,67 @@ with right:
             )
         )
         
-        # ========== ★ HOVER СОНГОЛТ (FRED style) ==========
-        hover = alt.selection_single(
-            fields=["time_dt"],
-            nearest=True,
-            on="mouseover",
-            empty=False,
-            clear="mouseout"
+        # ===== 7️⃣ HOVER EFFECT (FRED STYLE)
+        # Хулганы байршлыг тогтоох сонгогч
+        hover = alt.selection_point(
+            fields=['time'], 
+            nearest=True, 
+            on='mouseover', 
+            empty=False, 
+            clear='mouseout'
         )
         
-        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
-        line = base.mark_line(strokeWidth=2.4)
-        
-        # Хөндлөн огтлолцох дугуй цэг
-        points = (
-            base.mark_circle(size=65, filled=True, color="##1f77b4", stroke="#ffffff", strokeWidth=2)
-            .encode(opacity=alt.condition(hover, alt.value(1), alt.value(0)))
+        # Босоо шугам (Vertical Line)
+        rule = (
+            alt.Chart(chart_df)
+            .transform_pivot("Indicator", value="Value", groupby=["time"])
+            .mark_rule(color="#888", strokeWidth=1)
+            .encode(
+                x='time:T',
+                opacity=alt.condition(hover, alt.value(0.8), alt.value(0))
+            )
             .add_params(hover)
         )
         
-        # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
-        vline = (
-            alt.Chart(chart_df) # <--- base биш chart_df ашигласнаар бүтэн зурагдана
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
+        # Огтолцол дээрх цэг (Circles at intersections)
+        points = (
+            main_chart.mark_point(size=60, fill="white", strokeWidth=2)
             .encode(
-                x='time_dt:T',
-                # opacity-г энд нэмж өгснөөр хулгана байхгүй үед харагдахгүй
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
             )
-            .transform_filter(hover)
         )
         
-        main_chart = (
-            alt.layer(
-                line,
-                vline,
-                points
-            )
-            .properties(
-                height=400,
-                width=900
-            )
-            .interactive()   # zoom + pan хэвээр
-        )
-        
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) — өөрчлөх шаардлагагүй
-        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
-        
-        mini_chart = (
-            base
-            .mark_line(strokeWidth=1.2)
+        # Мэдээллийн текст (Tooltip text on chart)
+        white_text = (
+            main_chart.mark_text(align='left', dx=8, dy=-10, fontWeight="bold")
             .encode(
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=alt.Axis(
-                        labels=False,
-                        ticks=False,
-                        grid=False,
-                        domain=False
-                    )
-                ),
-                color=alt.Color("Indicator:N", legend=None)
+                text=alt.condition(hover, alt.Text("Value:Q", format=",.2f"), alt.value(" ")),
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
             )
-            .properties(
-                height=60
-            )
-            .add_params(brush)
         )
         
-        # ===== 7️⃣ LINK MAIN ↔ MINI
+        # ===== 8️⃣ COMBINE & LINK
+        # Графикуудаа давхарлаж нэгтгэх
+        layered_main = alt.layer(
+            main_chart, 
+            rule, 
+            points, 
+            white_text
+        ).properties(height=360).interactive()
+        
         final_chart = (
             alt.vconcat(
-                main_chart.add_params(brush),
+                layered_main,
                 mini_chart,
-                spacing=20
+                spacing=10
             )
-            .resolve_scale(x='shared') # Дээд доод графикийн өргөнийг яг ижил болгоно
-            .properties(
-                background="transparent",
-                # 🔥 Энэ тохиргоо нь графикийг хүрээн дотор нь "fit" хийж өгнө
-                autosize=alt.AutoSizeParams(type='fit', contains='padding'),
-                padding={"left": 10, "top": 10, "right": 10, "bottom": 10}
-            )
-            .configure_view(stroke=None) # Илүүц хүрээний шугамыг арилгана
-            .configure_axis(
-                grid=True,
-                gridColor='#e0e0e0'
-            )
+            .properties(background="transparent")
+            .configure_view(stroke=None)
         )
         
         st.altair_chart(
             final_chart,
-            use_container_width=False,
-            width=900
+            use_container_width=True
         )
 
         st.markdown('</div>', unsafe_allow_html=True)
