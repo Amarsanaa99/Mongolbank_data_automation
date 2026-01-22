@@ -482,8 +482,12 @@ with right:
                 x=alt.X(
                     'time:T',
                     title=None,
-                    axis=axis_config,  # Энд дээрх axis_config ашиглана
-                    scale=alt.Scale(zero=False)
+                    axis=axis_config,
+                    scale=alt.Scale(
+                        zero=False,
+                        # Графикийн хүрээг тогтоох
+                        domain=[start_time, end_time]
+                    )
                 ),
                 y=alt.Y(
                     "Value:Q",
