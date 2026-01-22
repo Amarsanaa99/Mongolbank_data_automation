@@ -469,7 +469,12 @@ with right:
         else:
             st.error("❌ Unknown frequency")
             st.stop()
+
+        # ===== 3️⃣.2️⃣ REMOVE NaT VALUES =====
+        chart_df = chart_df.dropna(subset=['time_dt'])
         
+        # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS =====
+        chart_df = chart_df.dropna(subset=valid_indicators, how='all')
         # 🔒 HARD CHECK
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
@@ -477,7 +482,6 @@ with right:
 
         
         # ===== 3.5️⃣ X-AXIS CONFIGURATION (ЭНД НЭМЭХ ХЭСЭГ) =====
-        # start_year, end_year-ыг integer болгох
         try:
             start_year_int = int(start_year) if isinstance(start_year, str) else start_year
             end_year_int = int(end_year) if isinstance(end_year, str) else end_year
@@ -496,10 +500,10 @@ with right:
             labelOverlap=True
         )
 
-        
+
         # ===== 4️⃣ BASE CHART (shared X scale) =====
         base = (
-            alt.Chart(chart_df)
+            alt.Chart(chart_df.dropna(subset=valid_indicators))  # NaN устгах
             .transform_fold(
                 valid_indicators,
                 as_=["Indicator", "Value"]
@@ -511,7 +515,6 @@ with right:
                     axis=axis_config,
                     scale=alt.Scale(zero=False)
                 ),
-
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -574,11 +577,10 @@ with right:
         
         # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
         vline = (
-            alt.Chart(chart_df) # <--- base биш chart_df ашигласнаар бүтэн зурагдана
+            alt.Chart(chart_df) 
             .mark_rule(color="#aaaaaa", strokeWidth=1.2)
             .encode(
                 x='time_dt:T',
-                # opacity-г энд нэмж өгснөөр хулгана байхгүй үед харагдахгүй
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
             )
             .transform_filter(hover)
@@ -590,9 +592,7 @@ with right:
                 vline,
                 points
             )
-            .properties(
-                height=400
-            )
+            .properties(height=400)
             .interactive()   # zoom + pan хэвээр
         )
         
@@ -615,9 +615,7 @@ with right:
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(
-                height=60
-            )
+            .properties(height=60)
             .add_params(brush)
         )
         
