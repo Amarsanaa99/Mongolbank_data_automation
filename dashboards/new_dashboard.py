@@ -499,11 +499,14 @@ with right:
                         labelFontSize=11
                     )
                 ),
-                color=alt.Color(
+               color=alt.Color(
                     "Indicator:N",
                     legend=alt.Legend(
                         title=None,
-                        orient="right"
+                        orient="right",
+                        offset=10,        # Графикаас бага зэрэг зай авна
+                        labelFontSize=11,
+                        symbolType="stroke"
                     )
                 ),
                 tooltip=[
@@ -583,32 +586,26 @@ with right:
             .add_params(brush)
         )
         
-        # ===== 7️⃣ LINK MAIN ↔ MINI (brush өмнөх шигээ)
-# ===== 7️⃣ LINK MAIN ↔ MINI
+        # ===== 7️⃣ LINK MAIN ↔ MINI
         final_chart = (
             alt.vconcat(
                 main_chart.add_params(brush),
                 mini_chart,
                 spacing=20
             )
-            .resolve_scale(x='shared') # Дээд доод графикийн өргөнийг ижил болгоно
+            .resolve_scale(x='shared') # Дээд доод графикийн өргөнийг яг ижил болгоно
             .properties(
                 background="transparent",
-                # 🔥 ЭНЭ ХЭСЭГ ХАМГИЙН ЧУХАЛ: Графикийг хүрээнд багтаана
-                autosize=alt.AutoSizeParams(type='fit', contains='padding')
+                # 🔥 Энэ тохиргоо нь графикийг хүрээн дотор нь "fit" хийж өгнө
+                autosize=alt.AutoSizeParams(type='fit', contains='padding'),
+                padding={"left": 10, "top": 10, "right": 10, "bottom": 10}
             )
-            .configure_legend(
-                orient='right',      # Баруун талд байх
-                offset=20,           # Графикаас бага зэрэг зай авна
-                labelFontSize=11,
-                symbolType='stroke'
-            )
+            .configure_view(stroke=None) # Илүүц хүрээний шугамыг арилгана
             .configure_axis(
                 grid=True,
                 gridColor='#e0e0e0'
             )
-            .configure_view(stroke=None) # Илүүц хүрээний зураасыг арилгана
-            )
+        )
         
         st.altair_chart(
             final_chart,
