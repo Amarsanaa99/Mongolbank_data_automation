@@ -449,8 +449,8 @@ with right:
 
         # ===== 3️⃣ WIDE → ALTAIR
         import altair as alt
-
-        # --- BASE (UNCHANGED)
+        
+        # --- BASE (x-axis only, background, padding)
         base = alt.Chart(chart_df).encode(
             x=alt.X(
                 "time:N",
@@ -467,12 +467,23 @@ with right:
             padding={"bottom": 5},
             background="transparent"
         )
-
-        # --- MAIN LINES (UNCHANGED)
-        lines = base.transform_fold(
+        
+        # --- Folded data for lines + hover
+        folded = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
-        ).mark_line(
+        )
+        
+        # --- Hover selection
+        hover = alt.selection_point(
+            fields=["time"],
+            nearest=True,
+            on="mouseover",
+            empty=False
+        )
+        
+        # --- Lines
+        lines = folded.mark_line(
             strokeWidth=2.2,
             interpolate="linear"
         ).encode(
@@ -491,10 +502,7 @@ with right:
             ),
             color=alt.Color(
                 "Indicator:N",
-                legend=alt.Legend(
-                    title=None,
-                    orient="right"
-                )
+                legend=alt.Legend(title=None, orient="right")
             ),
             tooltip=[
                 alt.Tooltip("time:N", title="Time"),
@@ -502,19 +510,9 @@ with right:
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-
-        # ===== 4️⃣ HOVER LOGIC (ШИНЭ)
-
-        # --- Hover selection (X-axis)
-        hover = alt.selection_point(
-            fields=["time"],
-            nearest=True,
-            on="mouseover",
-            empty=False
-        )
-
-        # --- Vertical running line
-        vline = base.mark_rule(
+        
+        # --- Vertical line
+        vline = folded.mark_rule(
             color="#64748b",
             strokeWidth=1,
             strokeDash=[4, 4]
@@ -523,12 +521,9 @@ with right:
         ).add_params(
             hover
         )
-
-        # --- Hover points + Date : Value tooltip
-        hover_points = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_point(
+        
+        # --- Hover points + tooltip
+        hover_points = folded.mark_point(
             size=70
         ).encode(
             x="time:N",
@@ -540,17 +535,14 @@ with right:
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-
-        # ===== 5️⃣ FINAL CHART
-        chart = (
-            lines
-            + vline
-            + hover_points
-        ).properties(
+        
+        # --- Layered chart
+        chart = (lines + vline + hover_points).properties(
             height=340
         ).interactive()
-
+        
         st.altair_chart(chart, width="stretch")
+
 
 
     
