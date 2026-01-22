@@ -421,212 +421,104 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
+
 # ======================
-# MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
+# MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-
-        # ===== 1️⃣ DATA (NO AGGREGATION)
+        # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
         
-        # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
+        # ⏳ APPLY TIME RANGE (STRING-SAFE) — ЗӨВ, ХАНГАЛТТАЙ
         chart_df = chart_df[
-            (chart_df["time"] >= start_time) & 
+            (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
         ]
-        
-        # ===== 2️⃣ VALID INDICATORS ONLY
+
+        # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
         valid_indicators = [
-            c for c in selected
-            if c in chart_df.columns and not chart_df[c].isna().all()
+            col for col in selected
+            if col in chart_df.columns and not chart_df[col].isna().all()
         ]
-        
+    
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
-
+    
+        # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
         import altair as alt
-        
-        # ===== 3️⃣ TIME FORMATTING - БҮХ ХУГАЦААНЫ ӨГӨГДЛИЙГ DATETIME БОЛГОХ
-        chart_df = chart_df.copy()
-        chart_df['time'] = pd.to_datetime(chart_df['time'])
-        
-        # ===== 4️⃣ BRUSH SELECTION - НЭГ Л УДАА ТОДОРХОЙЛОХ
-        brush = alt.selection_interval(encodings=['x'], name='brush')
-        
-        # ===== 5️⃣ ГОЛ ГРАФИКИЙН БААЗ (brush-аар хязгаарлагдах)
-        base_main = (
-            alt.Chart(chart_df)
-            .transform_fold(
-                valid_indicators,
-                as_=["Indicator", "Value"]
+    
+        base = alt.Chart(chart_df).encode(
+            x=alt.X(
+                "time:N",
+                title=None,
+                sort="ascending",
+                axis=alt.Axis(
+                    labelAngle=0,
+                    labelFontSize=11,
+                    grid=False,
+                    labelExpr="substring(datum.value, 0, 4)"
+                )
             )
-            .encode(
-                x=alt.X(
-                    'time:T',
+        ).properties(
+            padding={"bottom": 5},   
+            background="transparent"
+        )
+        
+        lines = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_line(
+            strokeWidth=2.2,
+            interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
+        ).encode(
+            y=alt.Y(
+                "Value:Q",
+                title=None,
+                axis=alt.Axis(
+                    labelFontSize=11,
+                    grid=True,
+                    gridColor="#94a3b8",
+                    gridOpacity=0.25,
+                    gridWidth=0.6,
+                    tickColor="#94a3b8",
+                    domain=False
+                )
+            ),
+            color=alt.Color(
+                "Indicator:N",
+                legend=alt.Legend(
                     title=None,
-                    axis=alt.Axis(
-                        format='%Y-%m',  # 🔥 ЗӨВХӨН НЭГ ФОРМАТ АШИГЛАХ
-                        labelAngle=0,
-                        labelFontSize=11,
-                        grid=False,
-                        labelOverlap='parity'  # 🔥 ТЭМДЭГЛЭГЭЭГ АВТОМАТААР ТОХИРУУЛНА
-                    )
-                    # 🔥 scale domain-ыг brush-аар хязгаарлахгүй, харин transform_filter ашиглана
-                ),
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=alt.Axis(
-                        grid=True,
-                        gridOpacity=0.25,
-                        domain=False,
-                        labelFontSize=11
-                    )
-                ),
-                color=alt.Color(
-                    "Indicator:N",
-                    legend=alt.Legend(
-                        title=None,
-                        orient="right"
-                    )
-                ),
-                tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),
-                    alt.Tooltip("Indicator:N"),
-                    alt.Tooltip("Value:Q", format=",.2f")
-                ]
-            )
+                    orient="right"
+                )
+            ),
+            tooltip=[
+                alt.Tooltip("time:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
         )
-        
-        # ===== 6️⃣ ГОЛ ГРАФИК (BRUSH-ААР ШҮҮГДЭНЭ)
-        main_chart = (
-            base_main
-            .mark_line(strokeWidth=2.4)
-            .properties(
-                height=360
-            )
-            .transform_filter(brush)  # 🔥 BRUSH-ААР ШҮҮГДЭНЭ
-            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM/PAN
+        points = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_point(
+            opacity=0,
+            size=80
+        ).encode(
+            y="Value:Q",
+            tooltip=[
+                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
         )
-        
-        # ===== 7️⃣ МИНИ ГРАФИК (БҮХ ХУГАЦААНЫ ХҮРЭЭ)
-        mini_base = (
-            alt.Chart(chart_df)
-            .transform_fold(
-                valid_indicators,
-                as_=["Indicator", "Value"]
-            )
-        )
-        
-        # Мини графикийн шугамууд
-        mini_lines = (
-            mini_base
-            .mark_line(strokeWidth=1, opacity=0.6)
-            .encode(
-                x=alt.X(
-                    'time:T',
-                    title=None,
-                    axis=alt.Axis(
-                        format='%Y',  # 🔥 ЗӨВХӨН ЖИЛ ХАРУУЛНА
-                        labelAngle=0,
-                        labelFontSize=9,
-                        grid=False,
-                        tickCount={'interval': 'year', 'step': 1}
-                    )
-                ),
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=alt.Axis(
-                        labels=False,
-                        ticks=False,
-                        grid=False,
-                        domain=False
-                    )
-                ),
-                color=alt.Color("Indicator:N", legend=None)
-            )
-        )
-        
-        # Мини график дээрх сонгогдсон хэсгийг тодруулах тэгш өнцөгт
-        mini_selection = (
-            mini_base
-            .mark_rect(opacity=0.3, color='gray')
-            .encode(
-                x='time:T',
-                x2='time_end:T' if 'time_end' in chart_df.columns else alt.value(None)
-            )
-            .transform_filter(brush)  # 🔥 BRUSH-ТАЙ ИЖИЛ ХЭСЭГТ ӨНГӨ ӨӨРЧЛӨГДӨНӨ
-        )
-        
-        # Мини графикийг бүрдүүлэх
-        mini_chart = (
-            (mini_lines + mini_selection)
-            .properties(height=60)
-            .add_params(brush)  # 🔥 BRUSH SELECTION НЭМЭХ
-        )
-        
-        # ===== 8️⃣ ХОЁР ГРАФИКИЙГ ХОЛБОХ
-        final_chart = (
-            alt.vconcat(
-                main_chart,
-                mini_chart,
-                spacing=2  # 🔥 ЗАЙГ БАГАСГАХ
-            )
-            .resolve_scale(
-                x='shared',  # 🔥 Х ТЭНХЛЭГИЙГ ХОЛБОНО
-                color='shared'
-            )
-            .configure_view(strokeWidth=0)  # 🔥 ХҮРЭЭГ НУУХ
-        )
-        
-        st.altair_chart(
-            final_chart,
-            use_container_width=True,
-            theme=None
-        )
-        
-        # ===== 9️⃣ ГҮЙЛГЭХ БААРЫГ САЙЖРУУЛАХ CSS
-        st.markdown("""
-        <style>
-        /* Вега график дээр гүйлгэх боломжийг нэмэх */
-        .vega-embed {
-            overflow-x: auto !important;
-        }
-        
-        /* Мини график дээр гүйлгэхэд хялбар болгох */
-        .vega-embed .marks {
-            cursor: grab !important;
-        }
-        
-        .vega-embed .marks:active {
-            cursor: grabbing !important;
-        }
-        
-        /* Scrollbar стиль */
-        ::-webkit-scrollbar {
-            height: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f0f0f0;
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        </style>
-        """, unsafe_allow_html=True)
 
+        st.altair_chart(
+            lines.properties(height=340).interactive(),
+            width="stretch"
+        )
     
     def compute_group_kpis(df, indicators):
         stats = []
