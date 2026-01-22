@@ -450,28 +450,38 @@ with right:
         # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
+        
         # ===== 3️⃣.1️⃣ CREATE REAL DATETIME COLUMN (FOR ALTAIR) =====
-        if freq == "Monthly":
-            # "2020-01" → 2020-01-01
-            chart_df["time_dt"] = pd.to_datetime(
-                chart_df["time"],
-                format="%Y-%m",
-                errors="coerce"
-            )
+        chart_df = chart_df.copy()
+        chart_df['time_detailed'] = chart_df['time'].astype(str)
         
-        elif freq == "Quarterly":
-            # "2020-Q1" → 2020-01-01, "2020-Q2" → 2020-04-01
-            chart_df["time_dt"] = (
-                pd.PeriodIndex(chart_df["time"], freq="Q")
-                .to_timestamp()
-            )
+        # Баталгаажуулах: 'time' байна уу?
+        if 'time' not in chart_df.columns:
+            st.error("❌ 'time' column missing in chart_df. Cannot create datetime.")
+            st.stop()
         
+        # Try/except ашиглан datetime үүсгэх
+        chart_df['time_dt'] = pd.NaT  # Анхны багана үүсгэх
+        
+        try:
+            if freq == "Monthly":
+                chart_df['time_dt'] = pd.to_datetime(chart_df['time'], format="%Y-%m", errors='coerce')
+            elif freq == "Quarterly":
+                chart_df['time_dt'] = pd.PeriodIndex(chart_df['time'], freq="Q").to_timestamp()
+            else:
+                st.error(f"❌ Unknown frequency: {freq}")
+                st.stop()
+        except Exception as e:
+            st.error(f"❌ Failed to create 'time_dt': {e}")
+            st.stop()
+        
+        # ===== 3️⃣.2️⃣ REMOVE NaT VALUES =====
+        if 'time_dt' in chart_df.columns:
+            chart_df = chart_df.dropna(subset=['time_dt'])
         else:
-            st.error("❌ Unknown frequency")
+            st.error("❌ 'time_dt' column was not created successfully.")
             st.stop()
 
-        # ===== 3️⃣.2️⃣ REMOVE NaT VALUES =====
-        chart_df = chart_df.dropna(subset=['time_dt'])
         
         # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS =====
         chart_df = chart_df.dropna(subset=valid_indicators, how='all')
