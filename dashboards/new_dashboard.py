@@ -421,35 +421,36 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
+
         # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
-        
-        # ⏳ APPLY TIME RANGE (STRING-SAFE) — ЗӨВ, ХАНГАЛТТАЙ
+
+        # ⏳ APPLY TIME RANGE (STRING-SAFE)
         chart_df = chart_df[
             (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
         ]
 
-        # ===== 2️⃣ өгөгдөлтэй indicator л үлдээнэ
+        # ===== 2️⃣ Зөвхөн өгөгдөлтэй indicator
         valid_indicators = [
             col for col in selected
             if col in chart_df.columns and not chart_df[col].isna().all()
         ]
-    
+
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
-    
-        # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
+
+        # ===== 3️⃣ WIDE → ALTAIR
         import altair as alt
-    
+
+        # --- BASE (UNCHANGED)
         base = alt.Chart(chart_df).encode(
             x=alt.X(
                 "time:N",
@@ -463,16 +464,17 @@ with right:
                 )
             )
         ).properties(
-            padding={"bottom": 5},   
+            padding={"bottom": 5},
             background="transparent"
         )
-        
+
+        # --- MAIN LINES (UNCHANGED)
         lines = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         ).mark_line(
             strokeWidth=2.2,
-            interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
+            interpolate="linear"
         ).encode(
             y=alt.Y(
                 "Value:Q",
@@ -500,25 +502,57 @@ with right:
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-        points = base.transform_fold(
+
+        # ===== 4️⃣ HOVER LOGIC (ШИНЭ)
+
+        # --- Hover selection (X-axis)
+        hover = alt.selection_point(
+            fields=["time"],
+            nearest=True,
+            on="mouseover",
+            empty=False
+        )
+
+        # --- Vertical running line
+        vline = base.mark_rule(
+            color="#64748b",
+            strokeWidth=1,
+            strokeDash=[4, 4]
+        ).encode(
+            x="time:N"
+        ).add_params(
+            hover
+        )
+
+        # --- Hover points + Date : Value tooltip
+        hover_points = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         ).mark_point(
-            opacity=0,
-            size=80
+            size=70
         ).encode(
+            x="time:N",
             y="Value:Q",
+            opacity=alt.condition(hover, alt.value(1), alt.value(0)),
             tooltip=[
-                alt.Tooltip("x:N", title="Time"),
+                alt.Tooltip("time:N", title="Date"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
 
-        st.altair_chart(
-            lines.properties(height=340).interactive(),
-            width="stretch"
-        )
+        # ===== 5️⃣ FINAL CHART
+        chart = (
+            lines
+            + vline
+            + hover_points
+        ).properties(
+            height=340
+        ).interactive()
+
+        st.altair_chart(chart, width="stretch")
+
+
     
     def compute_group_kpis(df, indicators):
         stats = []
