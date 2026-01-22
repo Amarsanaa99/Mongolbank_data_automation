@@ -503,6 +503,8 @@ with right:
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
+        ).add_params(
+            hover        # ✅ 🔥 ЯГ ЭНД
         )
 
         # ===== 7️⃣ Vertical line
