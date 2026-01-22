@@ -298,9 +298,6 @@ for col in ["Year", "Month", "Quarter"]:
 # ======================
 # ⏳ TIME RANGE (MAIN CHART ONLY)
 # ======================
-# ======================
-# ⏳ TIME RANGE (MAIN CHART ONLY)
-# ======================
 with left:
     with st.container(border=True):
         st.subheader("⏳ Time range")
@@ -472,7 +469,27 @@ with right:
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
         
-        # ===== 4️⃣ BASE CHART (shared X scale)
+        # ===== 3.5️⃣ X-AXIS CONFIGURATION (ЭНД НЭМЭХ ХЭСЭГ) =====
+        # start_year, end_year-ыг integer болгох
+        try:
+            start_year_int = int(start_year) if isinstance(start_year, str) else start_year
+            end_year_int = int(end_year) if isinstance(end_year, str) else end_year
+            year_count = end_year_int - start_year_int + 1
+        except:
+            start_year_int = 2000
+            end_year_int = 2025
+            year_count = 26
+        
+        # Тохируулсан форматтай axis үүсгэх
+        axis_config = alt.Axis(
+            labelAngle=0,
+            labelFontSize=11,
+            grid=False,
+            # Жилийн интервалаар шошго харуулах
+            tickCount={'interval': 'year', 'step': max(1, year_count // 12)}
+        )
+        
+        # ===== 4️⃣ BASE CHART (shared X scale) =====
         base = (
             alt.Chart(chart_df)
             .transform_fold(
@@ -483,13 +500,7 @@ with right:
                 x=alt.X(
                     'time:T',
                     title=None,
-                    axis=alt.Axis(
-                        format='%Y-%m',
-                        labelAngle=0,
-                        labelFontSize=11,
-                        grid=False,
-                        labelExpr="timeFormat(datum.value, '%Y-%m')"
-                    ),
+                    axis=axis_config,  # Энд дээрх axis_config ашиглана
                     scale=alt.Scale(zero=False)
                 ),
                 y=alt.Y(
@@ -502,18 +513,19 @@ with right:
                         labelFontSize=11
                     )
                 ),
-               color=alt.Color(
+                color=alt.Color(
                     "Indicator:N",
                     legend=alt.Legend(
                         title=None,
                         orient="right",
-                        offset=10,        # Графикаас бага зэрэг зай авна
+                        offset=10,
                         labelFontSize=11,
                         symbolType="stroke"
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),
+                    alt.Tooltip('time:T', title="Time", 
+                               format='%Y-%m' if freq == "Monthly" else '%Y-Q%q'),
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
@@ -534,7 +546,7 @@ with right:
         
         # Хөндлөн огтлолцох дугуй цэг
         points = (
-            base.mark_circle(size=65, filled=True, color="##1f77b4", stroke="#ffffff", strokeWidth=2)
+            base.mark_circle(size=65, filled=True, color="#1f77b4", stroke="#ffffff", strokeWidth=2)
             .encode(opacity=alt.condition(hover, alt.value(1), alt.value(0)))
             .add_params(hover)
         )
