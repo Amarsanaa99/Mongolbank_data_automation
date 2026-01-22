@@ -449,22 +449,20 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING - БҮХ ХУГАЦААНЫ ӨГӨГДЛИЙГ DATETIME БОЛГОХ
+        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
+        # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
         chart_df = chart_df.copy()
-        chart_df['time'] = pd.to_datetime(chart_df['time'])
-        
-        # ===== 4️⃣ BRUSH SELECTION
-        brush = alt.selection_interval(encodings=['x'], name='brush')
-        
-        # ===== 5️⃣ ГОЛ ГРАФИК
-        # Гол графикийн үндсэн бүтэц
-        main_chart = (
+        chart_df['time_detailed'] = chart_df['time'].astype(str)
+        # ===== BRUSH (FOR MINI NAVIGATOR)
+        brush = alt.selection_interval(encodings=["x"])
+
+        # ===== 4️⃣ BASE CHART (shared X scale)
+        base = (
             alt.Chart(chart_df)
             .transform_fold(
                 valid_indicators,
                 as_=["Indicator", "Value"]
             )
-            .mark_line(strokeWidth=2.4)
             .encode(
                 x=alt.X(
                     'time:T',
@@ -473,9 +471,12 @@ with right:
                         format='%Y-%m',
                         labelAngle=0,
                         labelFontSize=11,
-                        grid=False
-                    )
+                        grid=False,
+                        labelExpr="timeFormat(datum.value, '%Y-%m')"
+                    ),
+                    scale=alt.Scale(zero=False, domain=brush)  # 🔥 MINI-ГЭЭС ХЯЗГААРЛАГДАНА
                 ),
+
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -494,86 +495,71 @@ with right:
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),
+                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),  # 🔥 TOOLTIP ДЭЛГЭРЭНГҮЙ
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
-            .properties(height=360)
-            .transform_filter(brush)  # BRUSH-аар шүүгдэнэ
-            .interactive()  # ZOOM/PAN боломжтой
         )
         
-        # ===== 6️⃣ МИНИ ГРАФИК (SCROLL BAR)
-        # Мини графикийн шугамууд
-        mini_lines = (
-            alt.Chart(chart_df)
-            .transform_fold(
-                valid_indicators,
-                as_=["Indicator", "Value"]
+        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
+        main_chart = (
+            base
+            .mark_line(strokeWidth=2.4)
+            .properties(
+                height=360,
+                # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
             )
-            .mark_line(strokeWidth=1, opacity=0.6)
+            .interactive(bind_x=True)  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
+        )
+        
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
+        brush = alt.selection_interval(encodings=["x"])
+
+        
+        mini_chart = (
+            base
+            .mark_line(strokeWidth=1.2)
             .encode(
-                x=alt.X(
-                    'time:T',
-                    title=None,
-                    axis=alt.Axis(
-                        format='%Y',
-                        labelAngle=0,
-                        labelFontSize=9,
-                        grid=False
-                    )
-                ),
                 y=alt.Y(
                     "Value:Q",
                     title=None,
-                    axis=None
+                    axis=alt.Axis(
+                        labels=False,
+                        ticks=False,
+                        grid=False,
+                        domain=False
+                    )
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(height=60)
-        )
-        
-        # Мини график дээрх сонгогдсон хэсгийг харуулах
-        # Энгийн бөгөөд алдаагүй арга:
-        if len(chart_df) > 0:
-            # Бүх хугацааны хүрээг тооцоолох
-            time_min = chart_df['time'].min()
-            time_max = chart_df['time'].max()
-            
-            # Энгийн тэгш өнцөгт үүсгэх (зурагны хамт ажиллах)
-            mini_selection = (
-                alt.Chart(pd.DataFrame({'start': [time_min], 'end': [time_max]}))
-                .mark_rect(opacity=0.3, color='gray', height=60)
-                .encode(
-                    x='start:T',
-                    x2='end:T'
-                )
+            .properties(
+                height=70
             )
-        else:
-            # Хоосон өгөгдөл тохиолдолд
-            mini_selection = alt.Chart(pd.DataFrame()).mark_rect()
-        
-        # Мини графикийг нэгтгэх
-        mini_chart = (
-            (mini_lines + mini_selection)
-            .add_params(brush)  # BRUSH SELECTION нэмэх
+            .add_params(brush)
         )
         
-        # ===== 7️⃣ ХОЁР ГРАФИКИЙГ ХОЛБОХ
-        final_chart = alt.vconcat(
-            main_chart,
-            mini_chart,
-            spacing=2
-        ).resolve_scale(
-            x='shared',
-            color='shared'
+        # ===== 7️⃣ LINK MAIN ↔ MINI
+        final_chart = (
+            alt.vconcat(
+                main_chart,  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
+                mini_chart,
+                spacing=10
+            )
+            .properties(
+                background="transparent"
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0'
+            )
         )
         
         st.altair_chart(
             final_chart,
             use_container_width=True
         )
+
     
     def compute_group_kpis(df, indicators):
         stats = []
