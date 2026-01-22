@@ -286,6 +286,38 @@ elif year is not None:
 else:
     st.error("❌ No valid time columns found")
     st.stop()
+
+# ⚠️ ЭНД ШИНЭЭР НЭМЭХ КОД:
+# ======================
+# ✅ CREATE time_dt COLUMN FOR CHART
+# ======================
+def parse_time(time_str):
+    if isinstance(time_str, str):
+        if '-' in time_str:
+            parts = time_str.split('-')
+            if len(parts) == 2:
+                if len(parts[1]) == 2:  # Сар: "2020-01"
+                    try:
+                        year = int(parts[0])
+                        month = int(parts[1])
+                        return pd.Timestamp(year=year, month=month, day=1)
+                    except:
+                        pass
+                elif 'Q' in parts[1]:  # Улирал: "2020-Q1"
+                    try:
+                        year = int(parts[0])
+                        quarter = int(parts[1].replace('Q', ''))
+                        month = (quarter - 1) * 3 + 1
+                        return pd.Timestamp(year=year, month=month, day=1)
+                    except:
+                        pass
+    return pd.NaT
+
+series["time_dt"] = series["time"].apply(parse_time)
+
+if series["time_dt"].isna().all():
+    series["time_dt"] = pd.to_datetime(series["time"], errors='coerce')
+
 # ======================
 # ✅ YEAR LABEL (GLOBAL X AXIS)
 # ======================
@@ -383,32 +415,6 @@ for indicator in selected:
     else:
         st.warning(f"Indicator '{indicator}' not found in data")
 
-# Графикийн өгөгдөл бэлтгэх
-plot_data = (
-    series
-    .loc[:, ["time"] + selected]
-    .copy()
-    .set_index("time")
-    .sort_index()
-)
-# ======================
-# SPLIT: DATA vs NO DATA
-# ======================
-
-# өгөгдөлтэй баганууд
-valid_cols = [
-    col for col in plot_data.columns
-    if not plot_data[col].isna().all()
-]
-
-# өгөгдөлгүй баганууд
-nodata_cols = [
-    col for col in plot_data.columns
-    if plot_data[col].isna().all()
-]
-
-# зөвхөн өгөгдөлтэйг графикт ашиглана
-plot_data_valid = plot_data[valid_cols]
 # ======================
 # 🔒 HARD CHECK: time column
 # ======================
@@ -421,54 +427,13 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-# Өгөгдлийг цуваа болгон нэгтгэх
-series = df_time.copy()
-# ... бусад код ...
-
-# ======================
-# ✅ CREATE time_dt COLUMN FOR CHART
-# ======================
-def parse_time(time_str):
-    if isinstance(time_str, str):
-        if '-' in time_str:
-            parts = time_str.split('-')
-            if len(parts) == 2:
-                if len(parts[1]) == 2:
-                    try:
-                        year = int(parts[0])
-                        month = int(parts[1])
-                        return pd.Timestamp(year=year, month=month, day=1)
-                    except:
-                        pass
-                elif 'Q' in parts[1]:
-                    try:
-                        year = int(parts[0])
-                        quarter = int(parts[1].replace('Q', ''))
-                        month = (quarter - 1) * 3 + 1
-                        return pd.Timestamp(year=year, month=month, day=1)
-                    except:
-                        pass
-    return pd.NaT
-
-series["time_dt"] = series["time"].apply(parse_time)
-
-if series["time_dt"].isna().all():
-    series["time_dt"] = pd.to_datetime(series["time"], errors='coerce')
-
-# ... дараа нь Main chart хэсэг ...
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
-        # ===== series бэлэн болсон дараа
-        if "time_dt" not in series.columns:
-            # 🟢 Monthly
-            series["time_dt"] = pd.to_datetime(series["time"], format="%Y-%m")
-        
-            # 🟢 Quarterly
-            series["time_dt"] = pd.PeriodIndex(series["time"], freq="Q").to_timestamp()
+
 
         # ===== 1️⃣ DATA
         chart_df = series[["time", "time_dt"] + selected].copy()
