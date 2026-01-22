@@ -450,16 +450,9 @@ with right:
         # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
         import altair as alt
     
-        nearest = alt.selection_point(   # ← ЭНД
-            nearest=True,
-            on="mouseover",
-            fields=["time"],
-            empty=False
-        )
-
         base = alt.Chart(chart_df).encode(
             x=alt.X(
-                "time:T",
+                "time:N",
                 title=None,
                 sort="ascending",
                 axis=alt.Axis(
@@ -474,6 +467,18 @@ with right:
             background="transparent"
         )
         
+        # ===== 4️⃣ TOOLTIP-ЫГ САЙЖРУУЛАХ (mouse очиход утгууд харагдах)
+        # 🔥 ТУХАЙН ЦЭГ ДЭЭРХ БҮХ ИНДИКАТОРЫН УТГУУДЫГ ХАРУУЛДАГ TOOLTIP
+        # Эхлээд өгөгдлийг бэлтгэх (широко формат дахь бүх индикаторуудыг tooltip-д оруулах)
+        
+        # Tooltip-д харуулах бүх индикаторуудын нэрийг үүсгэх
+        tooltip_fields = []
+        for indicator in valid_indicators:
+            tooltip_fields.append(
+                alt.Tooltip(f"{indicator}:Q", title=indicator, format=",.2f")
+            )
+        
+        # Гол шугамууд
         lines = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
@@ -500,57 +505,50 @@ with right:
                     title=None,
                     orient="right"
                 )
+            )
+            # 🔥 ЭНД TOOLTIP БИЧГЭЭГҮЙ (доорх points дээр tooltip байх болно)
+        )
+        
+        # 🔥 ҮНДСЭН TOOLTIP БҮХ ИНДИКАТОРТОЙ ЦЭГҮҮД
+        points = base.mark_point(
+            opacity=0,      # 🔥 ЦЭГҮҮД ХАРАГДАХГҮЙ
+            size=300        # 🔥 ИЛҮҮ ТОМ ХӨРӨЛТӨЙ ЦЭГ (mouse-аар ойртоход амар)
+        ).encode(
+            # Y encoding шаардлагагүй (зөвхөн tooltip-д зориулагдсан)
+            tooltip=[
+                alt.Tooltip("time:N", title="Огноо"),  # 🔥 ЭХЛЭЭД ОГНОО
+            ] + tooltip_fields  # 🔥 ДАРАА НЬ БҮХ ИНДИКАТОРУУДЫН УТГУУД
+        )
+        
+        # 🔥 НЭМЭЛТ: ХУВЬСАН ЦЭГҮҮД (mouse очиход жинхэнэ цэгүүд харагдана)
+        highlight_points = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_point(
+            filled=True,
+            size=60,        # 🔥 ЖИЖИГ ХЭМЖЭЭТЭЙ
+            opacity=0       # 🔥 ЭХЛЭЭД ХАРАГДАХГҮЙ, зөвхөн mouse ойртоход харагдана
+        ).encode(
+            y="Value:Q",
+            color=alt.Color("Indicator:N", legend=None),
+            opacity=alt.condition(
+                alt.datum.Value != 0,  # 🔥 ЗӨВХӨН УТГА БАЙГАА ЦЭГҮҮДЭД
+                alt.value(0.8),        # 🔥 MOUSE ОЧИХОД ИЛҮҮ ХАРАГДАНА
+                alt.value(0)           # 🔥 ӨӨР ТОХИОЛДОЛД ХАРАГДАХГҮЙ
             ),
-            tooltip=[
-                alt.Tooltip("time:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
+            tooltip=[      # 🔥 ЦЭГ ДЭЭР MOUSE ОЧИХОД ТУСГАЙ TOOLTIP
+                alt.Tooltip("time:N", title="Огноо"),
+                alt.Tooltip("Indicator:N", title="Индикатор"),
+                alt.Tooltip("Value:Q", title="Утга", format=",.2f")
             ]
         )
-        points = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_point(
-            opacity=0,
-            size=80
-        ).encode(
-            y="Value:Q",
-            tooltip=[
-                alt.Tooltip("x:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
-        )
-        # ===== VERTICAL RULE (mouse hover line)
-        rule = base.mark_rule(
-            color="#111827",
-            strokeWidth=1
-        ).encode(
-            opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-        ).add_params(nearest)
-
-        hover_points = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_point(
-            size=70
-        ).encode(
-            y="Value:Q",
-            opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
-            tooltip=[
-                alt.Tooltip("time:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
-        )
-
+        
+        # 🔥 БҮХ ХЭСГИЙГ НЭГТГЭХ
+        chart = (lines + points + highlight_points)
+        
         st.altair_chart(
-            alt.layer(
-                lines,
-                rule,
-                hover_points
-            ).properties(height=340).interactive(),
-            width="stretch"
+            chart.properties(height=340).interactive(),
+            use_container_width=True  # 🔥 USE_CONTAINER_WIDTH АШИГЛАХ
         )
 
     
