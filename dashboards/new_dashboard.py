@@ -508,19 +508,13 @@ with right:
         )
         
         # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
-        line = base.mark_line(strokeWidth=2.4).add_params(hover)
+        line = base.mark_line(strokeWidth=2.4)
         
-        # Хөндлөн огтлолцох дугуй цэг — зөвхөн hover үед л зурна
+        # Хөндлөн огтлолцох дугуй цэг
         points = (
-            base
-            .mark_circle(
-                size=65,
-                filled=True,
-                color="#ffffff",
-                stroke="#1f77b4",
-                strokeWidth=2
-            )
-            .transform_filter(hover)    # ← ЭНЭ мөр хамгийн чухал
+            base.mark_circle(size=65, filled=True, color="#ffffff", stroke="#1f77b4", strokeWidth=2)
+            .encode(opacity=alt.condition(hover, alt.value(1), alt.value(0)))
+            .add_params(hover)
         )
         
         # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
@@ -540,12 +534,12 @@ with right:
                 points
             )
             .properties(
-                height=420,
+                height=360,
             )
             .interactive()   # zoom + pan хэвээр
         )
         
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) — өөрчлөх шаардлагагүй
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
         
         mini_chart = (
@@ -562,16 +556,10 @@ with right:
                         domain=False
                     )
                 ),
-                color=alt.Color(
-                    "Indicator:N",
-                    legend=alt.Legend(
-                        title=None,
-                        orient="right"
-                    )
-                )
+                color=alt.Color("Indicator:N", legend=None)
             )
             .properties(
-                height=60
+                height=70
             )
             .add_params(brush)
         )
