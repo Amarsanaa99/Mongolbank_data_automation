@@ -438,6 +438,7 @@ st.markdown("""
 # ======================
 with right:
     with st.container():
+
         st.subheader("📈 Main chart")
 
         st.markdown('<div class="main-chart-frame">', unsafe_allow_html=True)
