@@ -238,12 +238,6 @@ def render_change(label, value):
 # Өгөгдлийг цуваа болгон нэгтгэх
 series = df_time.copy()
 # ======================
-# ЗАСВАР: MultiIndex багануудыг энгийн болгох
-# ======================
-if isinstance(series.columns, pd.MultiIndex):
-    series.columns = series.columns.get_level_values(0)
-
-# ======================
 # HELPER: DataFrame → Series болгох
 # ======================
 def as_series(col):
@@ -423,7 +417,8 @@ if "time" not in series.columns:
 if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
-    
+
+# ======================
 # MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
@@ -432,36 +427,7 @@ with right:
         st.subheader("📈 Main chart")
         
         # ===== 1️⃣ DATA (NO AGGREGATION)
-        
-        # ДЕБАГ: series багануудыг шалгах
-        st.write("🔍 DEBUG: series columns", series.columns.tolist())
-        st.write("🔍 DEBUG: selected indicators", selected)
-        
-        # 'time' багана байгаа эсэхийг шалгах
-        if "time" not in series.columns:
-            # MultiIndex багана эсэхийг шалгах
-            if isinstance(series.columns, pd.MultiIndex):
-                # Хэрэв MultiIndex бол энгийн болгох
-                series.columns = series.columns.get_level_values(0)
-                st.write("⚠️ Fixed: series had MultiIndex columns")
-            
-            # Дахин шалгах
-            if "time" not in series.columns:
-                st.error(f"❌ 'time' column not found in series DataFrame!")
-                st.write("Available columns in series:", series.columns.tolist())
-                st.stop()
-        
         chart_df = series[["time"] + selected].copy()
-        
-        # Хэрэв chart_df-ийн баганууд MultiIndex бол энгийн болгох
-        if isinstance(chart_df.columns, pd.MultiIndex):
-            chart_df.columns = chart_df.columns.get_level_values(0)
-            st.write("⚠️ Fixed: chart_df had MultiIndex columns")
-        
-        # ДЕБАГ: chart_df-ийн эхний хэдэн мөр
-        st.write("🔍 DEBUG: chart_df head", chart_df.head())
-        st.write("🔍 DEBUG: chart_df columns", chart_df.columns.tolist())
-        
         
         # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
@@ -475,8 +441,6 @@ with right:
             if c in chart_df.columns and not chart_df[c].isna().all()
         ]
         
-        st.write("🔍 DEBUG: valid_indicators", valid_indicators)
-        
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
@@ -486,94 +450,34 @@ with right:
         # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
-        
         # ===== 3️⃣.1️⃣ CREATE REAL DATETIME COLUMN (FOR ALTAIR) =====
-        chart_df = chart_df.copy()
-        chart_df['time_detailed'] = chart_df['time'].astype(str)
+        if freq == "Monthly":
+            # "2020-01" → 2020-01-01
+            chart_df["time_dt"] = pd.to_datetime(
+                chart_df["time"],
+                format="%Y-%m",
+                errors="coerce"
+            )
         
-        # Анхны багана үүсгэх
-        chart_df['time_dt'] = pd.NaT  
+        elif freq == "Quarterly":
+            # "2020-Q1" → 2020-01-01, "2020-Q2" → 2020-04-01
+            chart_df["time_dt"] = (
+                pd.PeriodIndex(chart_df["time"], freq="Q")
+                .to_timestamp()
+            )
         
-        st.write("🔍 DEBUG: time column sample", chart_df['time'].head().tolist())
-        st.write("🔍 DEBUG: freq value", freq)
-        
-        try:
-            if freq == "Monthly":
-                # "%Y-%m" форматад хувиргах
-                st.write("🔄 Converting Monthly format...")
-                chart_df['time_dt'] = pd.to_datetime(
-                    chart_df['time'], 
-                    format="%Y-%m", 
-                    errors='coerce'
-                )
-            elif freq == "Quarterly":
-                # Q-формат (e.g., 2023-Q1)
-                st.write("🔄 Converting Quarterly format...")
-                chart_df['time_dt'] = pd.PeriodIndex(
-                    chart_df['time'], 
-                    freq="Q"
-                ).to_timestamp()
-            else:
-                st.error(f"❌ Unknown frequency: {freq}")
-                st.stop()
-        except Exception as e:
-            st.error(f"❌ Failed to create 'time_dt': {e}")
-            st.write("Time values that failed:", chart_df['time'].head(10).tolist())
-            st.stop()
-        
-        # ===== 3️⃣.2️⃣ REMOVE NaT VALUES SAFELY =====
-        # 'time_dt' багана байгаа эсэхийг шалгана
-        st.write("🔍 DEBUG: 'time_dt' in columns?", 'time_dt' in chart_df.columns)
-        st.write("🔍 DEBUG: All columns in chart_df", chart_df.columns.tolist())
-        
-        # chart_df багануудыг энгийн string болгох (MultiIndex байвал)
-        if isinstance(chart_df.columns, pd.MultiIndex):
-            st.write("⚠️ chart_df has MultiIndex columns, converting to single level")
-            chart_df.columns = chart_df.columns.get_level_values(0)
-            st.write("✅ Converted chart_df columns:", chart_df.columns.tolist())
-        
-        if 'time_dt' in chart_df.columns:
-            # NaT бүх мөрүүдийг устгана
-            st.write(f"🔍 DEBUG: time_dt sample values: {chart_df['time_dt'].head().tolist()}")
-            st.write(f"🔍 DEBUG: Number of NaT values: {chart_df['time_dt'].isna().sum()}")
-            
-            chart_df = chart_df.dropna(subset=['time_dt'])
-            
-            if chart_df.empty:
-                st.error("❌ 'time_dt' exists but all values are NaT after conversion")
-                st.write("Check time format. Expected formats:")
-                st.write("- Monthly: '2023-01', '2023-12'")
-                st.write("- Quarterly: '2023-Q1', '2023-Q4'")
-                st.stop()
         else:
-            st.error("❌ 'time_dt' column was not created successfully.")
-            st.write("Available columns:", chart_df.columns.tolist())
-            st.stop()
-        
-        # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS =====
-        # valid_indicators-ыг шинэчлэх (MultiIndex болсон эсэхийг шалгах)
-        if isinstance(valid_indicators[0], tuple):
-            # Хэрэв valid_indicators нь tuple байвал эхний түвшний нэрсийг авах
-            valid_indicators = [col[0] for col in valid_indicators if col in chart_df.columns]
-            st.write("🔍 DEBUG: Updated valid_indicators (from tuples):", valid_indicators)
-        
-        if valid_indicators:  # Хоосон жагсаалт биш эсэхийг шалгах
-            chart_df = chart_df.dropna(subset=valid_indicators, how='all')
-        else:
-            st.error("❌ No valid indicators selected")
+            st.error("❌ Unknown frequency")
             st.stop()
         
         # 🔒 HARD CHECK
-        if "time_dt" not in chart_df.columns:
-            st.error("❌ 'time_dt' column missing after cleaning")
-            st.stop()
-        
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
 
         
         # ===== 3.5️⃣ X-AXIS CONFIGURATION (ЭНД НЭМЭХ ХЭСЭГ) =====
+        # start_year, end_year-ыг integer болгох
         try:
             start_year_int = int(start_year) if isinstance(start_year, str) else start_year
             end_year_int = int(end_year) if isinstance(end_year, str) else end_year
@@ -588,14 +492,13 @@ with right:
             labelAngle=0,
             labelFontSize=11,
             grid=False,
-            format="%Y",                 # 🟢 Default = жил
-            labelOverlap=True
+            # Жилийн интервалаар шошго харуулах
+            tickCount={'interval': 'year', 'step': max(1, year_count // 12)}
         )
-
-
+        
         # ===== 4️⃣ BASE CHART (shared X scale) =====
         base = (
-            alt.Chart(chart_df.dropna(subset=valid_indicators))  # NaN устгах
+            alt.Chart(chart_df)
             .transform_fold(
                 valid_indicators,
                 as_=["Indicator", "Value"]
@@ -607,6 +510,7 @@ with right:
                     axis=axis_config,
                     scale=alt.Scale(zero=False)
                 ),
+
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -669,10 +573,11 @@ with right:
         
         # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
         vline = (
-            alt.Chart(chart_df) 
+            alt.Chart(chart_df) # <--- base биш chart_df ашигласнаар бүтэн зурагдана
             .mark_rule(color="#aaaaaa", strokeWidth=1.2)
             .encode(
                 x='time_dt:T',
+                # opacity-г энд нэмж өгснөөр хулгана байхгүй үед харагдахгүй
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
             )
             .transform_filter(hover)
@@ -684,7 +589,9 @@ with right:
                 vline,
                 points
             )
-            .properties(height=400)
+            .properties(
+                height=400
+            )
             .interactive()   # zoom + pan хэвээр
         )
         
@@ -707,7 +614,9 @@ with right:
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(height=60)
+            .properties(
+                height=60
+            )
             .add_params(brush)
         )
         
@@ -720,11 +629,11 @@ with right:
             )
             .resolve_scale(x='shared')
             .properties(
-                width="container",        # ✅ ЭНЭ МАШ ЧУХАЛ
                 background="transparent",
-                padding={"left": 50, "top": 20, "right": 30, "bottom": 50}
+                padding={"left": 50, "top": 20, "right": 20, "bottom": 50}
             )
         )
+
 
         st.altair_chart(final_chart, use_container_width=True)
 
