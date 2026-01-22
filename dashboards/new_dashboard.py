@@ -609,13 +609,6 @@ with right:
             )
             .configure_view(stroke=None) # Илүүц хүрээний зураасыг арилгана
             )
-            .configure_legend(
-                orient='right',
-                offset=10,  # Legend-ийн зай
-                labelLimit=200,  # Шошгын уртыг хязгаарлах
-                columns=1,  # Нэг баганаар харуулах
-                symbolLimit=50  # Симболын хязгаар
-            )
         )
         
         st.altair_chart(
