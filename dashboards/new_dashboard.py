@@ -503,15 +503,19 @@ with right:
         main_chart = (
             base
             .mark_line(strokeWidth=2.4)
-            .properties(
-                height=360,
-                # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
+            .encode(
+                x=alt.X(
+                    'time:T',
+                    scale=alt.Scale(domain=brush)  # 🔥 MINI-ИЙН СОНГОЛТООР MAIN ГҮЙЛГЭНЭ
+                )
             )
+            .properties(height=360)
+        )
             .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
         )
         
         # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
-        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
+        brush = alt.selection_interval(encodings=["x"], translate=True, zoom=False)
         
         mini_chart = (
             base
