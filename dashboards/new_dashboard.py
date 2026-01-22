@@ -453,28 +453,28 @@ with right:
         chart_df = chart_df.copy()
         chart_df['time'] = pd.to_datetime(chart_df['time'])
         
-        # ===== 4️⃣ BRUSH SELECTION - НЭГ Л УДАА ТОДОРХОЙЛОХ
+        # ===== 4️⃣ BRUSH SELECTION
         brush = alt.selection_interval(encodings=['x'], name='brush')
         
-        # ===== 5️⃣ ГОЛ ГРАФИКИЙН БААЗ (brush-аар хязгаарлагдах)
-        base_main = (
+        # ===== 5️⃣ ГОЛ ГРАФИК
+        # Гол графикийн үндсэн бүтэц
+        main_chart = (
             alt.Chart(chart_df)
             .transform_fold(
                 valid_indicators,
                 as_=["Indicator", "Value"]
             )
+            .mark_line(strokeWidth=2.4)
             .encode(
                 x=alt.X(
                     'time:T',
                     title=None,
                     axis=alt.Axis(
-                        format='%Y-%m',  # 🔥 ЗӨВХӨН НЭГ ФОРМАТ АШИГЛАХ
+                        format='%Y-%m',
                         labelAngle=0,
                         labelFontSize=11,
-                        grid=False,
-                        labelOverlap='parity'  # 🔥 ТЭМДЭГЛЭГЭЭГ АВТОМАТААР ТОХИРУУЛНА
+                        grid=False
                     )
-                    # 🔥 scale domain-ыг brush-аар хязгаарлахгүй, харин transform_filter ашиглана
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -499,134 +499,81 @@ with right:
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
+            .properties(height=360)
+            .transform_filter(brush)  # BRUSH-аар шүүгдэнэ
+            .interactive()  # ZOOM/PAN боломжтой
         )
         
-        # ===== 6️⃣ ГОЛ ГРАФИК (BRUSH-ААР ШҮҮГДЭНЭ)
-        main_chart = (
-            base_main
-            .mark_line(strokeWidth=2.4)
-            .properties(
-                height=360
-            )
-            .transform_filter(brush)  # 🔥 BRUSH-ААР ШҮҮГДЭНЭ
-            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM/PAN
-        )
-        
-        # ===== 7️⃣ МИНИ ГРАФИК (БҮХ ХУГАЦААНЫ ХҮРЭЭ)
-        mini_base = (
+        # ===== 6️⃣ МИНИ ГРАФИК (SCROLL BAR)
+        # Мини графикийн шугамууд
+        mini_lines = (
             alt.Chart(chart_df)
             .transform_fold(
                 valid_indicators,
                 as_=["Indicator", "Value"]
             )
-        )
-        
-        # Мини графикийн шугамууд
-        mini_lines = (
-            mini_base
             .mark_line(strokeWidth=1, opacity=0.6)
             .encode(
                 x=alt.X(
                     'time:T',
                     title=None,
                     axis=alt.Axis(
-                        format='%Y',  # 🔥 ЗӨВХӨН ЖИЛ ХАРУУЛНА
+                        format='%Y',
                         labelAngle=0,
                         labelFontSize=9,
-                        grid=False,
-                        tickCount={'interval': 'year', 'step': 1}
+                        grid=False
                     )
                 ),
                 y=alt.Y(
                     "Value:Q",
                     title=None,
-                    axis=alt.Axis(
-                        labels=False,
-                        ticks=False,
-                        grid=False,
-                        domain=False
-                    )
+                    axis=None
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
+            .properties(height=60)
         )
         
-        # Мини график дээрх сонгогдсон хэсгийг тодруулах тэгш өнцөгт
-        mini_selection = (
-            mini_base
-            .mark_rect(opacity=0.3, color='gray')
-            .encode(
-                x='time:T',
-                x2='time_end:T' if 'time_end' in chart_df.columns else alt.value(None)
+        # Мини график дээрх сонгогдсон хэсгийг харуулах
+        # Энгийн бөгөөд алдаагүй арга:
+        if len(chart_df) > 0:
+            # Бүх хугацааны хүрээг тооцоолох
+            time_min = chart_df['time'].min()
+            time_max = chart_df['time'].max()
+            
+            # Энгийн тэгш өнцөгт үүсгэх (зурагны хамт ажиллах)
+            mini_selection = (
+                alt.Chart(pd.DataFrame({'start': [time_min], 'end': [time_max]}))
+                .mark_rect(opacity=0.3, color='gray', height=60)
+                .encode(
+                    x='start:T',
+                    x2='end:T'
+                )
             )
-            .transform_filter(brush)  # 🔥 BRUSH-ТАЙ ИЖИЛ ХЭСЭГТ ӨНГӨ ӨӨРЧЛӨГДӨНӨ
-        )
+        else:
+            # Хоосон өгөгдөл тохиолдолд
+            mini_selection = alt.Chart(pd.DataFrame()).mark_rect()
         
-        # Мини графикийг бүрдүүлэх
+        # Мини графикийг нэгтгэх
         mini_chart = (
             (mini_lines + mini_selection)
-            .properties(height=60)
-            .add_params(brush)  # 🔥 BRUSH SELECTION НЭМЭХ
+            .add_params(brush)  # BRUSH SELECTION нэмэх
         )
         
-        # ===== 8️⃣ ХОЁР ГРАФИКИЙГ ХОЛБОХ
-        final_chart = (
-            alt.vconcat(
-                main_chart,
-                mini_chart,
-                spacing=2  # 🔥 ЗАЙГ БАГАСГАХ
-            )
-            .resolve_scale(
-                x='shared',  # 🔥 Х ТЭНХЛЭГИЙГ ХОЛБОНО
-                color='shared'
-            )
-            .configure_view(strokeWidth=0)  # 🔥 ХҮРЭЭГ НУУХ
+        # ===== 7️⃣ ХОЁР ГРАФИКИЙГ ХОЛБОХ
+        final_chart = alt.vconcat(
+            main_chart,
+            mini_chart,
+            spacing=2
+        ).resolve_scale(
+            x='shared',
+            color='shared'
         )
         
         st.altair_chart(
             final_chart,
-            use_container_width=True,
-            theme=None
+            use_container_width=True
         )
-        
-        # ===== 9️⃣ ГҮЙЛГЭХ БААРЫГ САЙЖРУУЛАХ CSS
-        st.markdown("""
-        <style>
-        /* Вега график дээр гүйлгэх боломжийг нэмэх */
-        .vega-embed {
-            overflow-x: auto !important;
-        }
-        
-        /* Мини график дээр гүйлгэхэд хялбар болгох */
-        .vega-embed .marks {
-            cursor: grab !important;
-        }
-        
-        .vega-embed .marks:active {
-            cursor: grabbing !important;
-        }
-        
-        /* Scrollbar стиль */
-        ::-webkit-scrollbar {
-            height: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f0f0f0;
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
     
     def compute_group_kpis(df, indicators):
         stats = []
