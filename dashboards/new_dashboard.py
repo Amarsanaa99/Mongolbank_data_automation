@@ -427,6 +427,13 @@ if series["time"].isna().all():
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
+        # ===== series бэлэн болсон дараа
+        if "time_dt" not in series.columns:
+            # 🟢 Monthly
+            series["time_dt"] = pd.to_datetime(series["time"], format="%Y-%m")
+        
+            # 🟢 Quarterly
+            series["time_dt"] = pd.PeriodIndex(series["time"], freq="Q").to_timestamp()
 
         # ===== 1️⃣ DATA
         chart_df = series[["time", "time_dt"] + selected].copy()
@@ -478,7 +485,7 @@ with right:
         selectors = base.mark_point(
             opacity=0
         ).encode(
-            x="time_dt:N"
+            x="time_dt:T"
         ).add_params(
             hover
         )
