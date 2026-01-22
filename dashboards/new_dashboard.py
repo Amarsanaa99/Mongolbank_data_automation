@@ -450,97 +450,29 @@ with right:
         import altair as alt
         
         # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
+        # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
         chart_df = chart_df.copy()
-        chart_df['time'] = pd.to_datetime(chart_df['time'])  # 🔥 PANDAS DATETIME БОЛГОХ
+        chart_df['time_detailed'] = chart_df['time'].astype(str)
         
-        # ===== 4️⃣ CREATE TIME SLIDER INPUT (SCROLL BAR)
-        # Хэрэглэгчийн сонгосон хугацааны мужийг олох
-        time_min = chart_df['time'].min()
-        time_max = chart_df['time'].max()
-        
-        # Хугацааны слайдер үүсгэх
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            selected_time_range = st.slider(
-                "Хугацааны хүрээ",
-                min_value=time_min.to_pydatetime(),
-                max_value=time_max.to_pydatetime(),
-                value=(time_min.to_pydatetime(), time_max.to_pydatetime()),
-                format="YYYY-MM",
-                label_visibility="collapsed"
-            )
-        
-        with col2:
-            # Zoom товчнууд (хүсэлтээр нэмсэн)
-            zoom_col1, zoom_col2, zoom_col3, zoom_col4, zoom_col5 = st.columns(5)
-            with zoom_col1:
-                zoom_1m = st.button("1м", use_container_width=True)
-            with zoom_col2:
-                zoom_3m = st.button("3м", use_container_width=True)
-            with zoom_col3:
-                zoom_6m = st.button("6м", use_container_width=True)
-            with zoom_col4:
-                zoom_1y = st.button("1ж", use_container_width=True)
-            with zoom_col5:
-                zoom_all = st.button("Бүгд", use_container_width=True)
-        
-        # 🔥 SLIDER ДАРСАН ЭСЭХИЙГ ШАЛГАХ
-        if 'current_time_range' not in st.session_state:
-            st.session_state.current_time_range = (time_min.to_pydatetime(), time_max.to_pydatetime())
-        
-        # Zoom товчнууд дээр дарах үед
-        if zoom_1m:
-            import datetime
-            end_date = selected_time_range[1]
-            start_date = end_date - datetime.timedelta(days=30)
-            selected_time_range = (start_date, end_date)
-        elif zoom_3m:
-            import datetime
-            end_date = selected_time_range[1]
-            start_date = end_date - datetime.timedelta(days=90)
-            selected_time_range = (start_date, end_date)
-        elif zoom_6m:
-            import datetime
-            end_date = selected_time_range[1]
-            start_date = end_date - datetime.timedelta(days=180)
-            selected_time_range = (start_date, end_date)
-        elif zoom_1y:
-            import datetime
-            end_date = selected_time_range[1]
-            start_date = end_date - datetime.timedelta(days=365)
-            selected_time_range = (start_date, end_date)
-        elif zoom_all:
-            selected_time_range = (time_min.to_pydatetime(), time_max.to_pydatetime())
-        
-        # ===== 5️⃣ FILTER DATA BASED ON SELECTED TIME RANGE
-        filtered_df = chart_df[
-            (chart_df['time'] >= selected_time_range[0]) & 
-            (chart_df['time'] <= selected_time_range[1])
-        ].copy()
-        
-        # ===== 6️⃣ BASE CHART
+        # ===== 4️⃣ BASE CHART (shared X scale)
         base = (
-            alt.Chart(filtered_df)
+            alt.Chart(chart_df)
             .transform_fold(
                 valid_indicators,
                 as_=["Indicator", "Value"]
             )
             .encode(
                 x=alt.X(
-                    'time:T',
+                    'time:T',  # 🔥 ТӨРӨЛӨӨ Temporal болгож өөрчиллөө (zoom дэлгэрэнгүй болгох)
                     title=None,
                     axis=alt.Axis(
-                        format='%Y-%m',
+                        format='%Y-%m',  # 🔥 ОЙРТУУЛАХАД ӨӨРЧЛӨГДӨХ ФОРМАТ
                         labelAngle=0,
                         labelFontSize=11,
-                        grid=False
+                        grid=False,
+                        labelExpr="timeFormat(datum.value, '%Y-%m')"  # 🔥 Жил-Сар харагдана
                     ),
-                    scale=alt.Scale(
-                        domain=[
-                            selected_time_range[0].isoformat(),
-                            selected_time_range[1].isoformat()
-                        ]
-                    )
+                    scale=alt.Scale(zero=False)  # 🔥 ТЭГЭЭС ЭХЭЛЖ БАЙХГҮЙ
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -560,76 +492,75 @@ with right:
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),
+                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),  # 🔥 TOOLTIP ДЭЛГЭРЭНГҮЙ
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
         )
         
-        # ===== 7️⃣ MAIN CHART WITH ZOOM AND PAN
+        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
         main_chart = (
             base
             .mark_line(strokeWidth=2.4)
             .properties(
                 height=360,
-                width="container"  # 🔥 ӨРГӨНИЙГ АВТОМАТААР ТОХИРУУЛНА
+                # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
             )
-            .interactive()  # Mouse zoom/pan
+            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
         )
         
-        # ===== 8️⃣ HORIZONTAL SCROLL BAR (MINI TIMELINE)
-        # Scroll bar-ыг тусад нь график болгон үүсгэх
-        scroll_bar_data = pd.DataFrame({
-            'time': pd.date_range(time_min, time_max, freq='MS'),
-            'dummy': 0
-        })
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
+        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
         
-        scroll_bar = alt.Chart(scroll_bar_data).mark_rect(
-            color='lightgray',
-            height=20,
-            opacity=0.7
-        ).encode(
-            x=alt.X('time:T', title=None, axis=None),
-            tooltip=[alt.Tooltip('time:T', title='Хугацаа', format='%Y-%m')]
-        ).properties(
-            height=20,
-            width="container"
+        mini_chart = (
+            base
+            .mark_line(strokeWidth=1.2)
+            .encode(
+                y=alt.Y(
+                    "Value:Q",
+                    title=None,
+                    axis=alt.Axis(
+                        labels=False,
+                        ticks=False,
+                        grid=False,
+                        domain=False
+                    )
+                ),
+                color=alt.Color("Indicator:N", legend=None)
+            )
+            .properties(
+                height=70
+            )
+            .add_params(brush)
         )
         
-        # 🔥 СОНГОГДСОН ХУГАЦААНЫ ХҮРЭЭГ ТОДОРХОЙЛОХ (scroll bar дээр)
-        selection_rect = alt.Chart(pd.DataFrame({
-            'start': [selected_time_range[0]],
-            'end': [selected_time_range[1]]
-        })).mark_rect(
-            color='#1f77b4',
-            opacity=0.5,
-            height=20
-        ).encode(
-            x='start:T',
-            x2='end:T'
-        )
-        
-        # ===== 9️⃣ COMBINE CHARTS
-        final_chart = alt.vconcat(
-            main_chart,
-            (scroll_bar + selection_rect).interactive(),  # 🔥 SCROLL BAR ДЭЭР ДАРСАНААР ШИЛЖИХ
-            spacing=5
-        ).resolve_scale(
-            x='shared'  # 🔥 Х ТЭНХЛЭГИЙГ ХОЛБОНО
+        # ===== 7️⃣ LINK MAIN ↔ MINI
+        final_chart = (
+            alt.vconcat(
+                main_chart.add_params(brush),  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
+                mini_chart,
+                spacing=10
+            )
+            .properties(
+                background="transparent"
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0'
+            )
         )
         
         st.altair_chart(
             final_chart,
-            use_container_width=True,
-            theme=None
+            use_container_width=True
         )
         
-        # ===== 🔟 TIME RANGE INFO DISPLAY
-        st.caption(f"""
-        🕐 **Харуулж буй хугацаа:** {selected_time_range[0].strftime('%Y-%m-%d')} → {selected_time_range[1].strftime('%Y-%m-%d')}  
-        🔍 **Zoom:** График дээр дарж сунгах/шахах | **Scroll:** Доод баарыг гүйлгэх | **Pan:** Графикийг чирж шилжүүлэх
-        """)
+        # 🔥 ЗААВАР ТЭМДЭГЛЭЛ
+        st.caption("🔍 **Zoom/Scroll заавар**: "
+                   "Дээр дарж зургийг сунгах/шахах | "
+                   "Х тэнхлэгийг гүйлгэж харах | "
+                   "Доод жижиг зурагнаас хэсэг сонгох")
 
     
     def compute_group_kpis(df, indicators):
