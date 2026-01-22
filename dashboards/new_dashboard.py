@@ -445,10 +445,28 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        # ===== 3️⃣ BASE (padding устгасан)
+        # ===== 3️⃣ ALTAIR CHART
         import altair as alt
-
-        base = alt.Chart(chart_df).encode(
+        
+        # ----- Шугамын график -----
+        # Fold data
+        chart_data = chart_df.melt(
+            id_vars=["time"], 
+            value_vars=valid_indicators,
+            var_name="Indicator", 
+            value_name="Value"
+        )
+        
+        # Hover selection
+        hover = alt.selection_point(
+            fields=["time"],
+            nearest=True,
+            on="mouseover",
+            empty=False
+        )
+        
+        # Base chart
+        base = alt.Chart(chart_data).encode(
             x=alt.X(
                 "time:N",
                 title=None,
@@ -459,28 +477,7 @@ with right:
                     grid=False,
                     labelExpr="substring(datum.value, 0, 4)"
                 )
-            )
-        )
-
-        # ===== 4️⃣ Folded data
-        folded = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        )
-
-        # ===== 5️⃣ Hover selection
-        hover = alt.selection_point(
-            fields=["time"],
-            nearest=True,
-            on="mouseover",
-            empty=False
-        )
-
-        # ===== 6️⃣ Lines
-        lines = folded.mark_line(
-            strokeWidth=2.2,
-            interpolate="linear"
-        ).encode(
+            ),
             y=alt.Y(
                 "Value:Q",
                 title=None,
@@ -497,48 +494,50 @@ with right:
             color=alt.Color(
                 "Indicator:N",
                 legend=alt.Legend(title=None, orient="right")
-            ),
+            )
+        )
+        
+        # Шугамууд
+        lines = base.mark_line(
+            strokeWidth=2.2,
+            interpolate="linear"
+        ).encode(
             tooltip=[
-                alt.Tooltip("time:N", title="Time"),
+                alt.Tooltip("time:N", title="Date"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
         
-        # ===== 8️⃣ Hover points + tooltip (ДУГУЙ ЦАГИРАГ ДАГАЖ ГҮЙДЭГ ШУГАМ)
-        # Одоогийн hover_points-ыг өөрчлөх:
-        hover_points = folded.mark_point(
-            size=70,
-            opacity=0  # Цэгүүд харагдахгүй болгох
+        # Босоо шугам (зөвхөн hover үед)
+        vertical_rule = alt.Chart(chart_data).mark_rule(
+            color="#64748b",
+            strokeWidth=1
         ).encode(
             x="time:N",
-            y="Value:Q",
+            opacity=alt.condition(hover, alt.value(0.5), alt.value(0))
+        ).add_params(hover)
+        
+        # Харагдахгүй цэгүүд (hover-д зориулсан)
+        points = base.mark_point(
+            opacity=0,
+            size=60
+        ).encode(
             tooltip=[
                 alt.Tooltip("time:N", title="Date"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         ).add_params(hover)
-
-        # ===== НЭМЭЛТ: БҮХ ӨНДӨРТӨЙ БОСОО ШУГАМ (VERTICAL RULE)
-        # Энэ нь зурагт үзүүлсэн шиг графикийн бүх өндрийг хамарна
-        vertical_rule = alt.Chart(chart_df).mark_rule(
-            color="#64748b",
-            strokeWidth=1,
-            opacity=0  # Эхлээд харагдахгүй
-        ).encode(
-            x=alt.X("time:N"),
-            opacity=alt.condition(hover, alt.value(0.7), alt.value(0))
-        ).add_params(hover)
-
-        # ===== 9️⃣ Layered chart 
-        chart = (lines + vertical_rule + hover_points).properties(
+        
+        # Нийт график
+        chart = (lines + vertical_rule + points).properties(
             height=340,
             padding={"bottom": 5},
             background="transparent"
         ).interactive()
-
-        st.altair_chart(chart, width="stretch")
+        
+        st.altair_chart(chart, use_container_width=True)
 
 
 
