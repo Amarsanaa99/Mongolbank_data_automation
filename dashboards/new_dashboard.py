@@ -679,7 +679,7 @@ with right:
         
         # ===== 1️⃣7️⃣ Графикийг харуулах
         try:
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width='stretch') 
         except Exception as e:
             st.error(f"❌ Error displaying chart: {e}")
             # Алдааг илүү дэлгэрэнгүй харуулах
