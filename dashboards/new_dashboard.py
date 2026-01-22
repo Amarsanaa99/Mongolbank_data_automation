@@ -614,7 +614,6 @@ with right:
                 domain=True,
                 domainWidth=1
             )
-        )
         
         st.altair_chart(
             final_chart,
