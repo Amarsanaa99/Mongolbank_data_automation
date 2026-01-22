@@ -453,7 +453,9 @@ with right:
         # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
         chart_df = chart_df.copy()
         chart_df['time_detailed'] = chart_df['time'].astype(str)
-        
+        # ===== BRUSH (FOR MINI NAVIGATOR)
+        brush = alt.selection_interval(encodings=["x"])
+
         # ===== 4️⃣ BASE CHART (shared X scale)
         base = (
             alt.Chart(chart_df)
