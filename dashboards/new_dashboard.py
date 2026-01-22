@@ -503,6 +503,7 @@ with right:
                         tickCount="year" # Эхлээд жилээр харагдуулна
                     ),
                     scale=alt.Scale(zero=False)
+                    )
                 ),
                 y=alt.Y(
                     "Value:Q",
