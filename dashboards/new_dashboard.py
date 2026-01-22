@@ -421,13 +421,27 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
+st.markdown("""
+<style>
+.main-chart-frame {
+    border: 1px solid rgba(148,163,184,0.25);
+    border-radius: 16px;
+    padding: 14px 14px 10px 14px;
+    background: rgba(15, 23, 42, 0.45);
+    overflow: hidden;   /* 🔥 ХАМГИЙН ЧУХАЛ */
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ======================
 # MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
-    with st.container(border=True):
+    with st.container():
         st.subheader("📈 Main chart")
 
+        st.markdown('<div class="main-chart-frame">', unsafe_allow_html=True)
+        
         # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
         
@@ -587,6 +601,8 @@ with right:
             final_chart,
             use_container_width=True
         )
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
     
     def compute_group_kpis(df, indicators):
