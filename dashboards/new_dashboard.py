@@ -534,7 +534,7 @@ with right:
                 points
             )
             .properties(
-                height=360,
+                height=450,
             )
             .interactive()   # zoom + pan хэвээр
         )
