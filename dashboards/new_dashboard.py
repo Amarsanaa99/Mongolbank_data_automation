@@ -491,10 +491,16 @@ with right:
             st.stop()
 
 
-
+        # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS SAFELY =====
+        # chart_df-д байгаа valid багануудыг л ашиглана
+        existing_valid_indicators = [c for c in valid_indicators if c in chart_df.columns]
         
-        # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS =====
-        chart_df = chart_df.dropna(subset=valid_indicators, how='all')
+        if existing_valid_indicators:
+            chart_df = chart_df.dropna(subset=existing_valid_indicators, how='all')
+        else:
+            st.warning("⚠️ No valid indicators exist in the data after filtering")
+            st.stop()
+
         # 🔒 HARD CHECK
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
