@@ -421,7 +421,6 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
-
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
@@ -450,16 +449,9 @@ with right:
         # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
         import altair as alt
     
-        nearest = alt.selection_point(   # ← ЭНД
-            nearest=True,
-            on="mouseover",
-            fields=["time"],
-            empty=False
-        )
-
         base = alt.Chart(chart_df).encode(
             x=alt.X(
-                "time:T",
+                "time:N",
                 title=None,
                 sort="ascending",
                 axis=alt.Axis(
@@ -474,12 +466,13 @@ with right:
             background="transparent"
         )
         
-        lines = base.transform_fold(
+        # ===== 4️⃣ ЗӨВХӨН НЭГ ГРАФИК (LINES ДААН) + INTERACTIVE TOOLTIP
+        chart = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         ).mark_line(
             strokeWidth=2.2,
-            interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
+            interpolate="linear"
         ).encode(
             y=alt.Y(
                 "Value:Q",
@@ -501,54 +494,19 @@ with right:
                     orient="right"
                 )
             ),
+            # 🔥 TOOLTIP ДЭЭР MOUSE ОЧИХОД УТГУУД ХАРАГДАНА
             tooltip=[
-                alt.Tooltip("time:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
+                alt.Tooltip("time:N", title="Огноо"),
+                alt.Tooltip("Indicator:N", title="Индикатор"),
+                alt.Tooltip("Value:Q", title="Утга", format=",.2f")
             ]
-        )
-        points = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_point(
-            opacity=0,
-            size=80
-        ).encode(
-            y="Value:Q",
-            tooltip=[
-                alt.Tooltip("x:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
-        )
-        # ===== VERTICAL RULE (mouse hover line)
-        rule = base.mark_rule(
-            color="#111827",
-            strokeWidth=1
-        ).encode(
-            opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-        )
+        ).properties(
+            height=340
+        ).interactive()  # 🔥 ЗӨВХӨН ЭНД INTERACTIVE НЭМНЭ
         
-        hover_points = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_point(
-            size=70
-        ).encode(
-            y="Value:Q",
-            opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
-            tooltip=[
-                alt.Tooltip("time:T", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
-        )
-
         st.altair_chart(
-            (lines + rule + hover_points)
-                .add_params(nearest)
-                .properties(height=340),
-            width="stretch"
+            chart,
+            use_container_width=True
         )
 
 
