@@ -596,24 +596,23 @@ with right:
             .resolve_scale(x='shared')
             .properties(
                 background="transparent",
-                # Графикийн хэмжээг нарийн тохируулах
                 width='container',
                 height=400,
                 padding={"left": 50, "top": 20, "right": 20, "bottom": 50}
             )
             .configure_view(
                 stroke=None,
-                # Хүрээг тодорхойлох
                 strokeWidth=0,
                 fill="transparent"
             )
             .configure_axis(
                 grid=True,
                 gridColor='#e0e0e0',
-                # Тэнхлэгүүдийн байршил
                 domain=True,
                 domainWidth=1
             )
+        )  # ✅ ЭНЭ ХААЛТ ДУТУУ БАЙСАН
+
         
         st.altair_chart(
             final_chart,
