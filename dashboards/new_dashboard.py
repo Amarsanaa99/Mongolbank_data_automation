@@ -511,8 +511,6 @@ with right:
             )
             .properties(height=360)
         )
-            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
-        )
         
         # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
         brush = alt.selection_interval(encodings=["x"], translate=True, zoom=False)
