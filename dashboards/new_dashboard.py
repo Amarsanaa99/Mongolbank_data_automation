@@ -545,14 +545,12 @@ with right:
         )
 
         st.altair_chart(
-            alt.layer(
-                lines,
-                rule,
-                hover_points
-            ).add_params(nearest)
-             .properties(height=340),
+            (lines + rule + hover_points)
+                .add_params(nearest)
+                .properties(height=340),
             width="stretch"
         )
+
 
     
     def compute_group_kpis(df, indicators):
