@@ -503,7 +503,7 @@ with right:
             fields=["time"],
             nearest=True,
             on="mouseover",
-            empty="none",
+            empty=False,
             clear="mouseout"
         )
         
@@ -519,12 +519,9 @@ with right:
         
         # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
         vline = (
-            alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
-            .encode(
-                x='time:T'
-            )
-            .transform_filter(hover)
+            base.mark_rule(color="#aaaaaa", strokeWidth=1.2)
+            .encode(x='time:T')
+            .transform_filter(hover) # <--- Энэ шүүлтүүр одоо hover selection-той зөв холбогдоно
         )
         
         main_chart = (
