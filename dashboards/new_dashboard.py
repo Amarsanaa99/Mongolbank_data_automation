@@ -463,17 +463,18 @@ with right:
             )
             .encode(
                 x=alt.X(
-                    'time:T',  # 🔥 ТӨРӨЛӨӨ Temporal болгож өөрчиллөө (zoom дэлгэрэнгүй болгох)
+                    'time:T',
                     title=None,
                     axis=alt.Axis(
-                        format='%Y-%m',  # 🔥 ОЙРТУУЛАХАД ӨӨРЧЛӨГДӨХ ФОРМАТ
+                        format='%Y-%m',
                         labelAngle=0,
                         labelFontSize=11,
                         grid=False,
-                        labelExpr="timeFormat(datum.value, '%Y-%m')"  # 🔥 Жил-Сар харагдана
+                        labelExpr="timeFormat(datum.value, '%Y-%m')"
                     ),
-                    scale=alt.Scale(zero=False)  # 🔥 ТЭГЭЭС ЭХЭЛЖ БАЙХГҮЙ
+                    scale=alt.Scale(zero=False, domain=brush)  # 🔥 MINI-ГЭЭС ХЯЗГААРЛАГДАНА
                 ),
+
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -507,11 +508,12 @@ with right:
                 height=360,
                 # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
             )
-            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
+            .interactive(bind_x=True)  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
         )
         
         # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
-        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
+        brush = alt.selection_interval(encodings=["x"])
+
         
         mini_chart = (
             base
