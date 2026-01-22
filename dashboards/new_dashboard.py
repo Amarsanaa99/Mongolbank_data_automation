@@ -498,29 +498,23 @@ with right:
                 ]
             )
         )
-    
-        # ===== 5️⃣ BRUSH (CONTEXT WINDOW)
-        brush = alt.selection_interval(
-            encodings=["x"],
-            translate=True,   # 🔥 хоёр тийш гүйлгэнэ
-            zoom=False        # 🔥 mini дээр zoom хийхгүй
-        )
-
-        # ===== 6️⃣ MAIN LINE (ZOOM via MINI)
+        
+        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
         main_chart = (
             base
             .mark_line(strokeWidth=2.4)
             .encode(
                 x=alt.X(
                     'time:T',
-                    scale=alt.Scale(domain=brush)  # 🔥 MINI-ИЙН СОНГОЛТ MAIN-Д НӨЛӨӨЛНӨ
+                    scale=alt.Scale(domain=brush)  # 🔥 MINI-ИЙН СОНГОЛТООР MAIN ГҮЙЛГЭНЭ
                 )
             )
             .properties(height=360)
         )
-
-
-        # ===== 7️⃣ MINI OVERVIEW (NAVIGATOR)
+        
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
+        brush = alt.selection_interval(encodings=["x"], translate=True, zoom=False)
+        
         mini_chart = (
             base
             .mark_line(strokeWidth=1.2)
@@ -537,24 +531,39 @@ with right:
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(height=70)
-            .add_params(brush)  # 🔥 ЭНД Л BRUSH БАЙРЛАНА
+            .properties(
+                height=70
+            )
+            .add_params(brush)
         )
-
-        final_chart = alt.vconcat(
-            main_chart,
-            mini_chart,
-            spacing=10
-        ).properties(
-            background="transparent"
+        
+        # ===== 7️⃣ LINK MAIN ↔ MINI
+        final_chart = (
+            alt.vconcat(
+                main_chart.add_params(brush),  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
+                mini_chart,
+                spacing=10
+            )
+            .properties(
+                background="transparent"
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0'
+            )
         )
-
         
         st.altair_chart(
             final_chart,
             use_container_width=True
         )
         
+        # 🔥 ЗААВАР ТЭМДЭГЛЭЛ
+        st.caption("🔍 **Zoom/Scroll заавар**: "
+                   "Дээр дарж зургийг сунгах/шахах | "
+                   "Х тэнхлэгийг гүйлгэж харах | "
+                   "Доод жижиг зурагнаас хэсэг сонгох")
+
     
     def compute_group_kpis(df, indicators):
         stats = []
