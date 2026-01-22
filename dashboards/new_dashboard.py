@@ -593,17 +593,26 @@ with right:
                 mini_chart,
                 spacing=20
             )
-            .resolve_scale(x='shared') # Дээд доод графикийн өргөнийг яг ижил болгоно
+            .resolve_scale(x='shared')
             .properties(
                 background="transparent",
-                # 🔥 Энэ тохиргоо нь графикийг хүрээн дотор нь "fit" хийж өгнө
-                autosize=alt.AutoSizeParams(type='fit', contains='padding'),
-                padding={"left": 10, "top": 10, "right": 10, "bottom": 10}
+                # Графикийн хэмжээг нарийн тохируулах
+                width='container',
+                height=400,
+                padding={"left": 50, "top": 20, "right": 20, "bottom": 50}
             )
-            .configure_view(stroke=None) # Илүүц хүрээний шугамыг арилгана
+            .configure_view(
+                stroke=None,
+                # Хүрээг тодорхойлох
+                strokeWidth=0,
+                fill="transparent"
+            )
             .configure_axis(
                 grid=True,
-                gridColor='#e0e0e0'
+                gridColor='#e0e0e0',
+                # Тэнхлэгүүдийн байршил
+                domain=True,
+                domainWidth=1
             )
         )
         
