@@ -450,7 +450,7 @@ with right:
 
         base = alt.Chart(chart_df).encode(
             x=alt.X(
-                "time:T",
+                "time:N",
                 title=None,
                 sort="ascending",
                 axis=alt.Axis(
@@ -479,7 +479,7 @@ with right:
         selectors = base.mark_point(
             opacity=0
         ).encode(
-            x="time:T"
+            x="time:N"
         ).add_params(
             hover
         )
@@ -520,7 +520,7 @@ with right:
             color="#64748b",
             strokeWidth=1.2
         ).encode(
-            x="time:T",
+            x="time:N",
             opacity=alt.condition(hover, alt.value(1), alt.value(0))
         )
 
@@ -533,7 +533,7 @@ with right:
             filled=False,
             strokeWidth=2
         ).encode(
-            x="time:T",
+            x="time:N",
             y="Value:Q",
             opacity=alt.condition(hover, alt.value(1), alt.value(0)),
             tooltip=[
@@ -549,7 +549,7 @@ with right:
             lines
             + vline
             + hover_points
-            + selectors     # 🔥 СҮҮЛД НЭМНЭ
+            + selectors
         ).properties(
             height=340,
             padding={"bottom": 5},
@@ -557,6 +557,7 @@ with right:
         )
         
         st.altair_chart(chart, width="stretch")
+
 
 
 
