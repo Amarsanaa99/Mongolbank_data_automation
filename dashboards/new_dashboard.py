@@ -553,7 +553,7 @@ with right:
         )
         
         # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
-        line = base.mark_line(strokeWidth=2.4)
+        line = base.mark_line(strokeWidth=2)
         
         # Хөндлөн огтлолцох дугуй цэг
         points = (
@@ -590,7 +590,7 @@ with right:
                 points
             )
             .properties(
-                height=400
+                height=350
             )
             .interactive()   # zoom + pan хэвээр
         )
@@ -615,7 +615,7 @@ with right:
                 color=alt.Color("Indicator:N", legend=None)
             )
             .properties(
-                height=60
+                height=40
             )
             .add_params(brush)
         )
@@ -630,7 +630,7 @@ with right:
             .resolve_scale(x='shared')
             .properties(
                 background="transparent",
-                padding={"left": 50, "top": 20, "right": 20, "bottom": 50}
+                padding={"left": 40, "top": 15, "right": 15, "bottom": 40}
             )
         )
 
