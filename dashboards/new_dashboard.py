@@ -609,7 +609,6 @@ with right:
             )
             .configure_view(stroke=None) # Илүүц хүрээний зураасыг арилгана
             )
-        )
         
         st.altair_chart(
             final_chart,
