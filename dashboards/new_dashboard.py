@@ -492,15 +492,52 @@ with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
 
+        # ===== 1️⃣ ШАЛГАЛТ: series дотор шаардлагатай баганууд байгаа эсэх
+        if "time" not in series.columns:
+            st.error("❌ 'time' column not found in series")
+            st.stop()
+            
+        if "time_dt" not in series.columns:
+            st.error("❌ 'time_dt' column not found in series")
+            st.stop()
+        
+        if not selected:
+            st.warning("⚠️ No indicators selected")
+            st.stop()
 
-        # ===== 1️⃣ DATA
-        chart_df = series[["time", "time_dt"] + selected].copy()
-        chart_df = chart_df[
-            (chart_df["time"] >= start_time) &
-            (chart_df["time"] <= end_time)
-        ]
+        # ===== 2️⃣ DATA
+        try:
+            chart_df = series[["time", "time_dt"] + selected].copy()
+        except KeyError as e:
+            st.error(f"❌ Column error: {e}")
+            st.stop()
+        
+        # ===== 3️⃣ ШАЛГАЛТ: chart_df хоосон эсэх
+        if chart_df.empty:
+            st.warning("⚠️ No data available")
+            st.stop()
+        
+        # ===== 4️⃣ ЦАГ ХУГАЦААНЫ ХЯЗГААРЛАЛТ
+        try:
+            chart_df = chart_df[
+                (chart_df["time"] >= start_time) &
+                (chart_df["time"] <= end_time)
+            ]
+        except Exception as e:
+            st.error(f"❌ Time range filter error: {e}")
+            st.stop()
+        
+        # ===== 5️⃣ ШАЛГАЛТ: шүүлтүүр хийсний дараа хоосон эсэх
+        if chart_df.empty:
+            st.warning(f"⚠️ No data in selected time range: {start_time} to {end_time}")
+            st.stop()
 
-        # ===== 2️⃣ Valid indicators
+        # ===== 6️⃣ ШАЛГАЛТ: time_dt datetime төрөлтэй эсэх
+        if not pd.api.types.is_datetime64_any_dtype(chart_df["time_dt"]):
+            st.warning("⚠️ Converting time_dt to datetime")
+            chart_df["time_dt"] = pd.to_datetime(chart_df["time_dt"], errors='coerce')
+        
+        # ===== 7️⃣ Valid indicators
         valid_indicators = [
             col for col in selected
             if col in chart_df.columns and not chart_df[col].isna().all()
@@ -510,9 +547,30 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        # ===== 3️⃣ BASE (padding устгасан)
+        # ===== 8️⃣ ШАЛГАЛТ: мэдээлэл хангалттай эсэх
+        # Хамгийн багадаа 2 цэг байх ёстой
+        min_data_points = 2
+        valid_indicators_with_data = []
+        
+        for ind in valid_indicators:
+            non_na_count = chart_df[ind].notna().sum()
+            if non_na_count >= min_data_points:
+                valid_indicators_with_data.append(ind)
+            else:
+                st.warning(f"⚠️ Indicator '{ind}' has only {non_na_count} data point(s) - needs at least {min_data_points}")
+        
+        if not valid_indicators_with_data:
+            st.warning("⚠️ No indicators have enough data points")
+            st.stop()
+        
+        valid_indicators = valid_indicators_with_data
+
+        # ===== 9️⃣ BASE
         import altair as alt
 
+        # Өгөгдлийг эрэмбэлэх
+        chart_df = chart_df.sort_values("time_dt").reset_index(drop=True)
+        
         base = alt.Chart(chart_df).encode(
             x=alt.X(
                 "time_dt:T",
@@ -520,72 +578,92 @@ with right:
                 axis=alt.Axis(
                     labelAngle=0,
                     labelFontSize=11,
-                    grid=False
+                    grid=False,
+                    format="%Y-%m"  # Цагийн форматыг тодорхойлох
                 )
             )
         )
 
-
-        # ===== 4️⃣ Folded data
+        # ===== 🔟 Folded data
         folded = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         )
 
-        # ===== 5️⃣ Hover selection
+        # ===== 1️⃣1️⃣ Hover selection
         hover = alt.selection_point(
-            encodings=["x"],    # 🔥 fields БИШ
+            encodings=["x"],
             nearest=True,
             on="mouseover",
             empty="none"
         )
-        # ===== 5️⃣.1️⃣ Invisible selector layer (FRED-style hover trigger)
+        
+        # ===== 1️⃣2️⃣ Invisible selector layer
         selectors = base.mark_point(
-            opacity=0
+            opacity=0,
+            size=200  # Hover талбарыг томруулах
         ).encode(
             x="time_dt:T"
         ).add_params(
             hover
         )
 
-        # ===== 6️⃣ Lines
+        # ===== 1️⃣3️⃣ Lines
         lines = folded.mark_line(
-            strokeWidth=2.2
+            strokeWidth=2.2,
+            interpolate='linear'
         ).encode(
             x="time_dt:T",
-            y="Value:Q",
-            color="Indicator:N"
+            y=alt.Y(
+                "Value:Q",
+                title=None,
+                axis=alt.Axis(
+                    grid=True,
+                    gridColor="#e2e8f0",
+                    gridOpacity=0.3
+                )
+            ),
+            color=alt.Color(
+                "Indicator:N",
+                legend=alt.Legend(
+                    title="Indicators",
+                    orient="top",
+                    labelLimit=200
+                )
+            )
         ).add_params(
             hover
         )
 
-
-        # ===== 7️⃣ Vertical line
+        # ===== 1️⃣4️⃣ Vertical line
         vline = alt.Chart(chart_df).mark_rule(
             color="#64748b",
-            strokeWidth=1.2
+            strokeWidth=1.2,
+            strokeDash=[5, 5]
         ).encode(
             x="time_dt:T",
-            opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            opacity=alt.condition(hover, alt.value(0.7), alt.value(0))
         )
 
-        # ===== 8️⃣ Hover points + tooltip
+        # ===== 1️⃣5️⃣ Hover points + tooltip
         hover_points = folded.mark_point(
-            size=70,
-            filled=False,
-            strokeWidth=2
+            size=100,
+            filled=True,
+            strokeWidth=2,
+            stroke="white"
         ).encode(
             x="time_dt:T",
             y="Value:Q",
             opacity=alt.condition(hover, alt.value(1), alt.value(0)),
+            color="Indicator:N",
             tooltip=[
-                alt.Tooltip("time:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
+                alt.Tooltip("time:N", title="Time Period"),
+                alt.Tooltip("Indicator:N", title="Indicator"),
+                alt.Tooltip("Value:Q", title="Value", format=",.3f")
             ]
         )
 
-        # ===== 9️⃣ Layered chart (padding болон height энд өгнө)
+        # ===== 1️⃣6️⃣ Layered chart
         chart = (
             lines
             + vline
@@ -593,12 +671,25 @@ with right:
             + selectors
         ).properties(
             height=340,
-            padding={"bottom": 5},
+            padding={"bottom": 5, "top": 5, "left": 5, "right": 5},
             background="transparent"
+        ).configure_view(
+            strokeWidth=0
         )
         
-        st.altair_chart(chart, width="stretch")
-
+        # ===== 1️⃣7️⃣ Графикийг харуулах
+        try:
+            st.altair_chart(chart, use_container_width=True)
+        except Exception as e:
+            st.error(f"❌ Error displaying chart: {e}")
+            # Алдааг илүү дэлгэрэнгүй харуулах
+            st.write("Debug info:")
+            st.write(f"chart_df shape: {chart_df.shape}")
+            st.write(f"chart_df columns: {chart_df.columns.tolist()}")
+            st.write(f"valid_indicators: {valid_indicators}")
+            if not chart_df.empty:
+                st.write("First few rows:")
+                st.write(chart_df.head())
 
 
 
