@@ -425,7 +425,7 @@ with right:
         
         st.subheader("📈 Main chart")
         
-        # ===== 1️⃣ DATA (NO AGGREGATION)
+        # ===== 1️⃣ DATA (NO AGGREGATION) =====
         
         # ДЕБАГ: series багануудыг шалгах
         st.write("🔍 DEBUG: series columns", series.columns.tolist())
@@ -433,22 +433,29 @@ with right:
         
         # 'time' багана байгаа эсэхийг шалгах
         if "time" not in series.columns:
-            st.error(f"❌ 'time' column not found in series DataFrame!")
-            st.write("Available columns in series:", series.columns.tolist())
-            
-            # Индекс шалгах
-            st.write("Series index:", series.index.name)
-            st.write("Series index type:", type(series.index))
-            
-            # Хэрэв индекс нь дататай бол
-            if hasattr(series.index, 'dtype'):
-                st.write("Series index dtype:", series.index.dtype)
+            # MultiIndex багана эсэхийг шалгах
+            if isinstance(series.columns, pd.MultiIndex):
+                st.write("⚠️ Series has MultiIndex columns")
+                # Эхний түвшний нэрсийг авах
+                first_level = series.columns.get_level_values(0).tolist()
+                st.write("First level columns:", first_level)
                 
-            # Хэрэв индекс нь цаг хугацаа бол дараахыг хийж болно
-            if series.index.name is not None:
-                st.write(f"Index name: {series.index.name} - maybe this should be 'time'?")
-            
-            st.stop()
+                if "time" in first_level:
+                    # MultiIndex-г энгийн index болгох
+                    series.columns = series.columns.get_level_values(0)
+                    st.write("✅ Converted MultiIndex to single level")
+                    st.write("New columns:", series.columns.tolist())
+                else:
+                    st.error(f"❌ 'time' column not found in MultiIndex first level")
+                    st.stop()
+            else:
+                st.error(f"❌ 'time' column not found in series DataFrame!")
+                st.write("Available columns in series:", series.columns.tolist())
+                st.stop()
+        
+        # Хэрэв series.columns нь MultiIndex бол энгийн болгох
+        if isinstance(series.columns, pd.MultiIndex):
+            series.columns = series.columns.get_level_values(0)
         
         chart_df = series[["time"] + selected].copy()
         
@@ -497,7 +504,7 @@ with right:
                 chart_df['time_dt'] = pd.to_datetime(
                     chart_df['time'], 
                     format="%Y-%m", 
-                    errors='coerce'  # Хувиргах боломжгүй бол NaT болгоно
+                    errors='coerce'
                 )
             elif freq == "Quarterly":
                 # Q-формат (e.g., 2023-Q1)
@@ -519,6 +526,12 @@ with right:
         st.write("🔍 DEBUG: 'time_dt' in columns?", 'time_dt' in chart_df.columns)
         st.write("🔍 DEBUG: All columns in chart_df", chart_df.columns.tolist())
         
+        # chart_df багануудыг энгийн string болгох (MultiIndex байвал)
+        if isinstance(chart_df.columns, pd.MultiIndex):
+            st.write("⚠️ chart_df has MultiIndex columns, converting to single level")
+            chart_df.columns = chart_df.columns.get_level_values(0)
+            st.write("✅ Converted chart_df columns:", chart_df.columns.tolist())
+        
         if 'time_dt' in chart_df.columns:
             # NaT бүх мөрүүдийг устгана
             st.write(f"🔍 DEBUG: time_dt sample values: {chart_df['time_dt'].head().tolist()}")
@@ -537,9 +550,13 @@ with right:
             st.write("Available columns:", chart_df.columns.tolist())
             st.stop()
         
-        # Дараагийн код үргэлжлүүлнэ...
-        
         # ===== 3️⃣.3️⃣ REMOVE ALL-NaN COLUMNS =====
+        # valid_indicators-ыг шинэчлэх (MultiIndex болсон эсэхийг шалгах)
+        if isinstance(valid_indicators[0], tuple):
+            # Хэрэв valid_indicators нь tuple байвал эхний түвшний нэрсийг авах
+            valid_indicators = [col[0] for col in valid_indicators if col in chart_df.columns]
+            st.write("🔍 DEBUG: Updated valid_indicators (from tuples):", valid_indicators)
+        
         if valid_indicators:  # Хоосон жагсаалт биш эсэхийг шалгах
             chart_df = chart_df.dropna(subset=valid_indicators, how='all')
         else:
