@@ -584,21 +584,30 @@ with right:
         )
         
         # ===== 7️⃣ LINK MAIN ↔ MINI (brush өмнөх шигээ)
+# ===== 7️⃣ LINK MAIN ↔ MINI
         final_chart = (
             alt.vconcat(
                 main_chart.add_params(brush),
                 mini_chart,
                 spacing=20
             )
+            .resolve_scale(x='shared') # Дээд доод графикийн өргөнийг ижил болгоно
             .properties(
-                background="transparent"
+                background="transparent",
+                # 🔥 ЭНЭ ХЭСЭГ ХАМГИЙН ЧУХАЛ: Графикийг хүрээнд багтаана
+                autosize=alt.AutoSizeParams(type='fit', contains='padding')
+            )
+            .configure_legend(
+                orient='right',      # Баруун талд байх
+                offset=20,           # Графикаас бага зэрэг зай авна
+                labelFontSize=11,
+                symbolType='stroke'
             )
             .configure_axis(
                 grid=True,
                 gridColor='#e0e0e0'
             )
-            .configure_view(
-                stroke=None  # График хүрээг арилгах
+            .configure_view(stroke=None) # Илүүц хүрээний зураасыг арилгана
             )
             .configure_legend(
                 orient='right',
