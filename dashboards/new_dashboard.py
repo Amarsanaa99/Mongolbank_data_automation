@@ -447,40 +447,39 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
     
-        # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
+        # ===== 3️⃣ WIDE → Altair (FRED STYLE)
         import altair as alt
-    
-        nearest = alt.selection_point(   # ← ЭНД
+        
+        # Хугацааг datetime болгох (дэлгэрэнгүй tooltip-д)
+        chart_df = chart_df.copy()
+        chart_df['time'] = pd.to_datetime(chart_df['time'])
+        
+        # Selection үүсгэх (mouse очоход ажиллана)
+        nearest = alt.selection_point(
+            encodings=['x'],
             nearest=True,
-            on="mouseover",
-            fields=["time"],
-            empty=False
-        )
-
-        base = alt.Chart(chart_df).encode(
-            x=alt.X(
-                "time:T",
-                title=None,
-                sort="ascending",
-                axis=alt.Axis(
-                    labelAngle=0,
-                    labelFontSize=11,
-                    grid=False,
-                    labelExpr="substring(datum.value, 0, 4)"
-                )
-            )
-        ).properties(
-            padding={"bottom": 5},   
-            background="transparent"
+            on='mouseover',
+            empty='none'
         )
         
-        lines = base.transform_fold(
+        # Үндсэн шугамын график
+        lines = alt.Chart(chart_df).transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         ).mark_line(
             strokeWidth=2.2,
-            interpolate="linear"       # ✅ ЭНГИЙН, POLICY STYLE
+            interpolate="linear"
         ).encode(
+            x=alt.X(
+                'time:T',
+                title=None,
+                axis=alt.Axis(
+                    format='%Y',
+                    labelAngle=0,
+                    labelFontSize=11,
+                    grid=False
+                )
+            ),
             y=alt.Y(
                 "Value:Q",
                 title=None,
@@ -501,57 +500,47 @@ with right:
                     orient="right"
                 )
             ),
+            # Tooltip - шугам дээр mouse очоход үзүүлнэ
             tooltip=[
-                alt.Tooltip("time:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
+                alt.Tooltip('time:T', title='Огноо', format='%Y-%m-%d'),
+                alt.Tooltip('Indicator:N', title='Индикатор'),
+                alt.Tooltip('Value:Q', title='Утга', format=',.2f')
             ]
         )
-        points = base.transform_fold(
+        
+        # Босоо шугам (vertical rule) - mouse очоход л харагдана
+        rule = alt.Chart(chart_df).mark_rule(
+            color='#666',
+            strokeWidth=1,
+            opacity=0  # 🔥 Эхлээд харагдахгүй
+        ).encode(
+            x='time:T',
+            opacity=alt.condition(nearest, alt.value(0.7), alt.value(0))
+        )
+        
+        # Цэгүүд - mouse очоход л харагдана
+        points = alt.Chart(chart_df).transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         ).mark_point(
-            opacity=0,
-            size=80
+            filled=True,
+            size=60,
+            opacity=0  # 🔥 Эхлээд харагдахгүй
         ).encode(
-            y="Value:Q",
-            tooltip=[
-                alt.Tooltip("x:N", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
+            x='time:T',
+            y='Value:Q',
+            color=alt.Color("Indicator:N", legend=None),
+            opacity=alt.condition(nearest, alt.value(0.8), alt.value(0))
         )
-        # ===== VERTICAL RULE (mouse hover line)
-        rule = base.mark_rule(
-            color="#111827",
-            strokeWidth=1
-        ).encode(
-            x="time:T",   # ← 🔴 ЗААВАЛ
-            opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-        )
-
-        hover_points = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
-        ).mark_point(
-            size=70
-        ).encode(
-            x="time:T",   # ← 🔴 ЗААВАЛ
-            y="Value:Q",
-            opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
-            tooltip=[
-                alt.Tooltip("time:T", title="Time"),
-                alt.Tooltip("Indicator:N"),
-                alt.Tooltip("Value:Q", format=",.2f")
-            ]
-        )
-
-
+        
+        # 🔥 БҮХ ХЭСГИЙГ НЭГТГЭХ (LINES + RULE + POINTS)
+        chart = (lines + rule + points).add_params(nearest).properties(
+            height=340
+        ).interactive()
+        
         st.altair_chart(
-            (lines + rule + hover_points)
-                .add_params(nearest)
-                .properties(height=340),
-            width="stretch"
+            chart,
+            use_container_width=True
         )
 
 
