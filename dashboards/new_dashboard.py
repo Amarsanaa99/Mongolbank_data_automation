@@ -512,7 +512,7 @@ with right:
         
         # Хөндлөн огтлолцох дугуй цэг
         points = (
-            base.mark_circle(size=65, filled=True, color="#ffffff", stroke="#1f77b4", strokeWidth=2)
+            base.mark_circle(size=65, filled=True, color="##1f77b4", stroke="#ffffff", strokeWidth=2)
             .encode(opacity=alt.condition(hover, alt.value(1), alt.value(0)))
             .add_params(hover)
         )
@@ -535,6 +535,7 @@ with right:
             )
             .properties(
                 height=450,
+                width='container'
             )
             .interactive()   # zoom + pan хэвээр
         )
@@ -569,7 +570,7 @@ with right:
             alt.vconcat(
                 main_chart.add_params(brush),
                 mini_chart,
-                spacing=10
+                spacing=20
             )
             .properties(
                 background="transparent"
