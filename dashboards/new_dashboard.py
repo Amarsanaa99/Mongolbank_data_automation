@@ -508,22 +508,27 @@ with right:
         )
         
         # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
-        line = base.mark_line(strokeWidth=2.4)
+        # hover‑ийг үндсэн шугам дээр холбоно
+        line = base.mark_line(strokeWidth=2.4).add_params(hover)
         
-        # Хөндлөн огтлолцох дугуй цэг
+        # Хөндлөн огтлолцох дугуй цэг — зөвхөн hover үед л зурна
         points = (
-            base.mark_circle(size=65, filled=True, color="##1f77b4", stroke="#ffffff", strokeWidth=2)
-            .encode(opacity=alt.condition(hover, alt.value(1), alt.value(0)))
-            .add_params(hover)
+            base
+            .mark_circle(
+                size=65,
+                filled=True,
+                color="#ffffff",     # дотор нь цагаан
+                stroke="#1f77b4",    # гадна хүрээ
+                strokeWidth=2
+            )
+            .transform_filter(hover)   # hover байхгүй бол ЦЭГ БАЙХГҮЙ
         )
         
         # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
         vline = (
-            alt.Chart(chart_df)
+            base
             .mark_rule(color="#aaaaaa", strokeWidth=1.2)
-            .encode(
-                x='time:T'
-            )
+            .encode(x='time:T')
             .transform_filter(hover)
         )
         
