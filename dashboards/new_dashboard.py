@@ -545,7 +545,7 @@ with right:
         
         # ========== ★ HOVER СОНГОЛТ (FRED style) ==========
         hover = alt.selection_single(
-            fields=["time"],
+            fields=["time_dt"],
             nearest=True,
             on="mouseover",
             empty=False,
@@ -576,7 +576,7 @@ with right:
             alt.Chart(chart_df) # <--- base биш chart_df ашигласнаар бүтэн зурагдана
             .mark_rule(color="#aaaaaa", strokeWidth=1.2)
             .encode(
-                x='time:T',
+                x='time_dt:T',
                 # opacity-г энд нэмж өгснөөр хулгана байхгүй үед харагдахгүй
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
             )
@@ -622,13 +622,18 @@ with right:
         
         # ===== 7️⃣ LINK MAIN ↔ MINI
         final_chart = (
-            alt.vconcat(...)
+            alt.vconcat(
+                main_chart,
+                mini_chart,
+                spacing=20
+            )
             .resolve_scale(x='shared')
             .properties(
                 background="transparent",
                 padding={"left": 50, "top": 20, "right": 20, "bottom": 50}
             )
         )
+
 
         st.altair_chart(final_chart, use_container_width=True)
 
