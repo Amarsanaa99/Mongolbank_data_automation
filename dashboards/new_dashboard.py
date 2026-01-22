@@ -232,22 +232,18 @@ def render_change(label, value):
         f"{label}: {value:.2f}%"
         f"</span>"
     )
+
+
+
 # Өгөгдлийг цуваа болгон нэгтгэх
 series = df_time.copy()
-
 # ======================
 # HELPER: DataFrame → Series болгох
 # ======================
 def as_series(col):
     if isinstance(col, pd.DataFrame):
-        if col.shape[1] == 1:
-            return col.iloc[:, 0]
-        else:
-            return col.iloc[:, 0]
-    elif isinstance(col, pd.Series):
-        return col
-    else:
-        return pd.Series(col)
+        return col.iloc[:, 0]
+    return col
 
 # ======================
 # FIX: Year / Month / Quarter block structure
@@ -259,132 +255,46 @@ for col in ["Year", "Month", "Quarter"]:
 # Time багануудыг тоон утга болгох
 for col in ["Year", "Month", "Quarter"]:
     if col in series.columns:
+        # Баганын утгуудыг list болгон авах, дараа нь Series болгох
         values = series[col].values.tolist() if hasattr(series[col], 'values') else series[col]
+        # Хэрэв nested list байвал задлах
         if isinstance(values, list) and values and isinstance(values[0], list):
             values = [v[0] if isinstance(v, list) else v for v in values]
         series[col] = pd.to_numeric(pd.Series(values), errors='coerce')
-
 # ======================
 # CREATE TIME INDEX (FINAL, SAFE)
 # ======================
-# re module импортлох
-import re
+year = as_series(series["Year"]) if "Year" in series.columns else None
+month = as_series(series["Month"]) if "Month" in series.columns else None
+quarter = as_series(series["Quarter"]) if "Quarter" in series.columns else None
 
-# Багануудыг Series болгох
-if "Year" in series.columns:
-    year_series = as_series(series["Year"])
-else:
-    year_series = None
-    
-if "Month" in series.columns:
-    month_series = as_series(series["Month"])
-else:
-    month_series = None
-    
-if "Quarter" in series.columns:
-    quarter_series = as_series(series["Quarter"])
-else:
-    quarter_series = None
+if year is not None and month is not None:
+    series["time"] = (
+        year.astype(int).astype(str) + "-" +
+        month.astype(int).astype(str).str.zfill(2)
+    )
 
-# Хэрэв Year багана байхгүй бол DataFrame-ийн эхний баганыг ашиглах
-if year_series is None and len(series.columns) > 0:
-    year_series = as_series(series.iloc[:, 0])
-    st.warning("⚠️ Year column not found - using first column as year")
+elif year is not None and quarter is not None:
+    series["time"] = (
+        year.astype(int).astype(str) + "-Q" +
+        quarter.astype(int).astype(str)
+    )
 
-# time багана үүсгэх
-if year_series is not None and month_series is not None:
-    # NaN утгуудыг цэвэрлэх
-    mask = year_series.notna() & month_series.notna()
-    if mask.any():
-        series["time"] = (
-            year_series.astype(int).astype(str) + "-" +
-            month_series.astype(int).astype(str).str.zfill(2)
-        )
-    else:
-        st.error("❌ No valid Year and Month data found")
-        st.stop()
-
-elif year_series is not None and quarter_series is not None:
-    # NaN утгуудыг цэвэрлэх
-    mask = year_series.notna() & quarter_series.notna()
-    if mask.any():
-        series["time"] = (
-            year_series.astype(int).astype(str) + "-Q" +
-            quarter_series.astype(int).astype(str)
-        )
-    else:
-        st.error("❌ No valid Year and Quarter data found")
-        st.stop()
-
-elif year_series is not None:
-    # Зөвхөн жил байгаа тохиолдолд
-    mask = year_series.notna()
-    if mask.any():
-        series["time"] = year_series.astype(int).astype(str)
-    else:
-        st.error("❌ No valid Year data found")
-        st.stop()
+elif year is not None:
+    series["time"] = year.astype(int).astype(str)
 
 else:
     st.error("❌ No valid time columns found")
     st.stop()
-
-# ======================
-# ✅ CREATE time_dt COLUMN FOR CHART
-# ======================
-def parse_time(time_str):
-    if pd.isna(time_str):
-        return pd.NaT
-        
-    if isinstance(time_str, str):
-        time_str = str(time_str).strip()
-        
-        # Сарны форматыг шалгах: "2020-01"
-        if re.match(r'^\d{4}-\d{2}$', time_str):
-            try:
-                year = int(time_str[:4])
-                month = int(time_str[5:7])
-                return pd.Timestamp(year=year, month=month, day=1)
-            except:
-                pass
-                
-        # Улирлын форматыг шалгах: "2020-Q1"
-        if re.match(r'^\d{4}-Q[1-4]$', time_str, re.IGNORECASE):
-            try:
-                year = int(time_str[:4])
-                quarter = int(time_str.split('-')[1][1:])
-                month = (quarter - 1) * 3 + 1
-                return pd.Timestamp(year=year, month=month, day=1)
-            except:
-                pass
-                
-        # Зөвхөн жил: "2020"
-        if re.match(r'^\d{4}$', time_str):
-            try:
-                year = int(time_str)
-                return pd.Timestamp(year=year, month=1, day=1)
-            except:
-                pass
-    
-    return pd.NaT
-
-series["time_dt"] = series["time"].apply(parse_time)
-
-# Хэрэв time_dt үүсэхгүй бол энгийн datetime үүсгэх
-if series["time_dt"].isna().all():
-    st.warning("⚠️ Could not parse time format - using sequential dates")
-    start_date = pd.Timestamp('2000-01-01')
-    series["time_dt"] = [start_date + pd.DateOffset(months=i) for i in range(len(series))]
-
 # ======================
 # ✅ YEAR LABEL (GLOBAL X AXIS)
 # ======================
-if "Year" in series.columns:
-    series["year_label"] = series["Year"].astype(int).astype(str)
+series["year_label"] = series["Year"].astype(int).astype(str)
 
 for col in ["Year", "Month", "Quarter"]:
     if col in series.columns:
         series[col] = as_series(series[col])
+
 # ======================
 # ⏳ TIME RANGE (MAIN CHART ONLY)
 # ======================
@@ -473,6 +383,32 @@ for indicator in selected:
     else:
         st.warning(f"Indicator '{indicator}' not found in data")
 
+# Графикийн өгөгдөл бэлтгэх
+plot_data = (
+    series
+    .loc[:, ["time"] + selected]
+    .copy()
+    .set_index("time")
+    .sort_index()
+)
+# ======================
+# SPLIT: DATA vs NO DATA
+# ======================
+
+# өгөгдөлтэй баганууд
+valid_cols = [
+    col for col in plot_data.columns
+    if not plot_data[col].isna().all()
+]
+
+# өгөгдөлгүй баганууд
+nodata_cols = [
+    col for col in plot_data.columns
+    if plot_data[col].isna().all()
+]
+
+# зөвхөн өгөгдөлтэйг графикт ашиглана
+plot_data_valid = plot_data[valid_cols]
 # ======================
 # 🔒 HARD CHECK: time column
 # ======================
@@ -486,214 +422,182 @@ if series["time"].isna().all():
     st.stop()
 
 # ======================
-# MAIN CHART (FAST, STABLE, NO melt, NO time)
+# MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
 
-        # ===== 1️⃣ ШАЛГАЛТ: series дотор шаардлагатай баганууд байгаа эсэх
-        if "time" not in series.columns:
-            st.error("❌ 'time' column not found in series")
-            st.stop()
-            
-        if "time_dt" not in series.columns:
-            st.error("❌ 'time_dt' column not found in series")
-            st.stop()
+        # ===== 1️⃣ DATA (NO AGGREGATION)
+        chart_df = series[["time"] + selected].copy()
         
-        if not selected:
-            st.warning("⚠️ No indicators selected")
-            st.stop()
-
-        # ===== 2️⃣ DATA
-        try:
-            chart_df = series[["time", "time_dt"] + selected].copy()
-        except KeyError as e:
-            st.error(f"❌ Column error: {e}")
-            st.stop()
-        
-        # ===== 3️⃣ ШАЛГАЛТ: chart_df хоосон эсэх
-        if chart_df.empty:
-            st.warning("⚠️ No data available")
-            st.stop()
-        
-        # ===== 4️⃣ ЦАГ ХУГАЦААНЫ ХЯЗГААРЛАЛТ
-        try:
-            chart_df = chart_df[
-                (chart_df["time"] >= start_time) &
-                (chart_df["time"] <= end_time)
-            ]
-        except Exception as e:
-            st.error(f"❌ Time range filter error: {e}")
-            st.stop()
-        
-        # ===== 5️⃣ ШАЛГАЛТ: шүүлтүүр хийсний дараа хоосон эсэх
-        if chart_df.empty:
-            st.warning(f"⚠️ No data in selected time range: {start_time} to {end_time}")
-            st.stop()
-
-        # ===== 6️⃣ ШАЛГАЛТ: time_dt datetime төрөлтэй эсэх
-        if not pd.api.types.is_datetime64_any_dtype(chart_df["time_dt"]):
-            st.warning("⚠️ Converting time_dt to datetime")
-            chart_df["time_dt"] = pd.to_datetime(chart_df["time_dt"], errors='coerce')
-        
-        # ===== 7️⃣ Valid indicators
-        valid_indicators = [
-            col for col in selected
-            if col in chart_df.columns and not chart_df[col].isna().all()
+        # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
+        chart_df = chart_df[
+            (chart_df["time"] >= start_time) & 
+            (chart_df["time"] <= end_time)
         ]
-
+        
+        # ===== 2️⃣ VALID INDICATORS ONLY
+        valid_indicators = [
+            c for c in selected
+            if c in chart_df.columns and not chart_df[c].isna().all()
+        ]
+        
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        # ===== 8️⃣ ШАЛГАЛТ: мэдээлэл хангалттай эсэх
-        # Хамгийн багадаа 2 цэг байх ёстой
-        min_data_points = 2
-        valid_indicators_with_data = []
-        
-        for ind in valid_indicators:
-            non_na_count = chart_df[ind].notna().sum()
-            if non_na_count >= min_data_points:
-                valid_indicators_with_data.append(ind)
-            else:
-                st.warning(f"⚠️ Indicator '{ind}' has only {non_na_count} data point(s) - needs at least {min_data_points}")
-        
-        if not valid_indicators_with_data:
-            st.warning("⚠️ No indicators have enough data points")
-            st.stop()
-        
-        valid_indicators = valid_indicators_with_data
-
-        # ===== 9️⃣ BASE
         import altair as alt
-
-        # Өгөгдлийг эрэмбэлэх
-        chart_df = chart_df.sort_values("time_dt").reset_index(drop=True)
         
-        base = alt.Chart(chart_df).encode(
-            x=alt.X(
-                "time_dt:T",
-                title=None,
-                axis=alt.Axis(
-                    labelAngle=0,
-                    labelFontSize=11,
-                    grid=False,
-                    format="%Y-%m"  # Цагийн форматыг тодорхойлох
-                )
+        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
+        # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
+        chart_df = chart_df.copy()
+        chart_df['time_detailed'] = chart_df['time'].astype(str)
+        
+        # ===== 4️⃣ BASE CHART (shared X scale)
+        base = (
+            alt.Chart(chart_df)
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
+            )
+            .encode(
+                x=alt.X(
+                    'time:T',  # 🔥 ТӨРӨЛӨӨ Temporal болгож өөрчиллөө (zoom дэлгэрэнгүй болгох)
+                    title=None,
+                    axis=alt.Axis(
+                        format='%Y-%m',  # 🔥 ОЙРТУУЛАХАД ӨӨРЧЛӨГДӨХ ФОРМАТ
+                        labelAngle=0,
+                        labelFontSize=11,
+                        grid=False,
+                        labelExpr="timeFormat(datum.value, '%Y-%m')"  # 🔥 Жил-Сар харагдана
+                    ),
+                    scale=alt.Scale(zero=False)  # 🔥 ТЭГЭЭС ЭХЭЛЖ БАЙХГҮЙ
+                ),
+                y=alt.Y(
+                    "Value:Q",
+                    title=None,
+                    axis=alt.Axis(
+                        grid=True,
+                        gridOpacity=0.25,
+                        domain=False,
+                        labelFontSize=11
+                    )
+                ),
+                color=alt.Color(
+                    "Indicator:N",
+                    legend=alt.Legend(
+                        title=None,
+                        orient="right"
+                    )
+                ),
+                tooltip=[
+                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),  # 🔥 TOOLTIP ДЭЛГЭРЭНГҮЙ
+                    alt.Tooltip("Indicator:N"),
+                    alt.Tooltip("Value:Q", format=",.2f")
+                ]
             )
         )
-
-        # ===== 🔟 Folded data
-        folded = base.transform_fold(
-            valid_indicators,
-            as_=["Indicator", "Value"]
+        
+        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
+        main_chart = (
+            base
+            .mark_line(strokeWidth=2.4)
+            .properties(
+                height=360,
+                # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
+            )
+            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
         )
-
-        # ===== 1️⃣1️⃣ Hover selection
-        hover = alt.selection_point(
-            encodings=["x"],
+        # ===== 5.1️⃣ HOVER RULE + CIRCLE
+        hover = alt.selection_single(
+            fields=["time"],
             nearest=True,
             on="mouseover",
-            empty="none"
+            empty="none",
+            clear="mouseout"
         )
         
-        # ===== 1️⃣2️⃣ Invisible selector layer
-        selectors = base.mark_point(
-            opacity=0,
-            size=200  # Hover талбарыг томруулах
-        ).encode(
-            x="time_dt:T"
-        ).add_params(
-            hover
-        )
-
-        # ===== 1️⃣3️⃣ Lines
-        lines = folded.mark_line(
-            strokeWidth=2.2,
-            interpolate='linear'
-        ).encode(
-            x="time_dt:T",
-            y=alt.Y(
-                "Value:Q",
-                title=None,
-                axis=alt.Axis(
-                    grid=True,
-                    gridColor="#e2e8f0",
-                    gridOpacity=0.3
-                )
-            ),
-            color=alt.Color(
-                "Indicator:N",
-                legend=alt.Legend(
-                    title="Indicators",
-                    orient="top",
-                    labelLimit=200
-                )
+        # Шулуун шугам
+        hover_rule = (
+            alt.Chart(chart_df)
+            .mark_rule(color="gray", strokeWidth=1, opacity=0.6)
+            .encode(
+                x="time:T"
             )
-        ).add_params(
-            hover
-        )
-
-        # ===== 1️⃣4️⃣ Vertical line
-        vline = alt.Chart(chart_df).mark_rule(
-            color="#64748b",
-            strokeWidth=1.2,
-            strokeDash=[5, 5]
-        ).encode(
-            x="time_dt:T",
-            opacity=alt.condition(hover, alt.value(0.7), alt.value(0))
-        )
-
-        # ===== 1️⃣5️⃣ Hover points + tooltip
-        hover_points = folded.mark_point(
-            size=100,
-            filled=True,
-            strokeWidth=2,
-            stroke="white"
-        ).encode(
-            x="time_dt:T",
-            y="Value:Q",
-            opacity=alt.condition(hover, alt.value(1), alt.value(0)),
-            color="Indicator:N",
-            tooltip=[
-                alt.Tooltip("time:N", title="Time Period"),
-                alt.Tooltip("Indicator:N", title="Indicator"),
-                alt.Tooltip("Value:Q", title="Value", format=",.3f")
-            ]
-        )
-
-        # ===== 1️⃣6️⃣ Layered chart
-        chart = (
-            lines
-            + vline
-            + hover_points
-            + selectors
-        ).properties(
-            height=340,
-            padding={"bottom": 5, "top": 5, "left": 5, "right": 5},
-            background="transparent"
-        ).configure_view(
-            strokeWidth=0
+            .add_selection(hover)
         )
         
-        # ===== 1️⃣7️⃣ Графикийг харуулах
-        try:
-            st.altair_chart(chart, width='stretch') 
-        except Exception as e:
-            st.error(f"❌ Error displaying chart: {e}")
-            # Алдааг илүү дэлгэрэнгүй харуулах
-            st.write("Debug info:")
-            st.write(f"chart_df shape: {chart_df.shape}")
-            st.write(f"chart_df columns: {chart_df.columns.tolist()}")
-            st.write(f"valid_indicators: {valid_indicators}")
-            if not chart_df.empty:
-                st.write("First few rows:")
-                st.write(chart_df.head())
+        # Цэг
+        hover_point = (
+            alt.Chart(chart_df)
+            .mark_circle(size=80, color="red", opacity=0.8)
+            .encode(
+                x="time:T",
+                y=alt.Y("Value:Q"),
+                tooltip=[
+                    alt.Tooltip("time:T", title="Time", format="%Y-%m-%d"),
+                    alt.Tooltip("Indicator:N"),
+                    alt.Tooltip("Value:Q", format=", .2f")
+                ]
+            )
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
+            )
+            .transform_filter(hover)
+        )
+        
+        # MAIN CHART-ыг шинэ hover нэмэлттэйгээр
+        main_chart_hover = main_chart + hover_rule + hover_point
 
+        
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
+        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
+        
+        mini_chart = (
+            base
+            .mark_line(strokeWidth=1.2)
+            .encode(
+                y=alt.Y(
+                    "Value:Q",
+                    title=None,
+                    axis=alt.Axis(
+                        labels=False,
+                        ticks=False,
+                        grid=False,
+                        domain=False
+                    )
+                ),
+                color=alt.Color("Indicator:N", legend=None)
+            )
+            .properties(
+                height=70
+            )
+            .add_params(brush)
+        )
+        
+        # ===== 7️⃣ LINK MAIN ↔ MINI
+        final_chart = (
+            alt.vconcat(
+                main_chart_hover.add_params(brush),  # hover нэмэгдсэн
+                mini_chart,
+                spacing=10
+            )
+            .properties(
+                background="transparent"
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0'
+            )
+        )
 
-
-
+        
+        st.altair_chart(
+            final_chart,
+            use_container_width=True
+        )
 
     
     def compute_group_kpis(df, indicators):
@@ -713,7 +617,7 @@ with right:
             raw_val = series.loc[last_valid_idx, ind]
     
             try:
-                last_value = float(raw_val.iloc[0]) if isinstance(raw_val, pd.Series) else float(raw_val)
+                last_value = float(raw_val)
             except:
                 continue
     
