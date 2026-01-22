@@ -238,6 +238,12 @@ def render_change(label, value):
 # Өгөгдлийг цуваа болгон нэгтгэх
 series = df_time.copy()
 # ======================
+# ЗАСВАР: MultiIndex багануудыг энгийн болгох
+# ======================
+if isinstance(series.columns, pd.MultiIndex):
+    series.columns = series.columns.get_level_values(0)
+
+# ======================
 # HELPER: DataFrame → Series болгох
 # ======================
 def as_series(col):
@@ -417,7 +423,7 @@ if "time" not in series.columns:
 if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
-
+    
 # MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
@@ -425,7 +431,7 @@ with right:
         
         st.subheader("📈 Main chart")
         
-        # ===== 1️⃣ DATA (NO AGGREGATION) =====
+        # ===== 1️⃣ DATA (NO AGGREGATION)
         
         # ДЕБАГ: series багануудыг шалгах
         st.write("🔍 DEBUG: series columns", series.columns.tolist())
@@ -435,33 +441,27 @@ with right:
         if "time" not in series.columns:
             # MultiIndex багана эсэхийг шалгах
             if isinstance(series.columns, pd.MultiIndex):
-                st.write("⚠️ Series has MultiIndex columns")
-                # Эхний түвшний нэрсийг авах
-                first_level = series.columns.get_level_values(0).tolist()
-                st.write("First level columns:", first_level)
-                
-                if "time" in first_level:
-                    # MultiIndex-г энгийн index болгох
-                    series.columns = series.columns.get_level_values(0)
-                    st.write("✅ Converted MultiIndex to single level")
-                    st.write("New columns:", series.columns.tolist())
-                else:
-                    st.error(f"❌ 'time' column not found in MultiIndex first level")
-                    st.stop()
-            else:
+                # Хэрэв MultiIndex бол энгийн болгох
+                series.columns = series.columns.get_level_values(0)
+                st.write("⚠️ Fixed: series had MultiIndex columns")
+            
+            # Дахин шалгах
+            if "time" not in series.columns:
                 st.error(f"❌ 'time' column not found in series DataFrame!")
                 st.write("Available columns in series:", series.columns.tolist())
                 st.stop()
         
-        # Хэрэв series.columns нь MultiIndex бол энгийн болгох
-        if isinstance(series.columns, pd.MultiIndex):
-            series.columns = series.columns.get_level_values(0)
-        
         chart_df = series[["time"] + selected].copy()
+        
+        # Хэрэв chart_df-ийн баганууд MultiIndex бол энгийн болгох
+        if isinstance(chart_df.columns, pd.MultiIndex):
+            chart_df.columns = chart_df.columns.get_level_values(0)
+            st.write("⚠️ Fixed: chart_df had MultiIndex columns")
         
         # ДЕБАГ: chart_df-ийн эхний хэдэн мөр
         st.write("🔍 DEBUG: chart_df head", chart_df.head())
         st.write("🔍 DEBUG: chart_df columns", chart_df.columns.tolist())
+        
         
         # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
