@@ -36,24 +36,6 @@ h2, h3 {
 .vega-embed {
     background: transparent !important;
 }
-/* Altair графикийн hover асуудлыг шийдэх */
-.vega-embed {
-    overflow: hidden !important;
-}
-
-.vega-embed .vega-embed-wrapper {
-    overflow: hidden !important;
-}
-
-/* Хулгана гарахад маркер алга болохуйц */
-.mark-group {
-    pointer-events: none;
-}
-
-/* Цэгүүдийн opacity анимаци */
-circle {
-    transition: opacity 0.15s ease;
-}
 </style>
 """, unsafe_allow_html=True)
 
