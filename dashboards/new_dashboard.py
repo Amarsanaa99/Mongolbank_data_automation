@@ -429,6 +429,8 @@ st.markdown("""
     padding: 14px 14px 10px 14px;
     background: rgba(15, 23, 42, 0.45);
     overflow: hidden;   /* 🔥 ХАМГИЙН ЧУХАЛ */
+    max-width: 100%;    /* Шинээр нэмэх: хамгийн их өргөн */
+    box-sizing: border-box; /* Шинээр нэмэх: padding-ийг өргөнд оруулах */
 }
 </style>
 """, unsafe_allow_html=True)
@@ -551,7 +553,7 @@ with right:
             )
             .properties(
                 height=400,
-                width='container'
+                width=900
             )
             .interactive()   # zoom + pan хэвээр
         )
@@ -595,11 +597,22 @@ with right:
                 grid=True,
                 gridColor='#e0e0e0'
             )
+            .configure_view(
+                stroke=None  # График хүрээг арилгах
+            )
+            .configure_legend(
+                orient='right',
+                offset=10,  # Legend-ийн зай
+                labelLimit=200,  # Шошгын уртыг хязгаарлах
+                columns=1,  # Нэг баганаар харуулах
+                symbolLimit=50  # Симболын хязгаар
+            )
         )
         
         st.altair_chart(
             final_chart,
-            use_container_width=True
+            use_container_width=False,
+            width=900
         )
 
         st.markdown('</div>', unsafe_allow_html=True)
