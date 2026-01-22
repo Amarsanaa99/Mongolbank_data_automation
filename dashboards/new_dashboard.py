@@ -600,7 +600,7 @@ with right:
             )
             .properties(
                 height=400,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 400
-                width=600
+                width=1000
             )
             .interactive()
         )
