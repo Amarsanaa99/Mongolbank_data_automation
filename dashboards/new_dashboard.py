@@ -509,48 +509,6 @@ with right:
             )
             .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
         )
-        # ===== 5.1️⃣ HOVER RULE + CIRCLE
-        hover = alt.selection_single(
-            fields=["time"],
-            nearest=True,
-            on="mouseover",
-            empty="none",
-            clear="mouseout"
-        )
-        
-        # Шулуун шугам
-        hover_rule = (
-            alt.Chart(chart_df)
-            .mark_rule(color="gray", strokeWidth=1, opacity=0.6)
-            .encode(
-                x="time:T"
-            )
-            .add_selection(hover)
-        )
-        
-        # Цэг
-        hover_point = (
-            alt.Chart(chart_df)
-            .mark_circle(size=80, color="red", opacity=0.8)
-            .encode(
-                x="time:T",
-                y=alt.Y("Value:Q"),
-                tooltip=[
-                    alt.Tooltip("time:T", title="Time", format="%Y-%m-%d"),
-                    alt.Tooltip("Indicator:N"),
-                    alt.Tooltip("Value:Q", format=", .2f")
-                ]
-            )
-            .transform_fold(
-                valid_indicators,
-                as_=["Indicator", "Value"]
-            )
-            .transform_filter(hover)
-        )
-        
-        # MAIN CHART-ыг шинэ hover нэмэлттэйгээр
-        main_chart_hover = main_chart + hover_rule + hover_point
-
         
         # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
@@ -580,7 +538,7 @@ with right:
         # ===== 7️⃣ LINK MAIN ↔ MINI
         final_chart = (
             alt.vconcat(
-                main_chart_hover.add_params(brush),  # hover нэмэгдсэн
+                main_chart.add_params(brush),  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
                 mini_chart,
                 spacing=10
             )
