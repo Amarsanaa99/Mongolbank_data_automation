@@ -449,15 +449,15 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
-        # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
+        # ===== 3️⃣ TIME FORMATTING - БҮХ ХУГАЦААНЫ ӨГӨГДЛИЙГ DATETIME БОЛГОХ
         chart_df = chart_df.copy()
-        chart_df['time_detailed'] = chart_df['time'].astype(str)
-        # ===== BRUSH (FOR MINI NAVIGATOR)
-        brush = alt.selection_interval(encodings=["x"])
-
-        # ===== 4️⃣ BASE CHART (shared X scale)
-        base = (
+        chart_df['time'] = pd.to_datetime(chart_df['time'])
+        
+        # ===== 4️⃣ BRUSH SELECTION - НЭГ Л УДАА ТОДОРХОЙЛОХ
+        brush = alt.selection_interval(encodings=['x'], name='brush')
+        
+        # ===== 5️⃣ ГОЛ ГРАФИКИЙН БААЗ (brush-аар хязгаарлагдах)
+        base_main = (
             alt.Chart(chart_df)
             .transform_fold(
                 valid_indicators,
@@ -468,15 +468,14 @@ with right:
                     'time:T',
                     title=None,
                     axis=alt.Axis(
-                        format='%Y-%m',
+                        format='%Y-%m',  # 🔥 ЗӨВХӨН НЭГ ФОРМАТ АШИГЛАХ
                         labelAngle=0,
                         labelFontSize=11,
                         grid=False,
-                        labelExpr="timeFormat(datum.value, '%Y-%m')"
-                    ),
-                    scale=alt.Scale(zero=False, domain=brush)  # 🔥 MINI-ГЭЭС ХЯЗГААРЛАГДАНА
+                        labelOverlap='parity'  # 🔥 ТЭМДЭГЛЭГЭЭГ АВТОМАТААР ТОХИРУУЛНА
+                    )
+                    # 🔥 scale domain-ыг brush-аар хязгаарлахгүй, харин transform_filter ашиглана
                 ),
-
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -495,32 +494,49 @@ with right:
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),  # 🔥 TOOLTIP ДЭЛГЭРЭНГҮЙ
+                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
         )
         
-        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
+        # ===== 6️⃣ ГОЛ ГРАФИК (BRUSH-ААР ШҮҮГДЭНЭ)
         main_chart = (
-            base
+            base_main
             .mark_line(strokeWidth=2.4)
             .properties(
-                height=360,
-                # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
+                height=360
             )
-            .interactive(bind_x=True)  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
+            .transform_filter(brush)  # 🔥 BRUSH-ААР ШҮҮГДЭНЭ
+            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM/PAN
         )
         
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
-        brush = alt.selection_interval(encodings=["x"])
-
+        # ===== 7️⃣ МИНИ ГРАФИК (БҮХ ХУГАЦААНЫ ХҮРЭЭ)
+        mini_base = (
+            alt.Chart(chart_df)
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
+            )
+        )
         
-        mini_chart = (
-            base
-            .mark_line(strokeWidth=1.2)
+        # Мини графикийн шугамууд
+        mini_lines = (
+            mini_base
+            .mark_line(strokeWidth=1, opacity=0.6)
             .encode(
+                x=alt.X(
+                    'time:T',
+                    title=None,
+                    axis=alt.Axis(
+                        format='%Y',  # 🔥 ЗӨВХӨН ЖИЛ ХАРУУЛНА
+                        labelAngle=0,
+                        labelFontSize=9,
+                        grid=False,
+                        tickCount={'interval': 'year', 'step': 1}
+                    )
+                ),
                 y=alt.Y(
                     "Value:Q",
                     title=None,
@@ -533,32 +549,83 @@ with right:
                 ),
                 color=alt.Color("Indicator:N", legend=None)
             )
-            .properties(
-                height=70
-            )
-            .add_params(brush)
         )
         
-        # ===== 7️⃣ LINK MAIN ↔ MINI
+        # Мини график дээрх сонгогдсон хэсгийг тодруулах тэгш өнцөгт
+        mini_selection = (
+            mini_base
+            .mark_rect(opacity=0.3, color='gray')
+            .encode(
+                x='time:T',
+                x2='time_end:T' if 'time_end' in chart_df.columns else alt.value(None)
+            )
+            .transform_filter(brush)  # 🔥 BRUSH-ТАЙ ИЖИЛ ХЭСЭГТ ӨНГӨ ӨӨРЧЛӨГДӨНӨ
+        )
+        
+        # Мини графикийг бүрдүүлэх
+        mini_chart = (
+            (mini_lines + mini_selection)
+            .properties(height=60)
+            .add_params(brush)  # 🔥 BRUSH SELECTION НЭМЭХ
+        )
+        
+        # ===== 8️⃣ ХОЁР ГРАФИКИЙГ ХОЛБОХ
         final_chart = (
             alt.vconcat(
-                main_chart,  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
+                main_chart,
                 mini_chart,
-                spacing=10
+                spacing=2  # 🔥 ЗАЙГ БАГАСГАХ
             )
-            .properties(
-                background="transparent"
+            .resolve_scale(
+                x='shared',  # 🔥 Х ТЭНХЛЭГИЙГ ХОЛБОНО
+                color='shared'
             )
-            .configure_axis(
-                grid=True,
-                gridColor='#e0e0e0'
-            )
+            .configure_view(strokeWidth=0)  # 🔥 ХҮРЭЭГ НУУХ
         )
         
         st.altair_chart(
             final_chart,
-            use_container_width=True
+            use_container_width=True,
+            theme=None
         )
+        
+        # ===== 9️⃣ ГҮЙЛГЭХ БААРЫГ САЙЖРУУЛАХ CSS
+        st.markdown("""
+        <style>
+        /* Вега график дээр гүйлгэх боломжийг нэмэх */
+        .vega-embed {
+            overflow-x: auto !important;
+        }
+        
+        /* Мини график дээр гүйлгэхэд хялбар болгох */
+        .vega-embed .marks {
+            cursor: grab !important;
+        }
+        
+        .vega-embed .marks:active {
+            cursor: grabbing !important;
+        }
+        
+        /* Scrollbar стиль */
+        ::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
     
     def compute_group_kpis(df, indicators):
