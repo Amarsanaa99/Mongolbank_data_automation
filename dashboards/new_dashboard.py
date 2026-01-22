@@ -435,28 +435,7 @@ with right:
             (chart_df["time"] <= end_time)
         ]
 
-        # ===== 2️⃣ Баганы нэрсийг FIX - tuple-ээс string болгох
-        # DataFrame-ийн баганы нэрсийг шалгаж, tuple байвал string болгоно
-        if chart_df.columns.nlevels > 1:
-            # MultiIndex байвал
-            chart_df.columns = chart_df.columns.get_level_values(0)
-        
-        # Баганы нэрсийг string болгох
-        new_columns = []
-        for col in chart_df.columns:
-            if isinstance(col, tuple):
-                # Tuple-ээс эхний хоосон биш элементийг авах
-                if col[0]:  # Эхний элемент хоосон биш бол
-                    new_columns.append(col[0])
-                elif len(col) > 1 and col[1]:  # Хоёр дахь элемент
-                    new_columns.append(col[1])
-                else:
-                    new_columns.append(str(col))
-            else:
-                new_columns.append(str(col))
-        chart_df.columns = new_columns
-
-        # ===== 3️⃣ Valid indicators
+        # ===== 2️⃣ Valid indicators
         valid_indicators = [
             col for col in selected
             if col in chart_df.columns and not chart_df[col].isna().all()
@@ -466,19 +445,9 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        # ===== 4️⃣ ALTAIR CHART
+        # ===== 3️⃣ BASE (padding устгасан)
         import altair as alt
-        
-        # ----- Chart үүсгэх -----
-        # Hover selection
-        hover = alt.selection_single(
-            fields=['time'],
-            nearest=True,
-            on='mouseover',
-            empty='none'
-        )
-        
-        # Base chart
+
         base = alt.Chart(chart_df).encode(
             x=alt.X(
                 "time:N",
@@ -492,14 +461,22 @@ with right:
                 )
             )
         )
-        
-        # Folded data
+
+        # ===== 4️⃣ Folded data
         folded = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         )
-        
-        # Шугамууд
+
+        # ===== 5️⃣ Hover selection
+        hover = alt.selection_point(
+            fields=["time"],
+            nearest=True,
+            on="mouseover",
+            empty=False
+        )
+
+        # ===== 6️⃣ Lines
         lines = folded.mark_line(
             strokeWidth=2.2,
             interpolate="linear"
@@ -522,44 +499,44 @@ with right:
                 legend=alt.Legend(title=None, orient="right")
             ),
             tooltip=[
-                alt.Tooltip("time:N", title="Date"),
+                alt.Tooltip("time:N", title="Time"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-        
-        # Босоо шугам (зөвхөн hover үед)
-        vertical_rule = folded.mark_rule(
+
+        # ===== 7️⃣ Vertical line
+        vline = folded.mark_rule(
             color="#64748b",
-            strokeWidth=1
+            strokeWidth=1,
+            strokeDash=[4, 4]
         ).encode(
-            x="time:N",
-            opacity=alt.condition(hover, alt.value(0.5), alt.value(0))
+            x="time:N"
         ).add_params(hover)
-        
-        # Харагдахгүй цэгүүд (hover-д зориулсан)
-        points = folded.mark_point(
-            opacity=0,
-            size=60
+
+        # ===== 8️⃣ Hover points + tooltip
+        hover_points = folded.mark_point(
+            size=70
         ).encode(
             x="time:N",
             y="Value:Q",
+            opacity=alt.condition(hover, alt.value(1), alt.value(0)),
             tooltip=[
                 alt.Tooltip("time:N", title="Date"),
                 alt.Tooltip("Indicator:N"),
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
-        ).add_params(hover)
-        
-        # Нийт график
-        chart = (lines + vertical_rule + points).properties(
+        )
+
+        # ===== 9️⃣ Layered chart (padding болон height энд өгнө)
+        chart = (lines + vline + hover_points).properties(
             height=340,
             padding={"bottom": 5},
             background="transparent"
         ).interactive()
-        
-        # Streamlit-д харуулах (deprecation warning-аас зайлсхийх)
+
         st.altair_chart(chart, width="stretch")
+
 
 
 
