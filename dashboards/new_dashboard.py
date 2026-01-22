@@ -421,6 +421,41 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
 
+# Өгөгдлийг цуваа болгон нэгтгэх
+series = df_time.copy()
+# ... бусад код ...
+
+# ======================
+# ✅ CREATE time_dt COLUMN FOR CHART
+# ======================
+def parse_time(time_str):
+    if isinstance(time_str, str):
+        if '-' in time_str:
+            parts = time_str.split('-')
+            if len(parts) == 2:
+                if len(parts[1]) == 2:
+                    try:
+                        year = int(parts[0])
+                        month = int(parts[1])
+                        return pd.Timestamp(year=year, month=month, day=1)
+                    except:
+                        pass
+                elif 'Q' in parts[1]:
+                    try:
+                        year = int(parts[0])
+                        quarter = int(parts[1].replace('Q', ''))
+                        month = (quarter - 1) * 3 + 1
+                        return pd.Timestamp(year=year, month=month, day=1)
+                    except:
+                        pass
+    return pd.NaT
+
+series["time_dt"] = series["time"].apply(parse_time)
+
+if series["time_dt"].isna().all():
+    series["time_dt"] = pd.to_datetime(series["time"], errors='coerce')
+
+# ... дараа нь Main chart хэсэг ...
 # ======================
 # MAIN CHART (FAST, STABLE, NO melt, NO time)
 # ======================
