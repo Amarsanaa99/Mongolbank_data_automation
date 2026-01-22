@@ -499,46 +499,49 @@ with right:
         )
         
         # ========== ★ HOVER СОНГОЛТ (FRED style) ==========
-        hover = alt.selection_single(
-            fields=["time"],
-            nearest=True,
-            on="mouseover",
-            empty="none",
-            clear="mouseout"
-        )
-        
-        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
-        line = base.mark_line(strokeWidth=2.4)
-        
-        # Хөндлөн огтлолцох дугуй цэг
-        points = (
-            base.mark_circle(size=65, filled=True, color="##1f77b4", stroke="#ffffff", strokeWidth=2)
-            .encode(opacity=alt.condition(hover, alt.value(1), alt.value(0)))
-            .add_params(hover)
-        )
-        
-        # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
-        vline = (
-            alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
-            .encode(
-                x='time:T'
-            )
-            .transform_filter(hover)
-        )
-        
-        main_chart = (
-            alt.layer(
-                line,
-                vline,
-                points
-            )
-            .properties(
-                height=450,
-                width='container'
-            )
-            .interactive()   # zoom + pan хэвээр
-        )
+                # empty=False гэж зааж өгснөөр хулгана байхгүй үед юу ч харуулахгүй
+                hover = alt.selection_point(
+                    fields=["time"],
+                    nearest=True,
+                    on="mouseover",
+                    clear="mouseout",
+                    toggle=False,
+                    empty=False  # Энэ нь mouse-гүй үед бүх зүйлийг харагдахаас сэргийлнэ
+                )
+                
+                # ===== 5️⃣ MAIN LINE + HOVER EFFECTS
+                line = base.mark_line(strokeWidth=2.4)
+                
+                # Хөндлөн огтлолцох дугуй цэг
+                # selection-д орсон цэгийг л харуулна
+                points = (
+                    base.mark_circle(size=80, filled=True, stroke="white", strokeWidth=2)
+                    .encode(
+                        opacity=alt.condition(hover, alt.value(1), alt.value(0))
+                    )
+                    .add_params(hover)
+                )
+                
+                # Босоо шулуун
+                # Одоо байгаа base-ээс transform_filter ашиглан үүсгэнэ
+                vline = (
+                    base.mark_rule(color="#888888", strokeWidth=1, strokeDash=[4, 4])
+                    .encode(x='time:T')
+                    .transform_filter(hover)
+                )
+                
+                main_chart = (
+                    alt.layer(
+                        line,
+                        vline,
+                        points
+                    )
+                    .properties(
+                        height=450,
+                        width='container'
+                    )
+                    .interactive()
+                )
         
         # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) — өөрчлөх шаардлагагүй
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
