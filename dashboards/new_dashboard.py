@@ -518,10 +518,18 @@ with right:
                 size=65,
                 filled=True,
                 color="#ffffff",   # дотор нь цагаан
-                stroke="#1f77b4",  # гадна хүрээ core line‑ийн өнгө
+                stroke="#1f77b4",  # гадна хүрээ
                 strokeWidth=2
             )
-            .transform_filter(hover)    # ← hover байхгүй үед ЦЭГ БАЙХГҮЙ
+            .transform_filter(hover)    # hover байхгүй үед ЦЭГ БАЙХГҮЙ
+        )
+        
+        # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
+        vline = (
+            base
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
+            .encode(x='time:T')
+            .transform_filter(hover)
         )
         
         main_chart = (
@@ -537,7 +545,7 @@ with right:
             .interactive()   # zoom + pan хэвээр
         )
         
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) — өөрчлөх шаардлагагүй
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
         brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
         
         mini_chart = (
@@ -562,7 +570,7 @@ with right:
             .add_params(brush)
         )
         
-        # ===== 7️⃣ LINK MAIN ↔ MINI (brush өмнөх шигээ)
+        # ===== 7️⃣ LINK MAIN ↔ MINI
         final_chart = (
             alt.vconcat(
                 main_chart.add_params(brush),
@@ -572,13 +580,12 @@ with right:
             .properties(
                 background="transparent"
             )
-            # Y тэнхлэг дээрх хэвтээ grid л үлдээнэ
+            # Зөвхөн Y‑ийн grid үлдээнэ, X‑ийн босоог унтраана
             .configure_axisY(
                 grid=True,
                 gridColor='#e0e0e0',
                 gridOpacity=0.25
             )
-            # X тэнхлэгийн бүх босоо grid‑ийг унтраана
             .configure_axisX(
                 grid=False
             )
