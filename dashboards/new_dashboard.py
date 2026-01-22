@@ -549,10 +549,11 @@ with right:
                 lines,
                 rule,
                 hover_points
-            ).properties(height=340).interactive(),
+            ).add_params(nearest)     # ← 🔴 ЯГ ЭНД Л БАЙХ ЁСТОЙ
+             .properties(height=340)
+             .interactive(),
             width="stretch"
         )
-
     
     def compute_group_kpis(df, indicators):
         stats = []
