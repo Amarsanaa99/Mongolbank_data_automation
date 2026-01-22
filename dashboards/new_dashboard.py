@@ -498,40 +498,46 @@ with right:
             )
         )
         
-        # ========== ★ HOVER СОНГОЛТ (ЭНГИЙНЧЛЭХ) ==========
+        # ========== ★ HOVER СОНГОЛТ (FRED style) ==========
         hover = alt.selection_single(
             fields=["time"],
             nearest=True,
             on="mouseover",
-            empty="none"
+            empty="none",
+            clear="mouseout"
         )
         
-        # ===== 5️⃣ MAIN LINE - ЭНГИЙН VERSION
+        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED) + HOVER EFFECTS
         line = base.mark_line(strokeWidth=2.4)
         
-        # Босоо шулуун (зөвхөн hover үед харагдана)
+        # Хөндлөн огтлолцох дугуй цэг
+        points = (
+            base.mark_circle(size=65, filled=True, color="##1f77b4", stroke="#ffffff", strokeWidth=2)
+            .encode(opacity=alt.condition(hover, alt.value(1), alt.value(0)))
+            .add_params(hover)
+        )
+        
+        # Босоо шулуун (chart‑ийн өндрийг бүхэлд нь хөндлөн гарах)
         vline = (
             alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1, strokeDash=[3,3])
-            .encode(x='time:T')
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
+            .encode(
+                x='time:T'
+            )
             .transform_filter(hover)
         )
         
-        # Цэгүүд - зөвхөн hover үед харагдана, жижиг хэмжээтэй
-        points = base.mark_circle(
-            size=40,
-            opacity=0
-        ).encode(
-            opacity=alt.condition(hover, alt.value(0.8), alt.value(0))
-        ).add_params(hover)
-        
         main_chart = (
-            alt.layer(line, vline, points)
+            alt.layer(
+                line,
+                vline,
+                points
+            )
             .properties(
                 height=450,
                 width='container'
             )
-            .interactive()
+            .interactive()   # zoom + pan хэвээр
         )
         
         # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) — өөрчлөх шаардлагагүй
