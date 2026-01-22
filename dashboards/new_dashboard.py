@@ -605,13 +605,6 @@ with right:
                 gridColor='#e0e0e0'
             )
         )
-        
-        st.altair_chart(
-            final_chart,
-            use_container_width=True
-        )
-
-        st.markdown('</div>', unsafe_allow_html=True)
 
     
     def compute_group_kpis(df, indicators):
