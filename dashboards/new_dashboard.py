@@ -599,10 +599,8 @@ with right:
                 points
             )
             .properties(
-                height=360,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 400
-                width="container",
-                # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
-                padding={"left": 10, "top": 20, "right": 50, "bottom": 20}
+                height=400,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 400
+                width="container"
             )
             .interactive()
         )
@@ -643,7 +641,7 @@ with right:
             alt.vconcat(
                 main_chart,
                 mini_chart,
-                spacing=10  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
+                spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
             )
             .resolve_scale(
                 x='shared',
