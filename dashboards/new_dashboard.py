@@ -428,16 +428,14 @@ with right:
     with st.container(border=True):
         st.subheader("📈 Main chart")
 
-        # ===== 1️⃣ DATA (REAL TIME, NO AGGREGATION)
+        # ===== 1️⃣ DATA
         chart_df = series[["time"] + selected].copy()
-
-        # ⏳ APPLY TIME RANGE (STRING-SAFE)
         chart_df = chart_df[
             (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
         ]
 
-        # ===== 2️⃣ Зөвхөн өгөгдөлтэй indicator
+        # ===== 2️⃣ Valid indicators
         valid_indicators = [
             col for col in selected
             if col in chart_df.columns and not chart_df[col].isna().all()
@@ -447,10 +445,9 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        # ===== 3️⃣ WIDE → ALTAIR
+        # ===== 3️⃣ BASE (padding устгасан)
         import altair as alt
-        
-        # --- BASE (x-axis only, background, padding)
+
         base = alt.Chart(chart_df).encode(
             x=alt.X(
                 "time:N",
@@ -463,26 +460,23 @@ with right:
                     labelExpr="substring(datum.value, 0, 4)"
                 )
             )
-        ).properties(
-            padding={"bottom": 5},
-            background="transparent"
         )
-        
-        # --- Folded data for lines + hover
+
+        # ===== 4️⃣ Folded data
         folded = base.transform_fold(
             valid_indicators,
             as_=["Indicator", "Value"]
         )
-        
-        # --- Hover selection
+
+        # ===== 5️⃣ Hover selection
         hover = alt.selection_point(
             fields=["time"],
             nearest=True,
             on="mouseover",
             empty=False
         )
-        
-        # --- Lines
+
+        # ===== 6️⃣ Lines
         lines = folded.mark_line(
             strokeWidth=2.2,
             interpolate="linear"
@@ -510,19 +504,17 @@ with right:
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-        
-        # --- Vertical line
+
+        # ===== 7️⃣ Vertical line
         vline = folded.mark_rule(
             color="#64748b",
             strokeWidth=1,
             strokeDash=[4, 4]
         ).encode(
             x="time:N"
-        ).add_params(
-            hover
-        )
-        
-        # --- Hover points + tooltip
+        ).add_params(hover)
+
+        # ===== 8️⃣ Hover points + tooltip
         hover_points = folded.mark_point(
             size=70
         ).encode(
@@ -535,13 +527,16 @@ with right:
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-        
-        # --- Layered chart
+
+        # ===== 9️⃣ Layered chart (padding болон height энд өгнө)
         chart = (lines + vline + hover_points).properties(
-            height=340
+            height=340,
+            padding={"bottom": 5},
+            background="transparent"
         ).interactive()
-        
+
         st.altair_chart(chart, width="stretch")
+
 
 
 
