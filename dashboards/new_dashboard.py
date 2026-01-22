@@ -449,10 +449,9 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
-        # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
+        # ===== 3️⃣ TIME FORMATTING - PANDAS DATETIME БОЛГОХ
         chart_df = chart_df.copy()
-        chart_df['time_detailed'] = chart_df['time'].astype(str)
+        chart_df["time"] = pd.to_datetime(chart_df["time"])
         
         # ===== 4️⃣ BASE CHART (shared X scale)
         base = (
@@ -463,16 +462,18 @@ with right:
             )
             .encode(
                 x=alt.X(
-                    'time:T',  # 🔥 ТӨРӨЛӨӨ Temporal болгож өөрчиллөө (zoom дэлгэрэнгүй болгох)
+                    "time:T",  # 🔥 ТӨРӨЛӨӨ Temporal болгох (N биш!)
                     title=None,
                     axis=alt.Axis(
-                        format='%Y-%m',  # 🔥 ОЙРТУУЛАХАД ӨӨРЧЛӨГДӨХ ФОРМАТ
+                        format="%Y-%m",  # 🔥 ЭНД ЛАВЛАГАА ӨӨРЧЛӨГДӨНӨ
                         labelAngle=0,
                         labelFontSize=11,
                         grid=False,
-                        labelExpr="timeFormat(datum.value, '%Y-%m')"  # 🔥 Жил-Сар харагдана
+                        labelOverlap=True,  # 🔥 ТЭМДЭГЛЭГЭЭГ АВТОМАТААР ЗОХИЦУУЛНА
+                        labelSeparation=10,
+                        tickCount={"interval": "year", "step": 1}  # 🔥 ЖИЛ БҮРЭЭС ТЭМДЭГЛЭНЭ
                     ),
-                    scale=alt.Scale(zero=False)  # 🔥 ТЭГЭЭС ЭХЭЛЖ БАЙХГҮЙ
+                    scale=alt.Scale(zero=False)
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -492,7 +493,7 @@ with right:
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),  # 🔥 TOOLTIP ДЭЛГЭРЭНГҮЙ
+                    alt.Tooltip("time:T", title="Time", format="%Y-%m-%d"),  # 🔥 ТӨРӨЛ Т Temporal
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
@@ -503,69 +504,110 @@ with right:
         main_chart = (
             base
             .mark_line(strokeWidth=2.4)
-            .encode(
-                x=alt.X(
-                    'time:T',
-                    scale=alt.Scale(domain=brush)  # 🔥 MINI-ИЙН СОНГОЛТООР MAIN ГҮЙЛГЭНЭ
-                )
+            .properties(
+                height=360
             )
-            .properties(height=360)
-        )
-            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
+            .interactive(bind_x=True)  # 🔥 ЗӨВХӨН Х ТЭНХЛЭГТ ZOOM+PAN
         )
         
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
-        brush = alt.selection_interval(encodings=["x"], translate=True, zoom=False)
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) - ГҮЙЛГЭХ БААР
+        # 🔥 ХЯЛБАРЧИЛСАН SCROLL BAR (date axis-гүй)
+        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=False)  # 🔥 ZOOM ХИЙГДЭХГҮЙ
         
         mini_chart = (
-            base
-            .mark_line(strokeWidth=1.2)
+            alt.Chart(chart_df)
+            .mark_rect(
+                color="lightgray",
+                height=20,
+                opacity=0.7
+            )
             .encode(
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=alt.Axis(
-                        labels=False,
-                        ticks=False,
-                        grid=False,
-                        domain=False
-                    )
+                x=alt.X(
+                    "time:T",
+                    axis=None  # 🔥 ТЭНХЛЭГИЙГ НУУХ
                 ),
-                color=alt.Color("Indicator:N", legend=None)
+                x2=alt.X2("time_end:T") if "time_end" in chart_df.columns else alt.value(None)
             )
             .properties(
-                height=70
+                height=20
             )
             .add_params(brush)
         )
         
+        # Хэрэглэгчийн сонгосон хүрээг харуулах тэгш өнцөгт
+        if "time_end" not in chart_df.columns:
+            # Өгөгдөл бэлтгэх
+            time_range_df = pd.DataFrame({
+                "start": [chart_df["time"].min()],
+                "end": [chart_df["time"].max()]
+            })
+            
+            range_rect = (
+                alt.Chart(time_range_df)
+                .mark_rect(
+                    color="#1f77b4",
+                    opacity=0.5,
+                    height=20
+                )
+                .encode(
+                    x="start:T",
+                    x2="end:T"
+                )
+            )
+            
+            mini_chart = (mini_chart + range_rect)
+        
         # ===== 7️⃣ LINK MAIN ↔ MINI
         final_chart = (
             alt.vconcat(
-                main_chart.add_params(brush),  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
+                main_chart.transform_filter(brush),
                 mini_chart,
-                spacing=10
+                spacing=5  # 🔥 ЗАЙГ БАГАСГАХ
             )
-            .properties(
-                background="transparent"
-            )
-            .configure_axis(
-                grid=True,
-                gridColor='#e0e0e0'
-            )
+            .resolve_scale(x="shared")  # 🔥 Х ТЭНХЛЭГИЙГ ХОЛБОНО
+            .configure_view(stroke=None)  # 🔥 ХҮРЭЭГ НУУХ
         )
         
         st.altair_chart(
             final_chart,
-            use_container_width=True
+            use_container_width=True,
+            theme=None
         )
         
-        # 🔥 ЗААВАР ТЭМДЭГЛЭЛ
-        st.caption("🔍 **Zoom/Scroll заавар**: "
-                   "Дээр дарж зургийг сунгах/шахах | "
-                   "Х тэнхлэгийг гүйлгэж харах | "
-                   "Доод жижиг зурагнаас хэсэг сонгох")
-
+        # ===== 8️⃣ ХҮРТЭЭМЖИЙГ САЙЖРУУЛАХ CSS
+        st.markdown("""
+        <style>
+        /* Графикийн хэсгийг гүйлгэх боломжтой болгох */
+        div[data-testid="stVerticalBlock"] {
+            overflow-x: auto !important;
+        }
+        
+        /* Altair график дээр гүйлгэх боломжийг нэмэх */
+        .vega-embed {
+            min-width: 800px;
+        }
+        
+        /* Scrollbar стиль */
+        ::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
     
     def compute_group_kpis(df, indicators):
         stats = []
