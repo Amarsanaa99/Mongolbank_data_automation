@@ -450,9 +450,16 @@ with right:
         # ===== 3️⃣ WIDE → Altair (FASTEST WAY)
         import altair as alt
     
+        nearest = alt.selection_point(   # ← ЭНД
+            nearest=True,
+            on="mouseover",
+            fields=["time"],
+            empty=False
+        )
+
         base = alt.Chart(chart_df).encode(
             x=alt.X(
-                "time:N",
+                "time:T",
                 title=None,
                 sort="ascending",
                 axis=alt.Axis(
@@ -514,11 +521,38 @@ with right:
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
+        # ===== VERTICAL RULE (mouse hover line)
+        rule = base.mark_rule(
+            color="#111827",
+            strokeWidth=1
+        ).encode(
+            opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+        ).add_params(nearest)
+
+        hover_points = base.transform_fold(
+            valid_indicators,
+            as_=["Indicator", "Value"]
+        ).mark_point(
+            size=70
+        ).encode(
+            y="Value:Q",
+            opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
+            tooltip=[
+                alt.Tooltip("time:N", title="Time"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
+        )
 
         st.altair_chart(
-            lines.properties(height=340).interactive(),
+            alt.layer(
+                lines,
+                rule,
+                hover_points
+            ).properties(height=340).interactive(),
             width="stretch"
         )
+
     
     def compute_group_kpis(df, indicators):
         stats = []
