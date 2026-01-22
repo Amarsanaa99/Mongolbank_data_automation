@@ -449,11 +449,11 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING
+        # ===== 3️⃣ TIME FORMATTING - PANDAS DATETIME БОЛГОХ
         chart_df = chart_df.copy()
-        chart_df['time'] = pd.to_datetime(chart_df['time'])
+        chart_df["time"] = pd.to_datetime(chart_df["time"])
         
-        # ===== 4️⃣ BASE CHART
+        # ===== 4️⃣ BASE CHART (shared X scale)
         base = (
             alt.Chart(chart_df)
             .transform_fold(
@@ -462,13 +462,16 @@ with right:
             )
             .encode(
                 x=alt.X(
-                    'time:T',
+                    "time:T",  # 🔥 ТӨРӨЛӨӨ Temporal болгох (N биш!)
                     title=None,
                     axis=alt.Axis(
-                        format='%Y-%m',
+                        format="%Y-%m",  # 🔥 ЭНД ЛАВЛАГАА ӨӨРЧЛӨГДӨНӨ
                         labelAngle=0,
                         labelFontSize=11,
-                        grid=False
+                        grid=False,
+                        labelOverlap=True,  # 🔥 ТЭМДЭГЛЭГЭЭГ АВТОМАТААР ЗОХИЦУУЛНА
+                        labelSeparation=10,
+                        tickCount={"interval": "year", "step": 1}  # 🔥 ЖИЛ БҮРЭЭС ТЭМДЭГЛЭНЭ
                     ),
                     scale=alt.Scale(zero=False)
                 ),
@@ -480,8 +483,7 @@ with right:
                         gridOpacity=0.25,
                         domain=False,
                         labelFontSize=11
-                    ),
-                    scale=alt.Scale(zero=False)
+                    )
                 ),
                 color=alt.Color(
                     "Indicator:N",
@@ -491,120 +493,120 @@ with right:
                     )
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),
+                    alt.Tooltip("time:T", title="Time", format="%Y-%m-%d"),  # 🔥 ТӨРӨЛ Т Temporal
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
         )
         
-        # ===== 5️⃣ MAIN CHART WITH ENHANCED ZOOM/PAN/SCROLL
+        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
         main_chart = (
             base
             .mark_line(strokeWidth=2.4)
             .properties(
-                height=360,
-                # 🔥 ГРАФИКИЙН ӨРГӨНИЙГ ӨӨРЧЛӨХ (хэрэв өгөгдөл их бол)
-                width=alt.Step(60) if len(chart_df) > 50 else "container"
+                height=360
             )
-            .interactive()  # Mouse zoom + pan
+            .interactive(bind_x=True)  # 🔥 ЗӨВХӨН Х ТЭНХЛЭГТ ZOOM+PAN
         )
         
-        # ===== 6️⃣ HORIZONTAL SCROLL BAR (TIMELINE OVERVIEW)
-        # Хэрэв өгөгдлийн цуваа урт бол (24 сараас дээш) scroll bar нэмнэ
-        if len(chart_df) > 24:
-            # Scroll bar-ыг тусад нь график болгон үүсгэх
-            scroll_data = pd.DataFrame({
-                'time': pd.date_range(
-                    chart_df['time'].min(),
-                    chart_df['time'].max(),
-                    freq='MS'
+        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR) - ГҮЙЛГЭХ БААР
+        # 🔥 ХЯЛБАРЧИЛСАН SCROLL BAR (date axis-гүй)
+        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=False)  # 🔥 ZOOM ХИЙГДЭХГҮЙ
+        
+        mini_chart = (
+            alt.Chart(chart_df)
+            .mark_rect(
+                color="lightgray",
+                height=20,
+                opacity=0.7
+            )
+            .encode(
+                x=alt.X(
+                    "time:T",
+                    axis=None  # 🔥 ТЭНХЛЭГИЙГ НУУХ
                 ),
-                'value': 0
+                x2=alt.X2("time_end:T") if "time_end" in chart_df.columns else alt.value(None)
+            )
+            .properties(
+                height=20
+            )
+            .add_params(brush)
+        )
+        
+        # Хэрэглэгчийн сонгосон хүрээг харуулах тэгш өнцөгт
+        if "time_end" not in chart_df.columns:
+            # Өгөгдөл бэлтгэх
+            time_range_df = pd.DataFrame({
+                "start": [chart_df["time"].min()],
+                "end": [chart_df["time"].max()]
             })
             
-            # Scroll bar (хялбаршуулсан хувилбар)
-            scroll_bar = (
-                alt.Chart(scroll_data)
+            range_rect = (
+                alt.Chart(time_range_df)
                 .mark_rect(
-                    color='lightgray',
-                    height=15,
-                    opacity=0.5
+                    color="#1f77b4",
+                    opacity=0.5,
+                    height=20
                 )
                 .encode(
-                    x=alt.X(
-                        'time:T',
-                        title=None,
-                        axis=alt.Axis(
-                            format='%Y',
-                            labels=True,
-                            ticks=False,
-                            grid=False,
-                            labelAngle=0
-                        )
-                    ),
-                    tooltip=[alt.Tooltip('time:T', title='Year', format='%Y')]
-                )
-                .properties(
-                    height=15
+                    x="start:T",
+                    x2="end:T"
                 )
             )
             
-            # 🔥 ГҮЙЛГЭХ БААРЫГ ҮҮСГЭХ (зурагны доор)
-            final_chart = alt.vconcat(
-                main_chart,
-                scroll_bar.interactive(bind_x=True),  # Х тэнхлэгт гүйлгэх боломжтой
-                spacing=5
-            ).resolve_scale(
-                x='shared'  # Х тэнхлэгийг холбоно
-            )
-        else:
-            # Өгөгдөл бага бол зөвхөн үндсэн график
-            final_chart = main_chart
+            mini_chart = (mini_chart + range_rect)
         
-        # ===== 7️⃣ RENDER CHART WITH SCROLL ENABLED
-        # Streamlit-д Altair график render хийх
+        # ===== 7️⃣ LINK MAIN ↔ MINI
+        final_chart = (
+            alt.vconcat(
+                main_chart.transform_filter(brush),
+                mini_chart,
+                spacing=5  # 🔥 ЗАЙГ БАГАСГАХ
+            )
+            .resolve_scale(x="shared")  # 🔥 Х ТЭНХЛЭГИЙГ ХОЛБОНО
+            .configure_view(stroke=None)  # 🔥 ХҮРЭЭГ НУУХ
+        )
+        
         st.altair_chart(
             final_chart,
             use_container_width=True,
             theme=None
         )
         
-        # ===== 8️⃣ ENHANCE SCROLLING WITH CUSTOM CSS
-        # 🔥 ХҮРТЭЭМЖИЙГ САЙЖРУУЛАХ CSS
+        # ===== 8️⃣ ХҮРТЭЭМЖИЙГ САЙЖРУУЛАХ CSS
         st.markdown("""
         <style>
-        /* Графикийн хэсгийг илүү сайн гүйлгэх боломжтой болгох */
-        div[data-testid="stVerticalBlock"] > div:has(> div[data-testid="stVerticalBlock"] > div[data-testid="element-container"]) {
+        /* Графикийн хэсгийг гүйлгэх боломжтой болгох */
+        div[data-testid="stVerticalBlock"] {
             overflow-x: auto !important;
-            padding-bottom: 10px;
         }
         
         /* Altair график дээр гүйлгэх боломжийг нэмэх */
-        .st-emotion-cache-1v0mbdj {
-            overflow-x: auto !important;
+        .vega-embed {
             min-width: 800px;
         }
         
-        /* График хэсэг дээр хулганаар гүйлгэх боломжтой болгох */
-        .main-svg {
-            cursor: grab !important;
+        /* Scrollbar стиль */
+        ::-webkit-scrollbar {
+            height: 8px;
         }
         
-        .main-svg:active {
-            cursor: grabbing !important;
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
         </style>
         """, unsafe_allow_html=True)
-        
-        # ===== 9️⃣ ЗААВАР МЭДЭЭЛЭЛ
-        st.caption("""
-        🔍 **Zoom/Pan/Scroll заавар:**
-        - **Zoom:** График дээр дарж сунгах/шахах эсвэл хулганы дугуйгаар zoom хийх
-        - **Pan:** Графикийг чирч хоёр тийш нь шилжүүлэх
-        - **Scroll:** Графикийн доод баарыг чирч гүйлгэх эсвэл график дээр чирч шилжүүлэх
-        - **Х тэнхлэг:** Ойртуулахад нарийн огтлолцол (жил-сар) харагдана
-        """)
         
     
     def compute_group_kpis(df, indicators):
