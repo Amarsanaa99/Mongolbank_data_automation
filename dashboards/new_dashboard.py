@@ -540,7 +540,7 @@ with right:
         # ===== 7️⃣ LINK MAIN ↔ MINI
         final_chart = (
             alt.vconcat(
-                main_chart.add_params(brush),  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
+                main_chart,  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
                 mini_chart,
                 spacing=10
             )
