@@ -600,7 +600,7 @@ with right:
             )
             .properties(
                 height=400,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 400
-                width=600
+                width=500
             )
             .interactive()
         )
@@ -649,7 +649,7 @@ with right:
             )
             .properties(
                 # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
-                padding={"left": 0, "top": 20, "right": 500, "bottom": 20}
+                padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
             )
             .configure_view(
                 strokeWidth=0
