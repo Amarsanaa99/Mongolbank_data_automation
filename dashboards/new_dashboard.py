@@ -550,7 +550,7 @@ with right:
                 points
             )
             .properties(
-                height=450,
+                height=400,
                 width='container'
             )
             .interactive()   # zoom + pan хэвээр
@@ -576,7 +576,7 @@ with right:
                 color=alt.Color("Indicator:N", legend=None)
             )
             .properties(
-                height=70
+                height=60
             )
             .add_params(brush)
         )
