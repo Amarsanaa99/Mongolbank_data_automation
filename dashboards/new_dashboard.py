@@ -449,13 +449,33 @@ with right:
         import altair as alt
         
         # ----- Шугамын график -----
-        # Fold data
-        chart_data = chart_df.melt(
-            id_vars=["time"], 
-            value_vars=valid_indicators,
-            var_name="Indicator", 
-            value_name="Value"
-        )
+        # Fold data - 'time' баганыг шалгах
+        if 'time' not in chart_df.columns:
+            st.error("'time' column not found in data.")
+            st.stop()
+            
+        # chart_df хоосон эсэхийг шалгах
+        if chart_df.empty:
+            st.warning("No data available for the selected time range.")
+            st.stop()
+            
+        # Melt хийхээс өмнө багануудыг шалгах
+        available_indicators = [col for col in valid_indicators if col in chart_df.columns]
+        if not available_indicators:
+            st.warning("No indicators with data available.")
+            st.stop()
+        
+        # Одоо melt хийх
+        try:
+            chart_data = chart_df.melt(
+                id_vars=["time"], 
+                value_vars=available_indicators,
+                var_name="Indicator", 
+                value_name="Value"
+            )
+        except KeyError as e:
+            st.error(f"Error melting data: {e}. Available columns: {chart_df.columns.tolist()}")
+            st.stop()
         
         # Hover selection
         hover = alt.selection_point(
