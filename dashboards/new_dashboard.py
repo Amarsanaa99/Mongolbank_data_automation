@@ -529,7 +529,8 @@ with right:
         brush = alt.selection_interval(
             encodings=["x"],
             translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
-            zoom=False        # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
+            zoom=False,
+            empty=False      # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
         )
         
         # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
@@ -637,8 +638,9 @@ with right:
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fill="#ffffff",
-                fillOpacity=0.15
+                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
+                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
+                strokeWidth=1.2
             )
             .encode(
                 x="time_dt:T"
@@ -672,7 +674,7 @@ with right:
             )
             .properties(
                 height=60,
-                width="container"
+                width=800
             )
             .add_params(brush)
         )
@@ -687,7 +689,7 @@ with right:
                 spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
             )
             .resolve_scale(
-                x='shared',
+                x='independent',
                 color='shared'
             )
             .properties(
