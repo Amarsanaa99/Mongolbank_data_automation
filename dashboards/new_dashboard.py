@@ -483,36 +483,53 @@ with right:
         else:
             tick_step = 1
 
-        # ===== X-AXIS (FRED STYLE) =====
-        if year_count > 8:
-            # 🔥 DEFAULT VIEW → ЗӨВХӨН ОН
+        # ===== X-AXIS (FRED STYLE, ZOOM-AWARE) =====
+        if freq == "Monthly":
             x_axis = alt.Axis(
                 title=None,
                 labelAngle=0,
                 labelFontSize=11,
                 grid=False,
                 domain=True,
-                orient='bottom',
-                format="%Y"
-            )
-        else:
-            # 🔥 ZOOMED VIEW → SAR / ULIRAL
-            x_axis = alt.Axis(
-                title=None,
-                labelAngle=0,
-                labelFontSize=11,
-                grid=False,
-                domain=True,
-                orient='bottom',
+                orient="bottom",
+                # Zoom хийгдээгүй үед жил, zoom хийсэн үед сар
                 labelExpr="""
-                timeFormat(
-                  datum.value,
-                  (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
-                    ? '%Y-%m'
-                    : '%Y'
-                )
+                if (max(datum.value) - min(datum.value) > 365*24*60*60*1000) {
+                    timeFormat(datum.value, '%Y')
+                } else {
+                    timeFormat(datum.value, '%Y-%m')
+                }
                 """
             )
+        
+        elif freq == "Quarterly":
+            x_axis = alt.Axis(
+                title=None,
+                labelAngle=0,
+                labelFontSize=11,
+                grid=False,
+                domain=True,
+                orient="bottom",
+                labelExpr="""
+                if (max(datum.value) - min(datum.value) > 365*24*60*60*1000) {
+                    timeFormat(datum.value, '%Y')
+                } else {
+                    timeFormat(datum.value, '%Y') + '-Q' + quarter(datum.value)
+                }
+                """
+            )
+        
+        else:  # Yearly
+            x_axis = alt.Axis(
+                title=None,
+                labelAngle=0,
+                labelFontSize=11,
+                grid=False,
+                domain=True,
+                orient="bottom",
+                format="%Y"   # Хэзээ ч сар/улирал биш
+            )
+
 
 
         
