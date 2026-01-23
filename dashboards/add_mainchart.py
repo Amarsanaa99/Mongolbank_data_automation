@@ -429,36 +429,11 @@ if series["time"].isna().all():
 # ======================
 with right:
     with st.container(border=True):
-
+        
         st.subheader("📈 Main chart")
         
-        # ⌨️ KEYBOARD-LIKE PAN (BLOOMBERG STYLE)
-        col1, col2, col3 = st.columns([1,1,1])
-        with col1:
-            pan_left = st.button("⬅️")
-        with col2:
-            pan_right = st.button("➡️")
-        with col3:
-            reset = st.button("🔄 Reset")
-
         # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
-
-        # ⏪⏩ PAN LOGIC
-        shift = 6 if freq == "Monthly" else 4  # 6 сар / 4 улирал
-        
-        if pan_left:
-            start_time = (pd.to_datetime(start_time) - pd.DateOffset(months=shift)).strftime("%Y-%m")
-            end_time   = (pd.to_datetime(end_time)   - pd.DateOffset(months=shift)).strftime("%Y-%m")
-        
-        if pan_right:
-            start_time = (pd.to_datetime(start_time) + pd.DateOffset(months=shift)).strftime("%Y-%m")
-            end_time   = (pd.to_datetime(end_time)   + pd.DateOffset(months=shift)).strftime("%Y-%m")
-        
-        if reset:
-            start_time = min(series["time"])
-            end_time   = max(series["time"])
-
         
         # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
@@ -565,9 +540,9 @@ with right:
                 # 🔑 FRED-STYLE BRUSH (PAN ONLY, NO ZOOM)
         brush = alt.selection_interval(
             encodings=["x"],
-            translate=True,
-            zoom=True,     # ⬅️ resize (handle effect)
-            empty=False
+            translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
+            zoom=False,
+            empty=False     # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
         )
         
         # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
@@ -675,16 +650,15 @@ with right:
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fill="#4c78a8",
-                fillOpacity=0.15,
-                stroke="#4c78a8",
-                strokeWidth=1.5,
-                cursor="ew-resize"   # 🔥 HANDLE МЭТ
+                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
+                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
+                strokeWidth=1.2
             )
-            .encode(x="time_dt:T")
+            .encode(
+                x="time_dt:T"
+            )
             .transform_filter(brush)
         )
-
 
 
 
