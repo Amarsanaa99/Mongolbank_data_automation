@@ -511,6 +511,12 @@ with right:
             cornerRadius=0,
             labelLimit=180
         )
+                # 🔑 FRED-STYLE BRUSH (PAN ONLY, NO ZOOM)
+        brush = alt.selection_interval(
+            encodings=["x"],
+            translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
+            zoom=False        # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
+        )
         
         # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
         base = (
@@ -608,13 +614,6 @@ with right:
         )
         
         # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
-        # 🔑 FRED-STYLE BRUSH (PAN ONLY, NO ZOOM)
-        brush = alt.selection_interval(
-            encodings=["x"],
-            translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
-            zoom=False        # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
-        )
-
         
         mini_chart = (
             base
