@@ -469,11 +469,6 @@ with right:
         
         # ===== 2️⃣ LABEL EXPRESSION (Monthly / Quarterly Corrected)
         if freq == "Monthly":
-        # ===== 4️⃣ X-AXIS CONFIGURATION - ДИНАМИК ТОХИРУУЛГА =====
-        # Zoom хийгдсэн эсэхийг шалгахгүй, зөвхөн графикийн хэмжээнээс хамаарч шошго өөрчлөгдөнө
-        # Хэрэв график маш том (олон жил) байвал зөвхөн жилүүд харагдана
-        # Хэрэв график жижиг (1-2 жил) байвал сар/улиралаар харагдана
-        if freq == "Monthly":
             label_expr = """
             // Хэрэв огноо null биш бол
             if(datum.value != null,
