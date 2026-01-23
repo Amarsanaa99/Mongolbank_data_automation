@@ -625,6 +625,7 @@ with right:
                 height=400,
                 width=850
             )
+            .add_params(zoom)   # 🔥 FRED STYLE ZOOM
         )
 
 
