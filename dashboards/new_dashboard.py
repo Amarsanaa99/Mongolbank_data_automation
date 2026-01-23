@@ -1157,7 +1157,7 @@ def small_multiple_chart(df, indicator):
             ),
             tooltip=[
                 alt.Tooltip("x:N"),
-                alt.Tooltip(f"{indicator}:Q", format=",.2f")
+                alt.Tooltip(f"{indicator}:Q", format=",.1f")
             ]
         )
         .properties(
