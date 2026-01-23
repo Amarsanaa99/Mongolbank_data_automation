@@ -481,22 +481,16 @@ with right:
         # Zoom-ээс хамаарч шошгыг өөрчлөх (Жил -> Сар/Улирал)
         if freq == "Monthly":
             label_expr = """
-            if(width <= 800,  // 👈 zoom хийгдээгүй үед (өргөн бага) жилээр харуулна
-                timeFormat(datum.value, '%Y'),
-                if(datum.value != null,
-                    (month(datum.value) == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
-                    ''
-                )
+            if(datum.value != null,
+                (month(datum.value) == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
+                ''
             )
             """
         elif freq == "Quarterly":
             label_expr = """
-            if(width <= 800,  // 👈 zoom хийгдээгүй үед жилээр
-                timeFormat(datum.value, '%Y'),
-                if(datum.value != null,
-                    (month(datum.value) % 3 == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y-Q%q') : timeFormat(datum.value, '%Y-Q%q'),
-                    ''
-                )
+            if(datum.value != null,
+                (month(datum.value) % 3 == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-Q%q'),
+                ''
             )
             """
         else:
