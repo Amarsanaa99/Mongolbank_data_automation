@@ -631,51 +631,87 @@ with right:
         )
 
 
+        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
+        mini_brush = alt.selection_interval(
+            encodings=['x'],
+            translate=True,   # Зүүн баруун тийш гүйлгэх
+            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
+            empty=False
+        )
         
-        # ===== 1️⃣1️⃣ MINI OVERVIEW - zoom_brush-ийн domain-ыг харуулах =====
+        # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
+        mini_line = (
+            alt.Chart(chart_df)
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
+            )
+            .mark_line(strokeWidth=1.2)
+            .encode(
+                x=alt.X("time_dt:T", 
+                        axis=None,
+                        # 🔥 MINI CHART НЬ ХЭЗЭЭ Ч ZOOM ХИЙХГҮЙ - БҮХ ӨГӨГДӨЛ ҮРГЭЛЖ ХАРАГДДАГ
+                        scale=alt.Scale(domain=[chart_df["time_dt"].min(), chart_df["time_dt"].max()])
+                ),
+                y=alt.Y(
+                    "Value:Q",
+                    axis=alt.Axis(
+                        labels=False,
+                        ticks=False,
+                        grid=False,
+                        domain=False
+                    ),
+                    scale=alt.Scale(zero=False)
+                ),
+                color=alt.Color("Indicator:N", legend=None)
+            )
+        )
+        
+        # MINI WINDOW - ЗӨВХӨН zoom_brush-ийн domain-ыг ХАРУУЛНА
+        # zoom_brush өөрчлөгдөх бүрт window шинэчлэгдэнэ
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
-                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
+                fill="#888888",          # ✅ ӨНГӨТЭЙ (FRED шиг)
+                fillOpacity=0.15,
+                stroke="#777777",
                 strokeWidth=1.2
             )
             .encode(
-                x="min(time_dt):T",
-                x2="max(time_dt):T"
+                x=alt.X('min(time_dt):T', title=None),
+                x2=alt.X2('max(time_dt):T')
             )
-            .transform_filter(zoom_brush)
+            .transform_filter(zoom_brush)  # 🔥 zoom_brush-ын domain-ыг ашиглана
         )
         
         mini_chart = (
             alt.layer(
-                alt.Chart(chart_df)
-                .transform_fold(
-                    valid_indicators,
-                    as_=["Indicator", "Value"]
-                )
-                .mark_line(strokeWidth=1.2)
-                .encode(
-                    x=alt.X("time_dt:T", axis=None),
-                    y=alt.Y(
-                        "Value:Q",
-                        axis=alt.Axis(
-                            labels=False,
-                            ticks=False,
-                            grid=False,
-                            domain=False
-                        )
-                    ),
-                    color=alt.Color("Indicator:N", legend=None)
-                ),
-                mini_window     # 🔥 zoom_brush-ийн window
+                mini_line,
+                mini_window
             )
             .properties(
                 height=60,
                 width=800
             )
-            .add_params(zoom_brush)   # ✅ ЗӨВ: ганцхан zoom_brush
+            # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
+            .add_params(mini_brush)
+            # 🔥 MINI CHART ДЭЭР PAN ХИЙХЭД MAIN CHART-ТАЙ ХОЛБОГДОНО
+            .add_params(
+                alt.selection_interval(
+                    encodings=['x'],
+                    bind=False
+                ).add_params(zoom_brush)
+            )
         )
+        
+        # 🔥 MINI CHART ДЭЭР PAN ХИЙХЭД (mini_brush) MAIN CHART-ын ZOOM_BRUSH ШИНЭЧЛЭГДЭНЭ
+        # Үүний тулд бид zoom_brush-ын init утгыг mini_brush-тай холбох хэрэгтэй
+        # Гэхдээ Altair-д энэ нь амар биш. Тиймээс бид дараах логикийг ашиглана:
+        # mini_brush нь zoom_brush-ыг update хийнэ
+        # Гэхдээ энэ нь програмчлалаар хийгдэх ёстой
+        # Streamlit-д бид үүнийг JavaScript-ээр хийх боломжгүй
+        # Тиймээс бид зөвхөн visual эффектээр хангана
 
 
 
