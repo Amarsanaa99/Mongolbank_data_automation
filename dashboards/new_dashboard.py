@@ -615,16 +615,29 @@ with right:
         )
         
         # ===== 9️⃣ ҮНДСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        zoom = alt.selection_interval(
+            bind='scales',
+            encodings=['x']
+        )
+
         main_chart = (
             alt.layer(
                 line,
                 vline,
                 points
             )
+            .encode(
+                x=alt.X(
+                    "time_dt:T", 
+                    scale=alt.Scale(domain=brush)),
+                    title=None,
+                    axis=x_axis
+            )
             .properties(
                 height=400,
                 width=850
             )
+            .add_params(zoom)
         )
 
 
