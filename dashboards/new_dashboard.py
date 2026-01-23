@@ -935,22 +935,27 @@ with right:
                 changes = None
     
             if changes:
-                # 🔹 Өнгөгүй, нейтрал болгох render функц
-                def render_neutral(label, value):
+                # 🔹 Өнгө цэнхэр, 1 оронтой
+                def render_blue(label, value):
                     if value is None or (isinstance(value, float) and pd.isna(value)):
                         return f"<span class='change-item'>{label}: N/A</span>"
-                    return f"<span class='change-item'>{label}: {value:.1f}%</span>"
+                    return (
+                        f"<span class='change-item' style='color:#3b82f6; font-weight:600;'>"
+                        f"{label}: {value:.1f}%"
+                        f"</span>"
+                    )
                 
                 cards_html += f"""
                 <div class="change-card">
                     <div class="change-title">{ind}</div>
                     <div class="change-bar">
-                        {render_neutral("YoY", changes.get("yoy"))}
-                        {render_neutral("YTD", changes.get("ytd"))}
-                        {render_neutral("Prev", changes.get("prev"))}
+                        {render_blue("YoY", changes.get("yoy"))}
+                        {render_blue("YTD", changes.get("ytd"))}
+                        {render_blue("Prev", changes.get("prev"))}
                     </div>
                 </div>
                 """
+
     
         # ✅ LOOP ДУУССАНЫ ДАРАА ГАНЦ УДАА RENDER
         if cards_html:
