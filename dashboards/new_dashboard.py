@@ -542,7 +542,9 @@ with right:
             encodings=['x'],
             translate=True,
             zoom=False,
-            empty=False
+            empty=False,
+            # 🔥 ШИНЭ: Анхны window байрлалыг тохируулна
+            init={"time_dt": [chart_df["time_dt"].min(), chart_df["time_dt"].max()]}
         )
         
         # ===== 7️⃣ BASE CHART =====
@@ -589,7 +591,7 @@ with right:
             alt.Chart(chart_df)
             .mark_rect(fill="#888888", fillOpacity=0.15, stroke="#777777", strokeWidth=1.2)
             .encode(x='min(time_dt):T', x2='max(time_dt):T')
-            .transform_filter(zoom_brush)   # 🔥 zoom_brush-ын domain-г харуулна
+            .transform_filter(mini_brush)   # 🔥 zoom_brush-ын domain-г харуулна
         )
         
         mini_chart = (
@@ -600,6 +602,13 @@ with right:
         
         # ===== FINAL CHART =====
         final_chart = alt.vconcat(main_chart, mini_chart, spacing=20).resolve_scale(x='independent', color='shared')
+        # 🔥 ШИНЭ: zoom_brush болон mini_brush синхрончлох
+        final_chart = final_chart.add_params(
+            # zoom_brush өөрчлөгдөхөд mini_brush шинэчлэгдэнэ
+            zoom_brush.bind(mini_brush, 
+                time_dt='time_dt'  # 🔥 Холбох параметр
+            )
+        )
         st.altair_chart(final_chart, use_container_width=True)
 
 
