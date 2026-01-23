@@ -64,6 +64,7 @@ with left:
             horizontal=True,
             label_visibility="collapsed"
         )
+        
 # ======================
 # LOAD DATA
 # ======================
