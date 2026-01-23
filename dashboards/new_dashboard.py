@@ -645,9 +645,8 @@ with right:
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fill="#4c78a8",      # 🔥 line-тэй ижил hue
-                fillOpacity=0.08,    # 🔥 маш сул
-                stroke="#4c78a8",
+                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
+                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
                 strokeWidth=1.2
             )
             .encode(
@@ -655,6 +654,7 @@ with right:
             )
             .transform_filter(brush)
         )
+
 
 
         mini_chart = (
