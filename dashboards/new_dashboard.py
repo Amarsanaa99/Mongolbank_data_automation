@@ -481,23 +481,23 @@ with right:
         # Zoom-ээс хамаарч шошгыг өөрчлөх (Жил -> Сар/Улирал)
         if freq == "Monthly":
             label_expr = """
-            // zoom хийгдээгүй үед (энгийн overview) жилээр харуулна
             if(datum.value != null,
-                // сар 1 буюу тухайн жилийн эхний сар → жилээр харуулна
-                (month(datum.value) == 0) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
+                // zoom хийгдээгүй үед зөвхөн жилийн эхэнд жилээр харуулна
+                (month(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
                 ''
             )
             """
         elif freq == "Quarterly":
             label_expr = """
             if(datum.value != null,
-                // улирал 1 буюу тухайн жилийн эхний улирал → жилээр харуулна
-                (month(datum.value) % 3 == 0) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-Q%q'),
+                // улирал эхлэх сар 1,4,7,10 дээр жилээр харуулна
+                (month(datum.value) == 1 || month(datum.value) == 4 || month(datum.value) == 7 || month(datum.value) == 10) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-Q%q'),
                 ''
             )
             """
         else:
             label_expr = "timeFormat(datum.value, '%Y')"
+
 
 
 
@@ -582,13 +582,14 @@ with right:
         )
         
         # ===== 7️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
-        hover = alt.selection_single(
+        hover = alt.selection_point(
             fields=["time_dt"],
             nearest=True,
             on="mouseover",
             empty=False,
             clear="mouseout"
         )
+
         
         # ===== 8️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
         line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
@@ -711,7 +712,7 @@ with right:
             )
         )
 
-        st.altair_chart(final_chart, use_container_width=True)
+        st.altair_chart(final_chart, width='stretch')
 
 
     
