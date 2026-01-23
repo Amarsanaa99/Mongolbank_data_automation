@@ -666,7 +666,7 @@ with right:
             )
             .properties(
                 height=60,
-                width="container"
+                width=800
             )
             .add_params(brush)
         )
