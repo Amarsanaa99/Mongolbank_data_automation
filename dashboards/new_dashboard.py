@@ -1224,9 +1224,9 @@ def group_chart(group_name):
             title=None,
             axis=alt.Axis(
                 grid=True,
-                gridColor="#334155",   # 🔥 GRID COLOR (slate-700)
-                gridOpacity=0.45,      # 🔥 илүү тод
-                gridWidth=1,           # 🔥 нимгэн
+                gridColor="#334155",   
+                gridOpacity=0.45,      
+                gridWidth=1,           
                 domain=False,
                 tickColor="#475569",   # (сонголт)
                 labelColor="#cbd5e1",  # (сонголт)
