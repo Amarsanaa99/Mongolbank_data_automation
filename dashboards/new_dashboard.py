@@ -301,8 +301,10 @@ for col in ["Year", "Month", "Quarter"]:
 with left:
     with st.container(border=True):
         st.subheader("⏳ Time range")
-    
-        # Жилийн сонголт
+        
+        # Жилийн сонголтыг хоёр баганад зэрэгцүүлэх
+        year_col1, year_col2 = st.columns(2)
+        
         year_s = series["Year"]
         if isinstance(year_s, pd.DataFrame):
             year_s = year_s.iloc[:, 0]
@@ -311,39 +313,41 @@ with left:
             year_s.dropna().astype(int).unique().tolist()
         )
         
-        # Эхлэх жил
-        start_year = st.selectbox(
-            "Start Year",
-            years,
-            index=0
-        )
+        with year_col1:
+            start_year = st.selectbox(
+                "Start Year",
+                years,
+                index=0
+            )
         
-        # Дуусах жил
-        end_year = st.selectbox(
-            "End Year",
-            years,
-            index=len(years)-1
-        )
+        with year_col2:
+            end_year = st.selectbox(
+                "End Year",
+                years,
+                index=len(years)-1
+            )
         
-        # Сар эсвэл улирлын сонголт
+        # Сар эсвэл улирлын сонголтыг хоёр баганад зэрэгцүүлэх
         if freq == "Monthly":
             months = list(range(1, 13))
             
-            # Эхлэх сар
-            start_month = st.selectbox(
-                "Start Month",
-                months,
-                index=0,
-                format_func=lambda x: f"{x:02d}"
-            )
+            month_col1, month_col2 = st.columns(2)
             
-            # Дуусах сар
-            end_month = st.selectbox(
-                "End Month",
-                months,
-                index=len(months)-1,
-                format_func=lambda x: f"{x:02d}"
-            )
+            with month_col1:
+                start_month = st.selectbox(
+                    "Start Month",
+                    months,
+                    index=0,
+                    format_func=lambda x: f"{x:02d}"
+                )
+            
+            with month_col2:
+                end_month = st.selectbox(
+                    "End Month",
+                    months,
+                    index=len(months)-1,
+                    format_func=lambda x: f"{x:02d}"
+                )
             
             # time string үүсгэх
             start_time = f"{start_year}-{start_month:02d}"
@@ -352,19 +356,21 @@ with left:
         elif freq == "Quarterly":
             quarters = [1, 2, 3, 4]
             
-            # Эхлэх улирал
-            start_quarter = st.selectbox(
-                "Start Quarter",
-                quarters,
-                index=0
-            )
+            quarter_col1, quarter_col2 = st.columns(2)
             
-            # Дуусах улирал
-            end_quarter = st.selectbox(
-                "End Quarter",
-                quarters,
-                index=len(quarters)-1
-            )
+            with quarter_col1:
+                start_quarter = st.selectbox(
+                    "Start Quarter",
+                    quarters,
+                    index=0
+                )
+            
+            with quarter_col2:
+                end_quarter = st.selectbox(
+                    "End Quarter",
+                    quarters,
+                    index=len(quarters)-1
+                )
             
             # time string үүсгэх
             start_time = f"{start_year}-Q{start_quarter}"
@@ -470,62 +476,54 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
 
-        # ===== 4️⃣ X-AXIS CONFIGURATION =====
-        # Жилийн тооцоо
-        start_year_int = int(start_year) if isinstance(start_year, str) else start_year
-        end_year_int = int(end_year) if isinstance(end_year, str) else end_year
-        year_count = end_year_int - start_year_int + 1
-        
-        # ✅ ЯГ ӨМНӨХ ШИГЭЭ: 2 ЖИЛИЙН ИНТЕРВАЛТАЙ ШОШГО
-        # Хэрэв year_count 12-оос их бол 2 жил тутамд, бага бол жил бүр
-        if year_count > 12:
-            tick_step = 2
-        else:
-            tick_step = 1
 
-        # ===== X-AXIS (FRED STYLE) =====
-        if year_count > 8:
-            # 🔥 DEFAULT VIEW → ЗӨВХӨН ОН
-            x_axis = alt.Axis(
-                title=None,
-                labelAngle=0,
-                labelFontSize=11,
-                grid=False,
-                domain=True,
-                orient='bottom',
-                format="%Y"
+        # ===== 4️⃣ X-AXIS CONFIGURATION - ДИНАМИК ТОХИРУУЛГА =====
+        # Zoom-ээс хамаарч шошгыг өөрчлөх (Жил -> Сар/Улирал)
+        if freq == "Monthly":
+            label_expr = """
+            if(datum.value != null,
+                // zoom хийгдээгүй үед зөвхөн жилийн эхэнд жилээр харуулна
+                (month(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
+                ''
             )
+            """
+        elif freq == "Quarterly":
+            label_expr = """
+            if(datum.value != null,
+                // улирал эхлэх сар 1,4,7,10 дээр жилээр харуулна
+                (month(datum.value) == 1 || month(datum.value) == 4 || month(datum.value) == 7 || month(datum.value) == 10) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-Q%q'),
+                ''
+            )
+            """
         else:
-            # 🔥 ZOOMED VIEW → SAR / ULIRAL
-            x_axis = alt.Axis(
-                title=None,
-                labelAngle=0,
-                labelFontSize=11,
-                grid=False,
-                domain=True,
-                orient='bottom',
-                labelExpr="""
-                timeFormat(
-                  datum.value,
-                  (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
-                    ? '%Y-%m'
-                    : '%Y'
-                )
-                """
-            )
+            label_expr = "timeFormat(datum.value, '%Y')"
+
+
+
+
+
+        x_axis = alt.Axis(
+            title=None,
+            labelAngle=0,
+            labelFontSize=11,
+            grid=False,
+            domain=True,
+            orient='bottom',
+            labelExpr=label_expr, # Динамик формат энд орж байна
+            tickCount=10          # Зай хэмнэх зорилгоор ойролцоогоор 10 тэмдэглэгээ харуулна
+        )
 
         
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
         legend_config = alt.Legend(
             title=None,
-            orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
+            orient='right', 
             offset=0,
             padding=0,
             labelFontSize=11,
             symbolType="stroke",
             symbolSize=80,
             direction='vertical',
-            # ✅ ЯГ ӨМНӨХ ШИГЭЭ ДЭВСГЭРГҮЙ, ЦЭВЭР
             fillColor=None,
             strokeColor=None,
             cornerRadius=0,
@@ -584,13 +582,14 @@ with right:
         )
         
         # ===== 7️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
-        hover = alt.selection_single(
+        hover = alt.selection_point(
             fields=["time_dt"],
             nearest=True,
             on="mouseover",
             empty=False,
             clear="mouseout"
         )
+
         
         # ===== 8️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
         line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
@@ -644,8 +643,8 @@ with right:
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
-                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
+                fillOpacity=0,         
+                stroke="#777777",      
                 strokeWidth=1.2
             )
             .encode(
@@ -694,14 +693,13 @@ with right:
             alt.vconcat(
                 main_chart,
                 mini_chart,
-                spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
+                spacing=20  
             )
             .resolve_scale(
                 x='independent',
                 color='shared'
             )
             .properties(
-                # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
                 padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
             )
             .configure_view(
@@ -714,7 +712,7 @@ with right:
             )
         )
 
-        st.altair_chart(final_chart, use_container_width=True)
+        st.altair_chart(final_chart, width='stretch')
 
 
     
