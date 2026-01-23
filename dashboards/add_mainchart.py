@@ -64,6 +64,7 @@ with left:
             horizontal=True,
             label_visibility="collapsed"
         )
+        
 # ======================
 # LOAD DATA
 # ======================
@@ -234,7 +235,6 @@ def render_change(label, value):
     )
 
 
-
 # Өгөгдлийг цуваа болгон нэгтгэх
 series = df_time.copy()
 # ======================
@@ -295,9 +295,6 @@ for col in ["Year", "Month", "Quarter"]:
     if col in series.columns:
         series[col] = as_series(series[col])
 
-# ======================
-# ⏳ TIME RANGE (MAIN CHART ONLY)
-# ======================
 # ======================
 # ⏳ TIME RANGE (MAIN CHART ONLY)
 # ======================
@@ -420,14 +417,15 @@ if "time" not in series.columns:
 if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
-
+        
 # ======================
 # MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
     with st.container(border=True):
+        
         st.subheader("📈 Main chart")
-
+        
         # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
         
@@ -449,12 +447,99 @@ with right:
 
         import altair as alt
         
-        # ===== 3️⃣ TIME FORMATTING FOR DETAILED X-Axis
-        # Х тэнхлэгийн нарийвчилсан формат (жил-сар-өдөр)
+        # ===== 3️⃣ TIME FORMATTING =====
         chart_df = chart_df.copy()
-        chart_df['time_detailed'] = chart_df['time'].astype(str)
         
-        # ===== 4️⃣ BASE CHART (shared X scale)
+        if freq == "Monthly":
+            chart_df["time_dt"] = pd.to_datetime(
+                chart_df["time"],
+                format="%Y-%m",
+                errors="coerce"
+            )
+        elif freq == "Quarterly":
+            chart_df["time_dt"] = (
+                pd.PeriodIndex(chart_df["time"], freq="Q")
+                .to_timestamp()
+            )
+        else:
+            st.error("❌ Unknown frequency")
+            st.stop()
+        
+        # 🔒 HARD CHECK
+        if chart_df["time_dt"].isna().all():
+            st.error("❌ Failed to convert time → datetime")
+            st.stop()
+
+        # ===== 4️⃣ X-AXIS CONFIGURATION =====
+        # Жилийн тооцоо
+        start_year_int = int(start_year) if isinstance(start_year, str) else start_year
+        end_year_int = int(end_year) if isinstance(end_year, str) else end_year
+        year_count = end_year_int - start_year_int + 1
+        
+        # ✅ ЯГ ӨМНӨХ ШИГЭЭ: 2 ЖИЛИЙН ИНТЕРВАЛТАЙ ШОШГО
+        # Хэрэв year_count 12-оос их бол 2 жил тутамд, бага бол жил бүр
+        if year_count > 12:
+            tick_step = 2
+        else:
+            tick_step = 1
+
+        # ===== X-AXIS (FRED STYLE) =====
+        if year_count > 8:
+            # 🔥 DEFAULT VIEW → ЗӨВХӨН ОН
+            x_axis = alt.Axis(
+                title=None,
+                labelAngle=0,
+                labelFontSize=11,
+                grid=False,
+                domain=True,
+                orient='bottom',
+                format="%Y"
+            )
+        else:
+            # 🔥 ZOOMED VIEW → SAR / ULIRAL
+            x_axis = alt.Axis(
+                title=None,
+                labelAngle=0,
+                labelFontSize=11,
+                grid=False,
+                domain=True,
+                orient='bottom',
+                labelExpr="""
+                timeFormat(
+                  datum.value,
+                  (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
+                    ? '%Y-%m'
+                    : '%Y'
+                )
+                """
+            )
+
+        
+        # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
+        legend_config = alt.Legend(
+            title=None,
+            orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
+            offset=0,
+            padding=0,
+            labelFontSize=11,
+            symbolType="stroke",
+            symbolSize=80,
+            direction='vertical',
+            # ✅ ЯГ ӨМНӨХ ШИГЭЭ ДЭВСГЭРГҮЙ, ЦЭВЭР
+            fillColor=None,
+            strokeColor=None,
+            cornerRadius=0,
+            labelLimit=180
+        )
+                # 🔑 FRED-STYLE BRUSH (PAN ONLY, NO ZOOM)
+        brush = alt.selection_interval(
+            encodings=["x"],
+            translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
+            zoom=False,
+            empty=False     # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
+        )
+        
+        # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
         base = (
             alt.Chart(chart_df)
             .transform_fold(
@@ -463,16 +548,13 @@ with right:
             )
             .encode(
                 x=alt.X(
-                    'time:T',  # 🔥 ТӨРӨЛӨӨ Temporal болгож өөрчиллөө (zoom дэлгэрэнгүй болгох)
+                    "time_dt:T",
                     title=None,
-                    axis=alt.Axis(
-                        format='%Y-%m',  # 🔥 ОЙРТУУЛАХАД ӨӨРЧЛӨГДӨХ ФОРМАТ
-                        labelAngle=0,
-                        labelFontSize=11,
-                        grid=False,
-                        labelExpr="timeFormat(datum.value, '%Y-%m')"  # 🔥 Жил-Сар харагдана
-                    ),
-                    scale=alt.Scale(zero=False)  # 🔥 ТЭГЭЭС ЭХЭЛЖ БАЙХГҮЙ
+                    axis=x_axis,
+                    scale=alt.Scale(
+                        zero=False,
+                        domain=brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
+                    )
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -480,81 +562,160 @@ with right:
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
-                        domain=False,
-                        labelFontSize=11
+                        domain=True,  # ✅ ЯГ ӨМНӨХ ШИГ
+                        labelFontSize=11,
+                        offset=5
                     )
                 ),
                 color=alt.Color(
                     "Indicator:N",
-                    legend=alt.Legend(
-                        title=None,
-                        orient="right"
-                    )
+                    legend=legend_config  # ✅ ЯГ ӨМНӨХ ШИГЭЭ LEGEND
                 ),
                 tooltip=[
-                    alt.Tooltip('time:T', title="Time", format='%Y-%m-%d'),  # 🔥 TOOLTIP ДЭЛГЭРЭНГҮЙ
+                    alt.Tooltip(
+                        "time_dt:T",
+                        title="Time",
+                        format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
+                    ),
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
         )
         
-        # ===== 5️⃣ MAIN LINE (ZOOM + PAN ENABLED)
-        main_chart = (
-            base
-            .mark_line(strokeWidth=2.4)
-            .properties(
-                height=360,
-                # 🔥 ЗУРАГ ДЭЭР ДАРАХАД ZOOM IN/OUT БОЛОМЖТОЙ
-            )
-            .interactive()  # 🔥 БҮХ ТЭНХЛЭГТ ZOOM, PAN БОЛОМЖТОЙ
+        # ===== 7️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
+        hover = alt.selection_single(
+            fields=["time_dt"],
+            nearest=True,
+            on="mouseover",
+            empty=False,
+            clear="mouseout"
         )
         
-        # ===== 6️⃣ MINI OVERVIEW (CONTEXT NAVIGATOR)
-        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
+        # ===== 8️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
+        line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
         
-        mini_chart = (
+        points = (
             base
-            .mark_line(strokeWidth=1.2)
+            .mark_circle(
+                size=65,  # ✅ ЯГ ӨМНӨХ ШИГ (65)
+                filled=True,
+                stroke="#ffffff",
+                strokeWidth=2  # ✅ ЯГ ӨМНӨХ ШИГ
+            )
             .encode(
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=alt.Axis(
-                        labels=False,
-                        ticks=False,
-                        grid=False,
-                        domain=False
-                    )
-                ),
-                color=alt.Color("Indicator:N", legend=None)
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            )
+            .add_params(hover)
+        )
+
+        # Босоо шулуун - ЯГ ӨМНӨХ ШИГ
+        vline = (
+            alt.Chart(chart_df)
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  # ✅ ЯГ ӨМНӨХ ШИГ
+            .encode(
+                x='time_dt:T',
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            )
+            .transform_filter(hover)
+        )
+        
+        # ===== 9️⃣ ҮНДСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        zoom = alt.selection_interval(
+            bind='scales',
+            encodings=['x']
+        )
+
+        main_chart = (
+            alt.layer(
+                line,
+                vline,
+                points
             )
             .properties(
-                height=70
+                height=400,
+                width=800
+            )
+            .add_params(zoom)   # 🔥 FRED STYLE ZOOM
+        )
+
+        
+        # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        mini_window = (
+            alt.Chart(chart_df)
+            .mark_rect(
+                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
+                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
+                strokeWidth=1.2
+            )
+            .encode(
+                x="time_dt:T"
+            )
+            .transform_filter(brush)
+        )
+
+
+
+        mini_chart = (
+            alt.layer(
+                alt.Chart(chart_df)
+                .transform_fold(
+                    valid_indicators,
+                    as_=["Indicator", "Value"]
+                )
+                .mark_line(strokeWidth=1.2)
+                .encode(
+                    x=alt.X("time_dt:T", axis=None),
+                    y=alt.Y(
+                        "Value:Q",
+                        axis=alt.Axis(
+                            labels=False,
+                            ticks=False,
+                            grid=False,
+                            domain=False
+                        )
+                    ),
+                    color=alt.Color("Indicator:N", legend=None)
+                ),
+        
+                mini_window     # 🔥 SHADED WINDOW
+            )
+            .properties(
+                height=60,
+                width=800
             )
             .add_params(brush)
         )
+
+
         
-        # ===== 7️⃣ LINK MAIN ↔ MINI
+        # ===== 1️⃣1️⃣ НЭГТГЭСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ПАРАМЕТРҮҮД =====
         final_chart = (
             alt.vconcat(
-                main_chart.add_params(brush),  # 🔥 MINI-ТЭЙ ХОЛБОГДОНО
+                main_chart,
                 mini_chart,
-                spacing=10
+                spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
+            )
+            .resolve_scale(
+                x='independent',
+                color='shared'
             )
             .properties(
-                background="transparent"
+                # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
+                padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
+            )
+            .configure_view(
+                strokeWidth=0
             )
             .configure_axis(
                 grid=True,
-                gridColor='#e0e0e0'
+                gridColor='#e0e0e0',
+                gridOpacity=0.3
             )
         )
-        
-        st.altair_chart(
-            final_chart,
-            use_container_width=True
-        )
+
+        st.altair_chart(final_chart, use_container_width=True)
+
 
     
     def compute_group_kpis(df, indicators):
@@ -1117,9 +1278,9 @@ def group_chart(group_name):
             title=None,
             axis=alt.Axis(
                 grid=True,
-                gridColor="#334155",   # 🔥 GRID COLOR (slate-700)
-                gridOpacity=0.45,      # 🔥 илүү тод
-                gridWidth=1,           # 🔥 нимгэн
+                gridColor="#334155",   
+                gridOpacity=0.45,      
+                gridWidth=1,           
                 domain=False,
                 tickColor="#475569",   # (сонголт)
                 labelColor="#cbd5e1",  # (сонголт)
