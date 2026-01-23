@@ -470,8 +470,16 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
 
+
         # ===== 4️⃣ X-AXIS CONFIGURATION - ДИНАМИК ТОХИРУУЛГА =====
-        # Хугацааны нарийвчлалыг автоматаар тохируулах
+        # Zoom-ээс хамаарч шошгыг өөрчлөх (Жил -> Сар/Улирал)
+        if freq == "Monthly":
+            label_expr = "(unit('month', datum.value) == 0) ? format(datum.value, '%Y') : format(datum.value, '%Y-%m')"
+        elif freq == "Quarterly":
+            label_expr = "(unit('month', datum.value) == 0) ? format(datum.value, '%Y') : format(datum.value, '%Y-Q') + (floor(month(datum.value)/3) + 1)"
+        else:
+            label_expr = "format(datum.value, '%Y')"
+
         x_axis = alt.Axis(
             title=None,
             labelAngle=0,
@@ -479,7 +487,8 @@ with right:
             grid=False,
             domain=True,
             orient='bottom',
-            format="%Y"
+            labelExpr=label_expr, # Динамик формат энд орж байна
+            tickCount=10          # Зай хэмнэх зорилгоор ойролцоогоор 10 тэмдэглэгээ харуулна
         )
 
         
