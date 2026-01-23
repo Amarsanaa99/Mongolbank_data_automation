@@ -479,7 +479,8 @@ with right:
             grid=False,
             domain=True,
             orient='bottom',
-            format="%Y",
+            format="%Y"
+        )
             labelExpr="""
             // Хугацааны интервалыг тооцоолох
             var timeDiff = (timeOffset('month', datum.value, 1) - datum.value);
