@@ -503,14 +503,9 @@ with right:
             )
         else:
             # 🔥 ZOOMED VIEW → SAR / ULIRAL
-            x_axis = alt.Axis(
-                title=None,
-                labelAngle=0,
-                labelFontSize=11,
-                grid=False,
-                domain=True,
-                orient='bottom',
-                labelExpr="""
+            if freq == "Monthly":
+                # Сар өгөгдөл: сараар харуулах
+                label_expr = """
                 timeFormat(
                   datum.value,
                   (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
@@ -518,6 +513,18 @@ with right:
                     : '%Y'
                 )
                 """
+            else:  # "Quarterly"
+                # Улирлын өгөгдөл: улирлаар харуулах
+                label_expr = "timeFormat(datum.value, '%Y-Q%q')"
+            
+            x_axis = alt.Axis(
+                title=None,
+                labelAngle=0,
+                labelFontSize=11,
+                grid=False,
+                domain=True,
+                orient='bottom',
+                labelExpr=label_expr
             )
 
         
