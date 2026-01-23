@@ -621,7 +621,7 @@ with right:
             )
             .properties(
                 height=400,
-                width=800
+                width=650
             )
             .add_params(zoom)   # 🔥 FRED STYLE ZOOM
         )
