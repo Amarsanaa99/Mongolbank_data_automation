@@ -548,7 +548,7 @@ with right:
                     axis=x_axis,
                     scale=alt.Scale(
                         zero=False,
-                        domain=zoom_brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
+                        domain=mini_brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
                     )
                 ),
                 y=alt.Y(
@@ -696,22 +696,9 @@ with right:
             )
             # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
             .add_params(mini_brush)
-            # 🔥 MINI CHART ДЭЭР PAN ХИЙХЭД MAIN CHART-ТАЙ ХОЛБОГДОНО
-            .add_params(
-                alt.selection_interval(
-                    encodings=['x'],
-                    bind=False
-                ).add_params(zoom_brush)
-            )
         )
         
-        # 🔥 MINI CHART ДЭЭР PAN ХИЙХЭД (mini_brush) MAIN CHART-ын ZOOM_BRUSH ШИНЭЧЛЭГДЭНЭ
-        # Үүний тулд бид zoom_brush-ын init утгыг mini_brush-тай холбох хэрэгтэй
-        # Гэхдээ Altair-д энэ нь амар биш. Тиймээс бид дараах логикийг ашиглана:
-        # mini_brush нь zoom_brush-ыг update хийнэ
-        # Гэхдээ энэ нь програмчлалаар хийгдэх ёстой
-        # Streamlit-д бид үүнийг JavaScript-ээр хийх боломжгүй
-        # Тиймээс бид зөвхөн visual эффектээр хангана
+
 
 
 
