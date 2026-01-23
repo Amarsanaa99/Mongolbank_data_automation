@@ -533,6 +533,14 @@ with right:
             zoom=True,       # Zoom идэвхжүүлэх
             empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
         )
+        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
+        mini_brush = alt.selection_interval(
+            encodings=['x'],
+            translate=True,   # Зүүн баруун тийш гүйлгэх
+            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
+            empty=False
+        )
         
         # ===== 7️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
         base = (
@@ -614,14 +622,7 @@ with right:
             )
             .transform_filter(hover)
         )
-        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
-        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
-        mini_brush = alt.selection_interval(
-            encodings=['x'],
-            translate=True,   # Зүүн баруун тийш гүйлгэх
-            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
-            empty=False
-        )
+
         
         # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
         # 🔍 FRED-STYLE ZOOM (MAIN CHART)
