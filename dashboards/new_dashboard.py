@@ -524,7 +524,10 @@ with right:
                     "time_dt:T",
                     title=None,
                     axis=x_axis,
-                    scale=alt.Scale(zero=False)  # ✅ ЯГ ӨМНӨХ ШИГ
+                    scale=alt.Scale(
+                        zero=False,
+                        domain=brush   # 🔥 FRED шиг zoom → хугацаа нарийсна
+                    )
                 ),
                 y=alt.Y(
                     "Value:Q",
@@ -605,7 +608,13 @@ with right:
         )
         
         # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
-        brush = alt.selection_interval(encodings=["x"], translate=False, zoom=True)
+        # 🔑 FRED-STYLE BRUSH (PAN ONLY, NO ZOOM)
+        brush = alt.selection_interval(
+            encodings=["x"],
+            translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
+            zoom=False        # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
+        )
+
         
         mini_chart = (
             base
