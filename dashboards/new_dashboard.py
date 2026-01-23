@@ -376,9 +376,6 @@ with left:
             start_time = f"{start_year}-Q{start_quarter}"
             end_time = f"{end_year}-Q{end_quarter}"
 
-
-
-
 # Сонгосон үзүүлэлтүүдийг нэмэх
 for indicator in selected:
     if (group, indicator) in df_data.columns:
