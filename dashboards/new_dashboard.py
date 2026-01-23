@@ -482,25 +482,38 @@ with right:
             tick_step = 2
         else:
             tick_step = 1
-        
-        # X тэнхлэгийн тохируулга - ЯГ ӨМНӨХ ШИГ
-        x_axis = alt.Axis(
-            title=None,
-            labelAngle=0,
-            labelFontSize=11,
-            grid=False,
-            domain=True,
-            orient='bottom',
-        
-            labelExpr="""
-            timeFormat(
-              datum.value,
-              (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
-                ? '%Y-%m'
-                : '%Y'
+
+        # ===== X-AXIS (FRED STYLE) =====
+        if year_count > 8:
+            # 🔥 DEFAULT VIEW → ЗӨВХӨН ОН
+            x_axis = alt.Axis(
+                title=None,
+                labelAngle=0,
+                labelFontSize=11,
+                grid=False,
+                domain=True,
+                orient='bottom',
+                format="%Y"
             )
-            """
-        )
+        else:
+            # 🔥 ZOOMED VIEW → SAR / ULIRAL
+            x_axis = alt.Axis(
+                title=None,
+                labelAngle=0,
+                labelFontSize=11,
+                grid=False,
+                domain=True,
+                orient='bottom',
+                labelExpr="""
+                timeFormat(
+                  datum.value,
+                  (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
+                    ? '%Y-%m'
+                    : '%Y'
+                )
+                """
+            )
+
 
         
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
@@ -523,7 +536,8 @@ with right:
         brush = alt.selection_interval(
             encodings=["x"],
             translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
-            zoom=False        # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
+            zoom=False,
+            empty=False     # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
         )
         
         # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
@@ -631,14 +645,17 @@ with right:
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fill="#ffffff",
-                fillOpacity=0.15
+                fill="#4c78a8",      # 🔥 line-тэй ижил hue
+                fillOpacity=0.08,    # 🔥 маш сул
+                stroke="#4c78a8",
+                strokeWidth=1.2
             )
             .encode(
                 x="time_dt:T"
             )
             .transform_filter(brush)
         )
+
 
         mini_chart = (
             alt.layer(
