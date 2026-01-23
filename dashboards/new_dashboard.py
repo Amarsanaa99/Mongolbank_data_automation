@@ -301,10 +301,8 @@ for col in ["Year", "Month", "Quarter"]:
 with left:
     with st.container(border=True):
         st.subheader("⏳ Time range")
-        
-        # Жилийн сонголтыг хоёр баганад зэрэгцүүлэх
-        year_col1, year_col2 = st.columns(2)
-        
+    
+        # Жилийн сонголт
         year_s = series["Year"]
         if isinstance(year_s, pd.DataFrame):
             year_s = year_s.iloc[:, 0]
@@ -313,41 +311,39 @@ with left:
             year_s.dropna().astype(int).unique().tolist()
         )
         
-        with year_col1:
-            start_year = st.selectbox(
-                "Start Year",
-                years,
-                index=0
-            )
+        # Эхлэх жил
+        start_year = st.selectbox(
+            "Start Year",
+            years,
+            index=0
+        )
         
-        with year_col2:
-            end_year = st.selectbox(
-                "End Year",
-                years,
-                index=len(years)-1
-            )
+        # Дуусах жил
+        end_year = st.selectbox(
+            "End Year",
+            years,
+            index=len(years)-1
+        )
         
-        # Сар эсвэл улирлын сонголтыг хоёр баганад зэрэгцүүлэх
+        # Сар эсвэл улирлын сонголт
         if freq == "Monthly":
             months = list(range(1, 13))
             
-            month_col1, month_col2 = st.columns(2)
+            # Эхлэх сар
+            start_month = st.selectbox(
+                "Start Month",
+                months,
+                index=0,
+                format_func=lambda x: f"{x:02d}"
+            )
             
-            with month_col1:
-                start_month = st.selectbox(
-                    "Start Month",
-                    months,
-                    index=0,
-                    format_func=lambda x: f"{x:02d}"
-                )
-            
-            with month_col2:
-                end_month = st.selectbox(
-                    "End Month",
-                    months,
-                    index=len(months)-1,
-                    format_func=lambda x: f"{x:02d}"
-                )
+            # Дуусах сар
+            end_month = st.selectbox(
+                "End Month",
+                months,
+                index=len(months)-1,
+                format_func=lambda x: f"{x:02d}"
+            )
             
             # time string үүсгэх
             start_time = f"{start_year}-{start_month:02d}"
@@ -356,21 +352,19 @@ with left:
         elif freq == "Quarterly":
             quarters = [1, 2, 3, 4]
             
-            quarter_col1, quarter_col2 = st.columns(2)
+            # Эхлэх улирал
+            start_quarter = st.selectbox(
+                "Start Quarter",
+                quarters,
+                index=0
+            )
             
-            with quarter_col1:
-                start_quarter = st.selectbox(
-                    "Start Quarter",
-                    quarters,
-                    index=0
-                )
-            
-            with quarter_col2:
-                end_quarter = st.selectbox(
-                    "End Quarter",
-                    quarters,
-                    index=len(quarters)-1
-                )
+            # Дуусах улирал
+            end_quarter = st.selectbox(
+                "End Quarter",
+                quarters,
+                index=len(quarters)-1
+            )
             
             # time string үүсгэх
             start_time = f"{start_year}-Q{start_quarter}"
@@ -503,20 +497,6 @@ with right:
             )
         else:
             # 🔥 ZOOMED VIEW → SAR / ULIRAL
-            if freq == "Monthly":
-                # Сар өгөгдөл: сараар харуулах
-                label_expr = """
-                timeFormat(
-                  datum.value,
-                  (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
-                    ? '%Y-%m'
-                    : '%Y'
-                )
-                """
-            else:  # "Quarterly"
-                # Улирлын өгөгдөл: улирлаар харуулах
-                label_expr = "timeFormat(datum.value, '%Y-Q%q')"
-            
             x_axis = alt.Axis(
                 title=None,
                 labelAngle=0,
@@ -524,7 +504,14 @@ with right:
                 grid=False,
                 domain=True,
                 orient='bottom',
-                labelExpr=label_expr
+                labelExpr="""
+                timeFormat(
+                  datum.value,
+                  (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
+                    ? '%Y-%m'
+                    : '%Y'
+                )
+                """
             )
 
         
