@@ -935,13 +935,19 @@ with right:
                 changes = None
     
             if changes:
+                # 🔹 Өнгөгүй, нейтрал болгох render функц
+                def render_neutral(label, value):
+                    if value is None or (isinstance(value, float) and pd.isna(value)):
+                        return f"<span class='change-item'>{label}: N/A</span>"
+                    return f"<span class='change-item'>{label}: {value:.1f}%</span>"
+                
                 cards_html += f"""
                 <div class="change-card">
                     <div class="change-title">{ind}</div>
                     <div class="change-bar">
-                        {render_change("YoY", changes.get("yoy"))}
-                        {render_change("YTD", changes.get("ytd"))}
-                        {render_change("Prev", changes.get("prev"))}
+                        {render_neutral("YoY", changes.get("yoy"))}
+                        {render_neutral("YTD", changes.get("ytd"))}
+                        {render_neutral("Prev", changes.get("prev"))}
                     </div>
                 </div>
                 """
