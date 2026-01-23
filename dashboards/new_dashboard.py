@@ -676,6 +676,7 @@ with right:
                 width=800
             )
             .add_params(
+            
                 alt.selection_interval(
                     encodings=['x'],
                     empty=False,
@@ -684,7 +685,7 @@ with right:
                         chart_df["time_dt"].max()
                     ]}
                 )
-                .add_params(zoom_brush)  # 🔥 zoom_brush-тай холбоно
+            .add_params(zoom_brush)  # 🔥 zoom_brush-тай холбоно
             )
         )
 
