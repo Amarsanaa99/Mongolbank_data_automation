@@ -1009,7 +1009,7 @@ with right:
             }
             .change-up {
                 color: #22c55e;        /* green */
-                font-weight: 600;
+                font-weight: normal;
             }
             
             .change-down {
