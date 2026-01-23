@@ -480,11 +480,22 @@ with right:
         # ===== 4️⃣ X-AXIS CONFIGURATION - ДИНАМИК ТОХИРУУЛГА =====
         # Zoom-ээс хамаарч шошгыг өөрчлөх (Жил -> Сар/Улирал)
         if freq == "Monthly":
-            label_expr = "(unit('month', datum.value) == 0) ? format(datum.value, '%Y') : format(datum.value, '%Y-%m')"
+            label_expr = """
+            if(datum.value != null,
+                (month(datum.value) == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
+                ''
+            )
+            """
         elif freq == "Quarterly":
-            label_expr = "(unit('month', datum.value) == 0) ? format(datum.value, '%Y') : format(datum.value, '%Y-Q') + (floor(month(datum.value)/3) + 1)"
+            label_expr = """
+            if(datum.value != null,
+                (month(datum.value) % 3 == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y-Q%q') : timeFormat(datum.value, '%Y-Q%q'),
+                ''
+            )
+            """
         else:
-            label_expr = "format(datum.value, '%Y')"
+            label_expr = "timeFormat(datum.value, '%Y')"
+
 
         x_axis = alt.Axis(
             title=None,
