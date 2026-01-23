@@ -615,11 +615,6 @@ with right:
         )
         
         # ===== 9️⃣ ҮНДСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
-        zoom = alt.selection_interval(
-            bind='scales',
-            encodings=['x']
-        )
-
         main_chart = (
             alt.layer(
                 line,
@@ -630,8 +625,8 @@ with right:
                 height=400,
                 width=850
             )
-            .add_params(zoom)   # 🔥 FRED STYLE ZOOM
         )
+
 
         
         # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
