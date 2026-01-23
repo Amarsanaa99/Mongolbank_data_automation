@@ -1009,12 +1009,12 @@ with right:
             }
             .change-up {
                 color: #22c55e;        /* green */
-                font-weight: normal;
+                font-weight: 600;
             }
             
             .change-down {
                 color: #ef4444;        /* red */
-                font-weight: 600;
+                font-weight: normal;
             }
             
             .change-arrow {
