@@ -479,18 +479,17 @@ with right:
             grid=False,
             domain=True,
             orient='bottom',
+            format="%Y",
             labelExpr="""
             // Хугацааны интервалыг тооцоолох
             var timeDiff = (timeOffset('month', datum.value, 1) - datum.value);
             var daysDiff = timeDiff / (1000*60*60*24);
             
             // Интервалаас хамааран форматыг сонгох
-            // 40 хоногоос бага бол сар, 120 хоногоос бага бол улирал, өөрөөр жил
             daysDiff < 40 ? timeFormat(datum.value, '%Y-%m') :  // сар
-            daysDiff < 120 ? timeFormat(datum.value, '%Y-Q') + quarter(datum.value) :  // улирал
+            daysDiff < 120 ? timeFormat(datum.value, '%Y') + '-Q' + quarter(datum.value) :  // улирал
             timeFormat(datum.value, '%Y')  // жил
             """
-        )
 
         
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
