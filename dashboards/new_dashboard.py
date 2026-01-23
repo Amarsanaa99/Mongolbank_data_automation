@@ -683,7 +683,8 @@ with right:
                         chart_df["time_dt"].min(),
                         chart_df["time_dt"].max()
                     ]}
-                ).add_params(zoom_brush)  # 🔥 zoom_brush-тай холбоно
+                )
+                .add_params(zoom_brush)  # 🔥 zoom_brush-тай холбоно
             )
         )
 
