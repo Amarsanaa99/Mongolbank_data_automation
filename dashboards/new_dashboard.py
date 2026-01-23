@@ -485,15 +485,22 @@ with right:
         # X тэнхлэгийн тохируулга - ЯГ ӨМНӨХ ШИГ
         x_axis = alt.Axis(
             title=None,
-            format="%Y",  # ЖИЛ ХАРУУЛАХ
             labelAngle=0,
             labelFontSize=11,
-            grid=False,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ grid ХИЙГҮЙ
-            tickCount={'interval': 'year', 'step': tick_step},
+            grid=False,
             domain=True,
             orient='bottom',
-            offset=0
+        
+            labelExpr="""
+            timeFormat(
+              datum.value,
+              (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
+                ? '%Y-%m'
+                : '%Y'
+            )
+            """
         )
+
         
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
         legend_config = alt.Legend(
@@ -532,7 +539,7 @@ with right:
                     axis=x_axis,
                     scale=alt.Scale(
                         zero=False,
-                        domain=brush   # 🔥 FRED шиг zoom → хугацаа нарийсна
+                        domain=brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
                     )
                 ),
                 y=alt.Y(
@@ -600,6 +607,11 @@ with right:
         )
         
         # ===== 9️⃣ ҮНДСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        zoom = alt.selection_interval(
+            bind='scales',
+            encodings=['x']
+        )
+
         main_chart = (
             alt.layer(
                 line,
@@ -607,41 +619,58 @@ with right:
                 points
             )
             .properties(
-                height=400,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 400
+                height=400,
                 width=850
             )
-            .interactive()
+            .add_params(zoom)   # 🔥 FRED STYLE ZOOM
         )
+
         
         # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
-        
-        mini_chart = (
-            base
-            .mark_line(strokeWidth=1.2)  # ✅ ЯГ ӨМНӨХ ШИГ
+        mini_window = (
+            alt.Chart(chart_df)
+            .mark_rect(
+                fill="#ffffff",
+                fillOpacity=0.15
+            )
             .encode(
-                x=alt.X(
-                    "time_dt:T",
-                    title=None,
-                    axis=None
+                x="time_dt:T"
+            )
+            .transform_filter(brush)
+        )
+
+        mini_chart = (
+            alt.layer(
+                alt.Chart(chart_df)
+                .transform_fold(
+                    valid_indicators,
+                    as_=["Indicator", "Value"]
+                )
+                .mark_line(strokeWidth=1.2)
+                .encode(
+                    x=alt.X("time_dt:T", axis=None),
+                    y=alt.Y(
+                        "Value:Q",
+                        axis=alt.Axis(
+                            labels=False,
+                            ticks=False,
+                            grid=False,
+                            domain=False
+                        )
+                    ),
+                    color=alt.Color("Indicator:N", legend=None)
                 ),
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=alt.Axis(
-                        labels=False,
-                        ticks=False,
-                        grid=False,
-                        domain=False
-                    )
-                ),
-                color=alt.Color("Indicator:N", legend=None)
+        
+                mini_window     # 🔥 SHADED WINDOW
             )
             .properties(
-                height=60,  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 60
+                height=60,
                 width="container"
             )
             .add_params(brush)
         )
+
+
         
         # ===== 1️⃣1️⃣ НЭГТГЭСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ПАРАМЕТРҮҮД =====
         final_chart = (
