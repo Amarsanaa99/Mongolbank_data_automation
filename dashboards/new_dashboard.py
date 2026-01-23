@@ -681,7 +681,7 @@ with right:
                 spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
             )
             .resolve_scale(
-                x='shared',
+                x='independent',
                 color='shared'
             )
             .properties(
