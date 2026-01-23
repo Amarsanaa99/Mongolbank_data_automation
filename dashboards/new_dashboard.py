@@ -470,62 +470,39 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
 
-        # ===== 4️⃣ X-AXIS CONFIGURATION =====
-        # Жилийн тооцоо
-        start_year_int = int(start_year) if isinstance(start_year, str) else start_year
-        end_year_int = int(end_year) if isinstance(end_year, str) else end_year
-        year_count = end_year_int - start_year_int + 1
-        
-        # ✅ ЯГ ӨМНӨХ ШИГЭЭ: 2 ЖИЛИЙН ИНТЕРВАЛТАЙ ШОШГО
-        # Хэрэв year_count 12-оос их бол 2 жил тутамд, бага бол жил бүр
-        if year_count > 12:
-            tick_step = 2
-        else:
-            tick_step = 1
-
-        # ===== X-AXIS (FRED STYLE) =====
-        if year_count > 8:
-            # 🔥 DEFAULT VIEW → ЗӨВХӨН ОН
-            x_axis = alt.Axis(
-                title=None,
-                labelAngle=0,
-                labelFontSize=11,
-                grid=False,
-                domain=True,
-                orient='bottom',
-                format="%Y"
-            )
-        else:
-            # 🔥 ZOOMED VIEW → SAR / ULIRAL
-            x_axis = alt.Axis(
-                title=None,
-                labelAngle=0,
-                labelFontSize=11,
-                grid=False,
-                domain=True,
-                orient='bottom',
-                labelExpr="""
-                timeFormat(
-                  datum.value,
-                  (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
-                    ? '%Y-%m'
-                    : '%Y'
-                )
-                """
-            )
+        # ===== 4️⃣ X-AXIS CONFIGURATION - ДИНАМИК ТОХИРУУЛГА =====
+        # Хугацааны нарийвчлалыг автоматаар тохируулах
+        x_axis = alt.Axis(
+            title=None,
+            labelAngle=0,
+            labelFontSize=11,
+            grid=False,
+            domain=True,
+            orient='bottom',
+            labelExpr="""
+            // Хугацааны интервалыг тооцоолох
+            var timeDiff = (timeOffset('month', datum.value, 1) - datum.value);
+            var daysDiff = timeDiff / (1000*60*60*24);
+            
+            // Интервалаас хамааран форматыг сонгох
+            // 40 хоногоос бага бол сар, 120 хоногоос бага бол улирал, өөрөөр жил
+            daysDiff < 40 ? timeFormat(datum.value, '%Y-%m') :  // сар
+            daysDiff < 120 ? timeFormat(datum.value, '%Y-Q') + quarter(datum.value) :  // улирал
+            timeFormat(datum.value, '%Y')  // жил
+            """
+        )
 
         
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
         legend_config = alt.Legend(
             title=None,
-            orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
+            orient='right', 
             offset=0,
             padding=0,
             labelFontSize=11,
             symbolType="stroke",
             symbolSize=80,
             direction='vertical',
-            # ✅ ЯГ ӨМНӨХ ШИГЭЭ ДЭВСГЭРГҮЙ, ЦЭВЭР
             fillColor=None,
             strokeColor=None,
             cornerRadius=0,
@@ -644,8 +621,8 @@ with right:
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
-                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
+                fillOpacity=0,         
+                stroke="#777777",      
                 strokeWidth=1.2
             )
             .encode(
@@ -694,14 +671,13 @@ with right:
             alt.vconcat(
                 main_chart,
                 mini_chart,
-                spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
+                spacing=20  
             )
             .resolve_scale(
                 x='independent',
                 color='shared'
             )
             .properties(
-                # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
                 padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
             )
             .configure_view(
