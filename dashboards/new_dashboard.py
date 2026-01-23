@@ -479,8 +479,7 @@ with right:
             grid=False,
             domain=True,
             orient='bottom',
-            format="%Y"
-        )
+            format="%Y",
             labelExpr="""
             // Хугацааны интервалыг тооцоолох
             var timeDiff = (timeOffset('month', datum.value, 1) - datum.value);
@@ -491,6 +490,7 @@ with right:
             daysDiff < 120 ? timeFormat(datum.value, '%Y') + '-Q' + quarter(datum.value) :  // улирал
             timeFormat(datum.value, '%Y')  // жил
             """
+        )
 
         
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
