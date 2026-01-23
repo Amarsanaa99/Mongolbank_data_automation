@@ -647,7 +647,7 @@ with right:
             )
             .transform_filter(zoom_brush)
         )
-
+        
         mini_chart = (
             alt.layer(
                 alt.Chart(chart_df)
@@ -675,19 +675,9 @@ with right:
                 height=60,
                 width=800
             )
-            .add_params(
-            
-                alt.selection_interval(
-                    encodings=['x'],
-                    empty=False,
-                    init={"time_dt": [
-                        chart_df["time_dt"].min(),
-                        chart_df["time_dt"].max()
-                    ]}
-                )
-            .add_params(zoom_brush)  # 🔥 zoom_brush-тай холбоно
-            )
+            .add_params(zoom_brush)   # ✅ ЗӨВ: ганцхан zoom_brush
         )
+
 
 
         
