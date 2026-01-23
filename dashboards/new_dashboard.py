@@ -469,24 +469,30 @@ with right:
         
         # ===== 2️⃣ LABEL EXPRESSION (Monthly / Quarterly Corrected)
         if freq == "Monthly":
+        # ===== 4️⃣ X-AXIS CONFIGURATION - ДИНАМИК ТОХИРУУЛГА =====
+        # Zoom хийгдсэн эсэхийг шалгахгүй, зөвхөн графикийн хэмжээнээс хамаарч шошго өөрчлөгдөнө
+        # Хэрэв график маш том (олон жил) байвал зөвхөн жилүүд харагдана
+        # Хэрэв график жижиг (1-2 жил) байвал сар/улиралаар харагдана
+        if freq == "Monthly":
             label_expr = """
+            // Хэрэв огноо null биш бол
             if(datum.value != null,
-                (month(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
+                // Графикийн хэмжээг шалгахгүй, зөвхөн тэмдэглэгээний нягтралаас хамааран
+                // Олон жилийг харуулж байгаа бол зөвхөн жилийн эхэн саруудад жил харуулна
+                (month(datum.value) == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
                 ''
             )
             """
         elif freq == "Quarterly":
             label_expr = """
             if(datum.value != null,
-                (month(datum.value) == 1 || month(datum.value) == 4 || month(datum.value) == 7 || month(datum.value) == 10) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-Q%q'),
+                // Улирлын эхэн саруудад жил харуулна, бусад тохиолдолд улирал харуулна
+                (month(datum.value) % 3 == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-Q%q'),
                 ''
             )
-            """
         else:
             label_expr = "timeFormat(datum.value, '%Y')"
-
-
-
+        
         x_axis = alt.Axis(
             title=None,
             labelAngle=0,
@@ -495,7 +501,7 @@ with right:
             domain=True,
             orient='bottom',
             labelExpr=label_expr,
-            tickCount=10
+            tickCount='year'  # Жилд нэг тэмдэглэгээ гаргах
         )
 
         legend_config = alt.Legend(
