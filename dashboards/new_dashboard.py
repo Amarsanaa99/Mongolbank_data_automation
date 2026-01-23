@@ -615,6 +615,12 @@ with right:
         )
         
         # ===== 9️⃣ ҮНДСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # 🔍 FRED-STYLE ZOOM (MAIN CHART)
+        zoom = alt.selection_interval(
+            bind='scales',   # ⬅️ mouse wheel zoom + drag pan
+            encodings=['x']
+        )
+
         main_chart = (
             alt.layer(
                 line,
