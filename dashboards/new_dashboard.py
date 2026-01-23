@@ -524,93 +524,210 @@ with right:
             cornerRadius=0,
             labelLimit=180
         )
-        
-        import altair as alt
-        
         # ===== 6️⃣ SHARED BRUSH/ZOOM SELECTION =====
-        # MAIN chart zoom + pan
+        # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
         zoom_brush = alt.selection_interval(
             encodings=['x'],
-            bind='scales',    # mouse wheel zoom + drag pan
-            translate=True,   # drag left/right
-            zoom=True,        # enable zoom
+            bind='scales',  # Mouse wheel zoom + drag pan
+            translate=True,  # Зүүн баруун тийш гүйлгэх
+            zoom=True,       # Zoom идэвхжүүлэх
+            empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
+        )
+        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
+        mini_brush = alt.selection_interval(
+            encodings=['x'],
+            translate=True,   # Зүүн баруун тийш гүйлгэх
+            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
             empty=False
         )
         
-        # MINI chart selection (window)
-        mini_brush = alt.selection_interval(
-            encodings=['x'],
-            translate=True,
-            zoom=False,
-            empty=False,
-            # 🔥 ШИНЭ: Анхны window байрлалыг тохируулна
-            init={"time_dt": [chart_df["time_dt"].min(), chart_df["time_dt"].max()]}
-        )
-        
-        # ===== 7️⃣ BASE CHART =====
+        # ===== 7️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
         base = (
             alt.Chart(chart_df)
-            .transform_fold(valid_indicators, as_=["Indicator", "Value"])
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
+            )
             .encode(
-                x=alt.X("time_dt:T", title=None, axis=x_axis),
-                y=alt.Y("Value:Q", title=None, axis=alt.Axis(grid=True, gridOpacity=0.25, domain=True, labelFontSize=11, offset=5)),
-                color=alt.Color("Indicator:N", legend=legend_config),
+                x=alt.X(
+                    "time_dt:T",
+                    title=None,
+                    axis=x_axis,
+                    scale=alt.Scale(
+                        zero=False,
+                        domain=mini_brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
+                    )
+                ),
+                y=alt.Y(
+                    "Value:Q",
+                    title=None,
+                    axis=alt.Axis(
+                        grid=True,
+                        gridOpacity=0.25,
+                        domain=True,  # ✅ ЯГ ӨМНӨХ ШИГ
+                        labelFontSize=11,
+                        offset=5
+                    )
+                ),
+                color=alt.Color(
+                    "Indicator:N",
+                    legend=legend_config  # ✅ ЯГ ӨМНӨХ ШИГЭЭ LEGEND
+                ),
                 tooltip=[
-                    alt.Tooltip("time_dt:T", title="Time", format="%Y-%m" if freq=="Monthly" else "%Y-Q%q"),
+                    alt.Tooltip(
+                        "time_dt:T",
+                        title="Time",
+                        format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
+                    ),
                     alt.Tooltip("Indicator:N"),
                     alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
         )
         
-        line = base.mark_line(strokeWidth=2.4)
-        hover = alt.selection_single(fields=["time_dt"], nearest=True, on="mouseover", empty=False, clear="mouseout")
-        points = base.mark_circle(size=65, filled=True, stroke="#fff", strokeWidth=2).encode(opacity=alt.condition(hover, alt.value(1), alt.value(0))).add_params(hover)
-        vline = alt.Chart(chart_df).mark_rule(color="#aaaaaa", strokeWidth=1.2).encode(x='time_dt:T', opacity=alt.condition(hover, alt.value(1), alt.value(0))).transform_filter(hover)
-        
-        # ===== MAIN CHART (zoom + pan) =====
-        main_chart = (
-            alt.layer(line, vline, points)
-            .properties(height=400, width=850)
-            .add_params(zoom_brush)   # 🔥 zoom_brush ажиллах
+        # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
+        hover = alt.selection_single(
+            fields=["time_dt"],
+            nearest=True,
+            on="mouseover",
+            empty=False,
+            clear="mouseout"
         )
         
-        # ===== MINI CHART =====
+        # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
+        line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
+        
+        points = (
+            base
+            .mark_circle(
+                size=65,  # ✅ ЯГ ӨМНӨХ ШИГ (65)
+                filled=True,
+                stroke="#ffffff",
+                strokeWidth=2  # ✅ ЯГ ӨМНӨХ ШИГ
+            )
+            .encode(
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            )
+            .add_params(hover)
+        )
+
+        # Босоо шулуун - ЯГ ӨМНӨХ ШИГ
+        vline = (
+            alt.Chart(chart_df)
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  # ✅ ЯГ ӨМНӨХ ШИГ
+            .encode(
+                x='time_dt:T',
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            )
+            .transform_filter(hover)
+        )
+
+        
+        # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
+        # 🔍 FRED-STYLE ZOOM (MAIN CHART)
+        main_chart = (
+            alt.layer(
+                line,
+                vline,
+                points
+            )
+            .properties(
+                height=400,
+                width=850
+            )
+            .add_params(zoom_brush)   # 🔥 ШИНЭ: zoom_brush ашиглах
+        )
+        
+        # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
         mini_line = (
             alt.Chart(chart_df)
-            .transform_fold(valid_indicators, as_=["Indicator", "Value"])
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
+            )
             .mark_line(strokeWidth=1.2)
             .encode(
-                x=alt.X("time_dt:T", axis=None, scale=alt.Scale(domain=[chart_df["time_dt"].min(), chart_df["time_dt"].max()])),
-                y=alt.Y("Value:Q", axis=alt.Axis(labels=False, ticks=False, grid=False, domain=False), scale=alt.Scale(zero=False)),
+                x=alt.X("time_dt:T", 
+                        axis=None,
+                        # 🔥 MINI CHART НЬ ХЭЗЭЭ Ч ZOOM ХИЙХГҮЙ - БҮХ ӨГӨГДӨЛ ҮРГЭЛЖ ХАРАГДДАГ
+                        scale=alt.Scale(domain=[chart_df["time_dt"].min(), chart_df["time_dt"].max()])
+                ),
+                y=alt.Y(
+                    "Value:Q",
+                    axis=alt.Axis(
+                        labels=False,
+                        ticks=False,
+                        grid=False,
+                        domain=False
+                    ),
+                    scale=alt.Scale(zero=False)
+                ),
                 color=alt.Color("Indicator:N", legend=None)
             )
         )
         
+        # MINI WINDOW - ЗӨВХӨН zoom_brush-ийн domain-ыг ХАРУУЛНА
+        # zoom_brush өөрчлөгдөх бүрт window шинэчлэгдэнэ
         mini_window = (
             alt.Chart(chart_df)
-            .mark_rect(fill="#888888", fillOpacity=0.15, stroke="#777777", strokeWidth=1.2)
-            .encode(x='min(time_dt):T', x2='max(time_dt):T')
-            .transform_filter(mini_brush)   # 🔥 zoom_brush-ын domain-г харуулна
+            .mark_rect(
+                fill="#888888",          # ✅ ӨНГӨТЭЙ (FRED шиг)
+                fillOpacity=0.15,
+                stroke="#777777",
+                strokeWidth=1.2
+            )
+            .encode(
+                x=alt.X('min(time_dt):T', title=None),
+                x2=alt.X2('max(time_dt):T')
+            )
+            .transform_filter(zoom_brush)  # 🔥 zoom_brush-ын domain-ыг ашиглана
         )
         
         mini_chart = (
-            alt.layer(mini_line, mini_window)
-            .properties(height=60, width=800)
-            .add_params(mini_brush)   # ✅ MINI дээр drag хийхэд MAIN chart шинэчлэгдэнэ
+            alt.layer(
+                mini_line,
+                mini_window
+            )
+            .properties(
+                height=60,
+                width=800
+            )
+            # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
+            .add_params(mini_brush)
         )
         
-        # ===== FINAL CHART =====
-        final_chart = alt.vconcat(main_chart, mini_chart, spacing=20).resolve_scale(x='independent', color='shared')
-        # 🔥 ШИНЭ: zoom_brush болон mini_brush синхрончлох
-        final_chart = final_chart.add_params(
-            # zoom_brush өөрчлөгдөхөд mini_brush шинэчлэгдэнэ
-            zoom_brush.bind(mini_brush, 
-                time_dt='time_dt'  # 🔥 Холбох параметр
+
+
+
+
+        
+        # ===== 1️⃣2️⃣ НЭГТГЭСЭН ГРАФИК =====
+        final_chart = (
+            alt.vconcat(
+                main_chart,
+                mini_chart,
+                spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
+            )
+            .resolve_scale(
+                x='independent',
+                color='shared'
+            )
+            .properties(
+                # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
+                padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
+            )
+            .configure_view(
+                strokeWidth=0
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0',
+                gridOpacity=0.3
             )
         )
-        st.altair_chart(final_chart, use_container_width=True)
 
+        st.altair_chart(final_chart, use_container_width=True)
 
 
     
