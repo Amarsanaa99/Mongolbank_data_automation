@@ -847,8 +847,6 @@ with right:
             """,
             unsafe_allow_html=True
         )
-
-
         
     # 🔥 HEADER ROW — INLINE
     st.markdown(
