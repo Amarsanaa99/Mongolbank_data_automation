@@ -525,15 +525,17 @@ with right:
             cornerRadius=0,
             labelLimit=180
         )
-                # 🔑 FRED-STYLE BRUSH (PAN ONLY, NO ZOOM)
-        brush = alt.selection_interval(
-            encodings=["x"],
-            translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
-            zoom=False,
-            empty=False      # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
+        # ===== 6️⃣ SHARED BRUSH/ZOOM SELECTION =====
+        # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
+        zoom_brush = alt.selection_interval(
+            encodings=['x'],
+            bind='scales',  # Mouse wheel zoom + drag pan
+            translate=True,  # Зүүн баруун тийш гүйлгэх
+            zoom=True,       # Zoom идэвхжүүлэх
+            empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
         )
         
-        # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
+        # ===== 7️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
         base = (
             alt.Chart(chart_df)
             .transform_fold(
@@ -547,7 +549,7 @@ with right:
                     axis=x_axis,
                     scale=alt.Scale(
                         zero=False,
-                        domain=brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
+                        domain=zoom_brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
                     )
                 ),
                 y=alt.Y(
@@ -577,7 +579,7 @@ with right:
             )
         )
         
-        # ===== 7️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
+        # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
         hover = alt.selection_single(
             fields=["time_dt"],
             nearest=True,
@@ -586,7 +588,7 @@ with right:
             clear="mouseout"
         )
         
-        # ===== 8️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
+        # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
         line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
         
         points = (
@@ -614,13 +616,8 @@ with right:
             .transform_filter(hover)
         )
         
-        # ===== 9️⃣ ҮНДСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
         # 🔍 FRED-STYLE ZOOM (MAIN CHART)
-        zoom = alt.selection_interval(
-            bind='scales',   # ⬅️ mouse wheel zoom + drag pan
-            encodings=['x']
-        )
-
         main_chart = (
             alt.layer(
                 line,
@@ -631,12 +628,12 @@ with right:
                 height=400,
                 width=850
             )
-            .add_params(zoom)   # 🔥 FRED STYLE ZOOM
+            .add_params(zoom_brush)   # 🔥 ШИНЭ: zoom_brush ашиглах
         )
 
 
         
-        # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # ===== 1️⃣1️⃣ MINI OVERVIEW - zoom_brush-ийн domain-ыг харуулах =====
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
@@ -645,9 +642,10 @@ with right:
                 strokeWidth=1.2
             )
             .encode(
-                x="time_dt:T"
+                x="min(time_dt):T",
+                x2="max(time_dt):T"
             )
-            .transform_filter(brush)
+            .transform_filter(zoom_brush)
         )
 
         mini_chart = (
@@ -671,19 +669,27 @@ with right:
                     ),
                     color=alt.Color("Indicator:N", legend=None)
                 ),
-        
-                mini_window     # 🔥 SHADED WINDOW
+                mini_window     # 🔥 zoom_brush-ийн window
             )
             .properties(
                 height=60,
                 width=800
             )
-            .add_params(brush)
+            .add_params(
+                alt.selection_interval(
+                    encodings=['x'],
+                    empty=False,
+                    init={"time_dt": [
+                        chart_df["time_dt"].min(),
+                        chart_df["time_dt"].max()
+                    ]}
+                ).add_params(zoom_brush)  # 🔥 zoom_brush-тай холбоно
+            )
         )
 
 
         
-        # ===== 1️⃣1️⃣ НЭГТГЭСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ПАРАМЕТРҮҮД =====
+        # ===== 1️⃣2️⃣ НЭГТГЭСЭН ГРАФИК =====
         final_chart = (
             alt.vconcat(
                 main_chart,
