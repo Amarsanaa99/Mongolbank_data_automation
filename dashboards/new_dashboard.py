@@ -694,10 +694,6 @@ with right:
             .add_params(mini_brush)
         )
         
-
-
-
-
         
         # ===== 1️⃣2️⃣ НЭГТГЭСЭН ГРАФИК =====
         final_chart = (
