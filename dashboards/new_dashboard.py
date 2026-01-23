@@ -529,8 +529,7 @@ with right:
         brush = alt.selection_interval(
             encodings=["x"],
             translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
-            zoom=False,
-            empty=False      # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
+            zoom=False        # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
         )
         
         # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
@@ -626,29 +625,20 @@ with right:
                 vline,
                 points
             )
-            .encode(
-                x=alt.X(
-                    "time_dt:T", 
-                    scale=alt.Scale(domain=brush)),
-                    title=None,
-                    axis=x_axis
-            )
             .properties(
                 height=400,
                 width=850
             )
-            .add_params(zoom)
+            .add_params(zoom)   # 🔥 FRED STYLE ZOOM
         )
-
 
         
         # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
-                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
-                strokeWidth=1.2
+                fill="#ffffff",
+                fillOpacity=0.15
             )
             .encode(
                 x="time_dt:T"
@@ -682,7 +672,7 @@ with right:
             )
             .properties(
                 height=60,
-                width=800
+                width="container"
             )
             .add_params(brush)
         )
@@ -697,7 +687,7 @@ with right:
                 spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
             )
             .resolve_scale(
-                x='independent',
+                x='shared',
                 color='shared'
             )
             .properties(
@@ -1019,12 +1009,12 @@ with right:
             }
             .change-up {
                 color: #22c55e;        /* green */
-                font-weight: 600;
+                font-weight: normal;
             }
             
             .change-down {
                 color: #ef4444;        /* red */
-                font-weight: normal;
+                font-weight: 600;
             }
             
             .change-arrow {
