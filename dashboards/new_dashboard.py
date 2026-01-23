@@ -614,6 +614,14 @@ with right:
             )
             .transform_filter(hover)
         )
+        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
+        mini_brush = alt.selection_interval(
+            encodings=['x'],
+            translate=True,   # Зүүн баруун тийш гүйлгэх
+            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
+            empty=False
+        )
         
         # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
         # 🔍 FRED-STYLE ZOOM (MAIN CHART)
@@ -628,16 +636,6 @@ with right:
                 width=850
             )
             .add_params(zoom_brush)   # 🔥 ШИНЭ: zoom_brush ашиглах
-        )
-
-
-        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
-        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
-        mini_brush = alt.selection_interval(
-            encodings=['x'],
-            translate=True,   # Зүүн баруун тийш гүйлгэх
-            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
-            empty=False
         )
         
         # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
