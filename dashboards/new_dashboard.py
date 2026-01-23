@@ -471,19 +471,26 @@ with right:
         if freq == "Monthly":
             label_expr = """
             if(datum.value != null,
-                (month(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
+                // zoom бага байвал сар/жилээр, zoom том байвал жилээр
+                (timeUnit('year', datum.value) == timeUnit('year', window('x')[0])) ?
+                    timeFormat(datum.value, '%Y-%m') : 
+                    timeFormat(datum.value, '%Y'),
                 ''
             )
             """
         elif freq == "Quarterly":
             label_expr = """
             if(datum.value != null,
-                (month(datum.value) == 1 || month(datum.value) == 4 || month(datum.value) == 7 || month(datum.value) == 10) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-Q%q'),
+                // zoom бага байвал улирал/жилээр, zoom том байвал жилээр
+                (timeUnit('year', datum.value) == timeUnit('year', window('x')[0])) ?
+                    timeFormat(datum.value, '%Y-Q%q') : 
+                    timeFormat(datum.value, '%Y'),
                 ''
             )
             """
         else:
             label_expr = "timeFormat(datum.value, '%Y')"
+
 
         x_axis = alt.Axis(
             title=None,
