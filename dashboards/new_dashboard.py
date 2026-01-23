@@ -467,26 +467,26 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
         
-        # ===== 2️⃣ LABEL EXPRESSION (Monthly / Quarterly Corrected)
+        # ===== 4️⃣ X-AXIS CONFIGURATION - ДИНАМИК ТОХИРУУЛГА =====
+        # Altair-д zoom-aware tickValues гаргах
+        # zoom хийхээс өмнө зөвхөн жил
         if freq == "Monthly":
-            label_expr = """
-            // Хэрэв огноо null биш бол
-            if(datum.value != null,
-                // Графикийн хэмжээг шалгахгүй, зөвхөн тэмдэглэгээний нягтралаас хамааран
-                // Олон жилийг харуулж байгаа бол зөвхөн жилийн эхэн саруудад жил харуулна
-                (month(datum.value) == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-%m'),
-                ''
-            )
-            """
+            chart_df["year_start"] = chart_df["time_dt"].dt.month == 1
         elif freq == "Quarterly":
-            label_expr = """
-            if(datum.value != null,
-                // Улирлын эхэн саруудад жил харуулна, бусад тохиолдолд улирал харуулна
-                (month(datum.value) % 3 == 0 && day(datum.value) == 1) ? timeFormat(datum.value, '%Y') : timeFormat(datum.value, '%Y-Q%q'),
-                ''
-            )
-        else:
-            label_expr = "timeFormat(datum.value, '%Y')"
+            chart_df["quarter_start"] = chart_df["time_dt"].dt.month.isin([1,4,7,10])
+        
+        # X-axis-г dynamic tickValues ашиглан тохируулна
+        def get_tick_values(df, freq):
+            if freq == "Monthly":
+                # zoom хийхээс өмнө зөвхөн жилийн эхний сар
+                return df.loc[df["time_dt"].dt.month == 1, "time_dt"].tolist()
+            elif freq == "Quarterly":
+                # zoom хийхээс өмнө зөвхөн улирлын эхний сар
+                return df.loc[df["time_dt"].dt.month.isin([1,4,7,10]), "time_dt"].tolist()
+            else:
+                return df["time_dt"].tolist()
+        
+        tick_vals = get_tick_values(chart_df, freq)
         
         x_axis = alt.Axis(
             title=None,
@@ -495,9 +495,16 @@ with right:
             grid=False,
             domain=True,
             orient='bottom',
-            labelExpr=label_expr,
-            tickCount='year'  # Жилд нэг тэмдэглэгээ гаргах
+            tickCount=10,
+            values=tick_vals,  # ✅ Explicit tickValues ашиглаж баталгаатай жил гаргана
+            labelExpr="""
+                if(datum.value != null,
+                    timeFormat(datum.value, '%Y')  // zoom байхгүй үед жил
+                    , ''
+                )
+            """
         )
+
 
         legend_config = alt.Legend(
             title=None,
