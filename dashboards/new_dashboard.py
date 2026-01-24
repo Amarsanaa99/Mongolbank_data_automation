@@ -474,7 +474,6 @@ with right:
             st.stop()
 
         # ===== 4️⃣ X-AXIS CONFIGURATION =====
-        # Жилийн тооцоо
         start_year_int = int(start_year) if isinstance(start_year, str) else start_year
         end_year_int = int(end_year) if isinstance(end_year, str) else end_year
         year_count = end_year_int - start_year_int + 1
