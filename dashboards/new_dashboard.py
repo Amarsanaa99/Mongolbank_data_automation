@@ -687,7 +687,7 @@ with right:
             )
             .properties(
                 height=60,
-                width=750
+                width=800
             )
             # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
             .add_params(mini_brush)
