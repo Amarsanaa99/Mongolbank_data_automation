@@ -630,7 +630,7 @@ with right:
             )
             .properties(
                 height=400,
-                width=850
+                width=700
             )
             .add_params(zoom_brush)   # 🔥 ШИНЭ: zoom_brush ашиглах
         )
