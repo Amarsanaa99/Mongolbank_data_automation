@@ -2,20 +2,19 @@
 base="dark"
 
 # Text & primary highlight
-textColor = "#e2e8f0"           # light text
-primaryColor = "#14347C"        # Mongolbank primary blue
+textColor = "#e2e8f0"           
+primaryColor = "#14347C"        # Mongolbank blue
 
 # Backgrounds
-backgroundColor = "#0B2554"      # main app background
-secondaryBackgroundColor = "#0F2F6B"  # sidebar background
+backgroundColor = "#0B2554"      # Main (одоогийнх)
+secondaryBackgroundColor = "#132F5E"  # ✅ ШИНЭ: бага зэрэг цайвар
 
 # Widgets
 showWidgetBorder = true
-borderColor = "#314158"
-
+borderColor = "#14347C"          # ✅ ШИНЭ: банкны өнгө
 
 # Dataframes
-dataframeHeaderBackgroundColor = "#1d293d"
+dataframeHeaderBackgroundColor = "#0F2953"
 
 # Fonts
 font="'PT Sans', sans-serif"
