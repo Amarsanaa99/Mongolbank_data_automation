@@ -528,12 +528,7 @@ with right:
                 font=dict(size=11)
             )
         )
-        
-        # X тэнхлэгийн tick-үүдийг жил/сар холимог болгохыг Plotly автоматаар хийнэ.
-        # Хэрэв заавал жил тутам 1,2 жилийн алхамтай байлгахыг хүсвэл:
-        # fig.update_xaxes(
-        #     dtick="M24" if year_count > 12 else "M12"
-        # )
+
         
         # Tooltip формат (Monthly, Quarterly формат ялгана)
         if freq == "Monthly":
