@@ -38,60 +38,6 @@ h2, h3 {
 }
 </style>
 """, unsafe_allow_html=True)
-st.markdown("""
-<style>
-/* PT Sans font */
-@import url('https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap');
-
-/* WHOLE APP BACKGROUND */
-.stApp {
-    background: linear-gradient(
-        180deg,
-        #0B2554 0%,  /* top dark blue */
-        #14347C 100%  /* bottom primary blue */
-    );
-}
-
-/* SIDEBAR */
-section[data-testid="stSidebar"] {
-    background-color: #0F2F6B;
-}
-
-/* HEADERS */
-h1, h2, h3 {
-    color: #ffffff;
-    font-family: 'PT Sans', sans-serif;
-    font-weight: 700;
-}
-
-/* WIDGETS */
-.stButton>button {
-    background-color: #14347C;
-    color: #ffffff;
-    border: 1px solid #0B2554;
-}
-
-.stButton>button:hover {
-    background-color: #0F2F6B;
-}
-
-/* MAIN CONTAINER PADDING */
-.block-container {
-    padding-top: 2rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
-
-/* Optional: scrollbar style */
-::-webkit-scrollbar {
-    width: 8px;
-}
-::-webkit-scrollbar-thumb {
-    background-color: #14347C;
-    border-radius: 4px;
-}
-</style>
-""", unsafe_allow_html=True)
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 EXCEL_PATH = BASE_DIR / "Dashboard_cleaned_data.xlsx"
