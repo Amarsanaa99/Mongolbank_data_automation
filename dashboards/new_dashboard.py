@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit.components.v1 as components
 from pathlib import Path
 
+# ⬇️ ШИНЭ: custom component импорт
+from fred_chart_component import render_fred_chart
 # ======================
 # PAGE
 # ======================
@@ -426,33 +428,31 @@ if series["time"].isna().all():
 # ======================
 with right:
     with st.container(border=True):
-        
+
         st.subheader("📈 Main chart")
-        
+
         # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
-        
+
         # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
-            (chart_df["time"] >= start_time) & 
+            (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
         ]
-        
+
         # ===== 2️⃣ VALID INDICATORS ONLY
         valid_indicators = [
             c for c in selected
             if c in chart_df.columns and not chart_df[c].isna().all()
         ]
-        
+
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        import plotly.graph_objects as go
-        
         # ===== 3️⃣ TIME FORMATTING =====
         chart_df = chart_df.copy()
-        
+
         if freq == "Monthly":
             chart_df["time_dt"] = pd.to_datetime(
                 chart_df["time"],
@@ -467,84 +467,41 @@ with right:
         else:
             st.error("❌ Unknown frequency")
             st.stop()
-        
+
         # 🔒 HARD CHECK
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
-        
-        # ===== 4️⃣ X-AXIS CONFIGURATION ( жилийн тооцоолол чинь үлдэж болно, 
-        # гэхдээ Plotly өөрөө tick-ээ тооцдог тул энд зөвхөн хэрэгтэй бол ашиглана ) =====
-        start_year_int = int(start_year) if isinstance(start_year, str) else start_year
-        end_year_int = int(end_year) if isinstance(end_year, str) else end_year
-        year_count = end_year_int - start_year_int + 1
-        
-        if year_count > 12:
-            tick_step = 2
-        else:
-            tick_step = 1
-        
-        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
-        fig = go.Figure()
-        
-        # Өнгө, нэршлийг Plotly өөрөө legend дээр харуулна (баруун талд)
-        for col in valid_indicators:
-            fig.add_trace(
-                go.Scatter(
-                    x=chart_df["time_dt"],
-                    y=chart_df[col],
-                    mode="lines",
-                    name=col,
-                    line=dict(width=2.4)  # Altair lineWidth-тэй ойролцоо
-                )
-            )
-        
-        # === Layout: FRED-style interaction ===
-        fig.update_layout(
-            height=460,
-            margin=dict(l=40, r=140, t=40, b=60),  # баруун талд legend-д зай гаргана
-            template="plotly_dark",                # чиний dark dashboard-т тааруулах
-            xaxis=dict(
-                title=None,
-                type="date",
-                rangeslider=dict(
-                    visible=True  # 🔥 Доод талын mini window (range slider)
-                ),
-                showgrid=False,
-            ),
-            yaxis=dict(
-                title=None,
-                zeroline=False,
-                showgrid=True,
-                gridcolor="rgba(224,224,224,0.3)"
-            ),
-            legend=dict(
-                title=None,
-                x=1.02, y=1,
-                xanchor="left",
-                yanchor="top",
-                bgcolor="rgba(0,0,0,0)",
-                orientation="v",
-                font=dict(size=11)
-            )
+
+        # ✅ ЭНДЭЭС ЦААШ PLOTLY FIGURE БАЙХГҮЙ, ЗӨВХӨН COMPONENT РҮҮ ӨГӨХ
+
+        # 🔢 Component-д өгөх өгөгдлийг бага зэрэг цэвэрлэе
+        chart_df_for_js = chart_df.copy()
+        chart_df_for_js["time_dt_str"] = chart_df_for_js["time_dt"].dt.strftime(
+            "%Y-%m-%d"
         )
 
-        
-        # Tooltip формат (Monthly, Quarterly формат ялгана)
-        if freq == "Monthly":
-            hoverfmt = "%Y-%m"
-        else:
-            # Quarter-г text болгож үзүүлэхийн тулд custom hovertemplate ашиглаж болно
-            hoverfmt = "%Y-%m"
-        
-        fig.update_traces(
-            hovertemplate="Time: %{x|" + hoverfmt + "}<br>Value: %{y:.2f}<extra>%{fullData.name}</extra>"
+        series_payload = {
+            ind: chart_df_for_js[ind].astype(float).where(
+                ~chart_df_for_js[ind].isna(),
+                None
+            ).tolist()
+            for ind in valid_indicators
+        }
+
+        time_payload = chart_df_for_js["time_dt_str"].tolist()
+
+        # 🔥 FRED-style custom component-ийг дуудаж main+mini-г зуруулна
+        render_fred_chart(
+            time=time_payload,
+            series=series_payload,
+            indicators=valid_indicators,
+            key="main_fred_chart",
         )
         
-        # Streamlit дээр харуулах
-        st.plotly_chart(fig, use_container_width=True)
+        
+        
 
-    
     def compute_group_kpis(df, indicators):
         stats = []
     
