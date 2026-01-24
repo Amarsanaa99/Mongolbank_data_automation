@@ -721,28 +721,28 @@ with right:
 
         st.altair_chart(final_chart, use_container_width=True)
         
-        # ===== DOWNLOAD BUTTON (BOTTOM-RIGHT, ULTRA MINIMAL) =====
+        # ===== DOWNLOAD BUTTON (BOTTOM-RIGHT) =====
         st.markdown(
             """
             <style>
-            /* Parent container must be relative */
-            div[data-testid="stVerticalBlock"] {
+            /* Make the current container relative */
+            div[data-testid="stContainer"]:has(> div[data-testid="stAltairChart"]) {
                 position: relative;
             }
-        
-            /* Target Streamlit download button wrapper */
+
+            /* Position the download button */
             div[data-testid="stDownloadButton"] {
                 position: absolute;
-                bottom: 14px;
-                right: 14px; 
+                bottom: 6px;
+                right: 6px;
                 z-index: 10;
             }
-        
-            /* Actual button styling */
+
+            /* Minimal button styling */
             div[data-testid="stDownloadButton"] button {
-                background-color: rgba(30, 41, 59, 0.4);  
+                background-color: rgba(30, 41, 59, 0.4);
                 color: rgba(203, 213, 225, 0.7);
-                border: none;         
+                border: none;
                 padding: 3px 5px;
                 font-size: 11px;
                 border-radius: 4px;
@@ -750,7 +750,7 @@ with right:
                 box-shadow: none;
                 cursor: pointer;
             }
-        
+
             div[data-testid="stDownloadButton"] button:hover {
                 background-color: rgba(30, 41, 59, 0.7);
                 color: rgba(248, 250, 252, 0.95);
@@ -759,7 +759,7 @@ with right:
             """,
             unsafe_allow_html=True
         )
-        
+
         st.download_button(
             label="↓",
             data=chart_df[valid_indicators].to_csv(index=False),
@@ -768,6 +768,7 @@ with right:
             help="Download chart data",
             key="main_chart_download"
         )
+
 
 
 
