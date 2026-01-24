@@ -1054,6 +1054,7 @@ def small_multiple_chart(df, indicator):
         )
     )
 
+
 # ======================
 # 📊 ALL INDICATOR GROUPS — SMALL MULTIPLES (FULL WIDTH)
 # ======================
@@ -1061,7 +1062,6 @@ def small_multiple_chart(df, indicator):
 st.markdown("### 📊 All indicator groups")
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 # бүх group-ууд
 all_groups = df_data.columns.get_level_values(0).unique()
@@ -1094,7 +1094,7 @@ def group_chart_plotly(group_name):
     # ⛔ SMALL CHART — 2020 оноос хойш
     gdf = gdf[gdf["time"] >= "2020"]
     
-    # ✅ 5️⃣ өгөгдөлтэй indicator-ууд
+    # ✅ өгөгдөлтэй indicator-ууд
     valid_inds = [
         c for c in inds
         if c in gdf.columns and not gdf[c].isna().all()
@@ -1168,7 +1168,7 @@ def group_chart_plotly(group_name):
             title=None,
             showgrid=False,
             tickfont=dict(size=11),
-            tickformat="%Y"  # зөвхөн жил харуулах
+            tickformat="%Y"
         ),
         yaxis=dict(
             title=None,
@@ -1192,7 +1192,16 @@ def group_chart_plotly(group_name):
     )
     
     return fig
+# RENDER CHARTS (ЭНЭ ХЭСЭГ ДУТУУ БАЙСАН!)
 
+for row in rows:
+    cols = st.columns(NUM_COLS, gap="small")
+    for col, grp in zip(cols, row):
+        with col:
+            with st.container(border=True):
+                chart = group_chart_plotly(grp)
+                if chart is not None:
+                    st.plotly_chart(chart, use_container_width=True, config={'displayModeBar': False})
 # ======================
 # 📄 RAW DATA — INDICATOR GROUP LEVEL
 # ======================
