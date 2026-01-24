@@ -13,29 +13,58 @@ st.caption("Macro Indicators")
 # ✅ GLOBAL STYLE (END USER QUALITY)
 st.markdown("""
 <style>
+/* ===== MONGOLBANK PROFESSIONAL THEME ===== */
+
 /* Page width control */
 .block-container {
     padding-top: 3.2rem;
     padding-bottom: 2.2rem;
 }
+
 h1 {
     margin-top:0;
+    color: #e2e8f0;
 }
-/* Sidebar-like left column feel */
+
+/* ✅ LEFT COLUMN (SIDEBAR-STYLE) - UPGRADED */
 div[data-testid="column"]:first-child {
-    background: rgba(255,255,255,0.02);
+    background: linear-gradient(
+        180deg,
+        rgba(19, 47, 94, 0.6),    /* #132F5E with alpha */
+        rgba(15, 41, 83, 0.4)      /* #0F2953 with alpha */
+    );
+    border: 1px solid rgba(20, 52, 124, 0.3);  /* #14347C border */
+    border-radius: 12px;
+    padding: 8px;
+}
+
+/* ✅ CONTAINERS (CARD BACKGROUNDS) */
+div[data-testid="stContainer"] {
+    background: rgba(19, 47, 94, 0.4) !important;  /* #132F5E */
+    border: 1px solid rgba(20, 52, 124, 0.25);     /* #14347C */
     border-radius: 12px;
 }
 
 /* Section headers */
 h2, h3 {
     letter-spacing: 0.3px;
+    color: #e2e8f0;
+}
+
+/* ✅ CHART BACKGROUNDS (PLOTLY) */
+.js-plotly-plot .plotly {
+    background: rgba(15, 41, 83, 0.3) !important;  /* #0F2953 */
 }
 
 /* Remove Altair gray background */
 .vega-embed {
     background: transparent !important;
 }
+
+/* ✅ MONGOLBANK ACCENT COLORS */
+.bank-blue { color: #14347C; }
+.accent-gold { color: #D4AF37; }
+.accent-cyan { color: #06B6D4; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -481,9 +510,15 @@ with right:
         # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
         fig = go.Figure()
         
-        # Өнгөний палитр (professional colors)
-        colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
-        
+        # ✅ MONGOLBANK PROFESSIONAL PALETTE
+        colors = [
+            '#14347C',  # Mongolbank primary blue
+            '#D4AF37',  # Accent gold
+            '#06B6D4',  # Cyan
+            '#10B981',  # Green
+            '#EF4444',  # Red
+            '#8B5CF6'   # Purple
+        ]
         # 🔥 LINE TRACES (markers-гүйгээр эхлээд)
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
@@ -662,10 +697,10 @@ with right:
     .kpi-card {
         background: linear-gradient(
             135deg,
-            rgba(15, 23, 42, 0.95),
-            rgba(30, 41, 59, 0.85)
+            rgba(19, 47, 94, 0.85),    /* #132F5E */
+            rgba(15, 41, 83, 0.75)      /* #0F2953 */
         );
-        border: 1px solid rgba(59,130,246,0.3);
+        border: 1px solid rgba(20, 52, 124, 0.4);  /* #14347C */
         border-radius: 12px;
         padding: 16px 18px;
         margin: 8px 0;
@@ -887,10 +922,10 @@ with right:
                     padding: 16px 18px;
                     background: linear-gradient(
                         135deg,
-                        rgba(15, 23, 42, 0.95),
-                        rgba(30, 41, 59, 0.85)
+                        rgba(19, 47, 94, 0.85),    /* #132F5E */
+                        rgba(15, 41, 83, 0.75)      /* #0F2953 */
                     );
-                    border: 1px solid rgba(148,163,184,0.25);
+                    border: 1px solid rgba(20, 52, 124, 0.35);  /* #14347C */
                     border-radius: 12px;
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
