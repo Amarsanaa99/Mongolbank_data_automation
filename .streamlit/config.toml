@@ -4,7 +4,7 @@ base = "dark"
 # General color setup
 textColor = "#e2e8f0"
 primaryColor = "#615fff"
-backgroundColor = "#11296b"
+backgroundColor = "#14347c"
 secondaryBackgroundColor = "#0f172b"
 
 # Widgets
