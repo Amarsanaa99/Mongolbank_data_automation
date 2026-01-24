@@ -569,7 +569,7 @@ with right:
                 spikecolor='rgba(170, 170, 170, 0.6)',
                 spikethickness=1.5,
                 spikedash='solid',
-                
+            ),
             yaxis=dict(
                 title=None,
                 zeroline=False,
