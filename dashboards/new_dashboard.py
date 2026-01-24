@@ -434,7 +434,7 @@ with right:
         
         # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
-            (chart_df["time"] >= start_time) & 
+            (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
         ]
         
@@ -447,7 +447,7 @@ with right:
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
-
+        
         import plotly.graph_objects as go
         
         # ===== 3️⃣ TIME FORMATTING =====
@@ -473,8 +473,7 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
         
-        # ===== 4️⃣ X-AXIS CONFIGURATION ( жилийн тооцоолол чинь үлдэж болно, 
-        # гэхдээ Plotly өөрөө tick-ээ тооцдог тул энд зөвхөн хэрэгтэй бол ашиглана ) =====
+        # ===== 4️⃣ X-AXIS CONFIGURATION
         start_year_int = int(start_year) if isinstance(start_year, str) else start_year
         end_year_int = int(end_year) if isinstance(end_year, str) else end_year
         year_count = end_year_int - start_year_int + 1
@@ -487,40 +486,96 @@ with right:
         # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
         fig = go.Figure()
         
-        # Өнгө, нэршлийг Plotly өөрөө legend дээр харуулна (баруун талд)
-        for col in valid_indicators:
+        # Өнгөний палитр (professional colors)
+        colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+        
+        # 🔥 LINE TRACES + MARKERS
+        for i, col in enumerate(valid_indicators):
+            color = colors[i % len(colors)]
+            
             fig.add_trace(
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines",
+                    mode="lines+markers",  # 🔥 lines + markers
                     name=col,
-                    line=dict(width=2.4)  # Altair lineWidth-тэй ойролцоо
+                    line=dict(width=2.4, color=color),
+                    marker=dict(
+                        size=6,
+                        color=color,
+                        line=dict(width=1, color='white')
+                    ),
+                    hovertemplate=(
+                        "<b>%{fullData.name}</b><br>" +
+                        "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
+                        "Value: %{y:.2f}<extra></extra>"
+                    )
                 )
             )
         
         # === Layout: FRED-style interaction ===
         fig.update_layout(
             height=460,
-            margin=dict(l=40, r=140, t=40, b=60),  # баруун талд legend-д зай гаргана
-            template="plotly_dark",                # чиний dark dashboard-т тааруулах
+            margin=dict(l=40, r=140, t=40, b=60),
+            template="plotly_dark",
+            
+            # 🔥 CROSSHAIR HOVER (mouse-ыг дагах босоо шулуун)
+            hovermode='x unified',  # 🔥 ЭНЭ ЧУХАЛ
+            
             xaxis=dict(
                 title=None,
                 type="date",
                 rangeslider=dict(
-                    visible=True  # 🔥 Доод талын mini window (range slider)
+                    visible=True,
+                    thickness=0.05  # mini window-ыг бага зэрэг нимгэн болгоно
                 ),
                 showgrid=False,
+                
+                # 🔥 SPIKE LINES (босоо шулуун зураас)
+                showspikes=True,
+                spikemode='across',
+                spikesnap='cursor',
+                spikecolor='rgba(170, 170, 170, 0.6)',
+                spikethickness=1.5,
+                spikedash='solid',
+                
+                # 🔥 RANGE SELECTOR BUTTONS (1Y, 3Y, 5Y, All)
+                rangeselector=dict(
+                    buttons=list([
+                        dict(count=1, label="1Y", step="year", stepmode="backward"),
+                        dict(count=3, label="3Y", step="year", stepmode="backward"),
+                        dict(count=5, label="5Y", step="year", stepmode="backward"),
+                        dict(step="all", label="All")
+                    ]),
+                    bgcolor="rgba(59,130,246,0.1)",
+                    activecolor="rgba(59,130,246,0.3)",
+                    font=dict(size=10),
+                    x=0,
+                    y=1.08,
+                    xanchor='left',
+                    yanchor='top'
+                )
             ),
+            
             yaxis=dict(
                 title=None,
                 zeroline=False,
                 showgrid=True,
-                gridcolor="rgba(224,224,224,0.3)"
+                gridcolor="rgba(224,224,224,0.3)",
+                
+                # 🔥 Y-AXIS SPIKE LINES
+                showspikes=True,
+                spikemode='across',
+                spikesnap='cursor',
+                spikecolor='rgba(170, 170, 170, 0.6)',
+                spikethickness=1.5,
+                spikedash='solid'
             ),
+            
             legend=dict(
                 title=None,
-                x=1.02, y=1,
+                x=1.02, 
+                y=1,
                 xanchor="left",
                 yanchor="top",
                 bgcolor="rgba(0,0,0,0)",
@@ -529,25 +584,22 @@ with right:
             )
         )
         
-        # X тэнхлэгийн tick-үүдийг жил/сар холимог болгохыг Plotly автоматаар хийнэ.
-        # Хэрэв заавал жил тутам 1,2 жилийн алхамтай байлгахыг хүсвэл:
-        # fig.update_xaxes(
-        #     dtick="M24" if year_count > 12 else "M12"
-        # )
-        
-        # Tooltip формат (Monthly, Quarterly формат ялгана)
-        if freq == "Monthly":
-            hoverfmt = "%Y-%m"
-        else:
-            # Quarter-г text болгож үзүүлэхийн тулд custom hovertemplate ашиглаж болно
-            hoverfmt = "%Y-%m"
-        
-        fig.update_traces(
-            hovertemplate="Time: %{x|" + hoverfmt + "}<br>Value: %{y:.2f}<extra>%{fullData.name}</extra>"
-        )
+        # 🔥 MODEBAR CONFIGURATION (toolbar buttons)
+        config = {
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
+            'toImageButtonOptions': {
+                'format': 'png',
+                'filename': 'macro_dashboard_chart',
+                'height': 800,
+                'width': 1400,
+                'scale': 2
+            }
+        }
         
         # Streamlit дээр харуулах
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config=config)
 
     
     def compute_group_kpis(df, indicators):
