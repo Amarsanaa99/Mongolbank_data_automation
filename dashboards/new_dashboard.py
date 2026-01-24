@@ -576,6 +576,14 @@ with right:
                 ]
             )
         )
+        # ===== 8️⃣ HOVER СОНГОЛТ =====
+        hover = alt.selection_single(
+            fields=["time_dt"],
+            nearest=True,
+            on="mouseover",
+            empty=False,
+            clear="mouseout"
+        )
         
         # ===== 9️⃣ ЭЛЕМЕНТҮҮД (хуучин шигээ) =====
         line = base.mark_line(strokeWidth=2.4)
