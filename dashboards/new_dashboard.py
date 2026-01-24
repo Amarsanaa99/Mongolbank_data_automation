@@ -421,43 +421,42 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
         
+
 # ======================
 # MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
     with st.container(border=True):
-        
+
         st.subheader("📈 Main chart")
-        
+
         # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
-        
+
         # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
-            (chart_df["time"] >= start_time) & 
+            (chart_df["time"] >= start_time) &
             (chart_df["time"] <= end_time)
         ]
-        
+
         # ===== 2️⃣ VALID INDICATORS ONLY
         valid_indicators = [
             c for c in selected
             if c in chart_df.columns and not chart_df[c].isna().all()
         ]
-        
+
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        import plotly.graph_objects as go
-        
-        # ===== 3️⃣ TIME FORMATTING =====
+        # ===== 3️⃣ TIME → DATETIME =====
         chart_df = chart_df.copy()
-        
+
         if freq == "Monthly":
             chart_df["time_dt"] = pd.to_datetime(
                 chart_df["time"],
                 format="%Y-%m",
-                errors="coerce"
+                errors="coerce",
             )
         elif freq == "Quarterly":
             chart_df["time_dt"] = (
@@ -467,27 +466,16 @@ with right:
         else:
             st.error("❌ Unknown frequency")
             st.stop()
-        
+
         # 🔒 HARD CHECK
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
-        
-        # ===== 4️⃣ X-AXIS CONFIGURATION ( жилийн тооцоолол чинь үлдэж болно, 
-        # гэхдээ Plotly өөрөө tick-ээ тооцдог тул энд зөвхөн хэрэгтэй бол ашиглана ) =====
-        start_year_int = int(start_year) if isinstance(start_year, str) else start_year
-        end_year_int = int(end_year) if isinstance(end_year, str) else end_year
-        year_count = end_year_int - start_year_int + 1
-        
-        if year_count > 12:
-            tick_step = 2
-        else:
-            tick_step = 1
-        
-        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
+
+        # ===== 4️⃣ PLOTLY FIGURE (MAIN + MINI WINDOW) =====
         fig = go.Figure()
-        
-        # Өнгө, нэршлийг Plotly өөрөө legend дээр харуулна (баруун талд)
+
+        # MAIN TRACES
         for col in valid_indicators:
             fig.add_trace(
                 go.Scatter(
@@ -495,20 +483,20 @@ with right:
                     y=chart_df[col],
                     mode="lines",
                     name=col,
-                    line=dict(width=2.4)  # Altair lineWidth-тэй ойролцоо
+                    line=dict(width=2.4),
                 )
             )
-        
-        # === Layout: FRED-style interaction ===
+
+        # === Layout: pro interaction ===
         fig.update_layout(
             height=460,
-            margin=dict(l=40, r=140, t=40, b=60),  # баруун талд legend-д зай гаргана
-            template="plotly_dark",                # чиний dark dashboard-т тааруулах
+            margin=dict(l=40, r=140, t=40, b=60),
+            template="plotly_dark",
             xaxis=dict(
                 title=None,
                 type="date",
                 rangeslider=dict(
-                    visible=True  # 🔥 Доод талын mini window (range slider)
+                    visible=True  # 🔥 доод mini window
                 ),
                 showgrid=False,
             ),
@@ -516,31 +504,34 @@ with right:
                 title=None,
                 zeroline=False,
                 showgrid=True,
-                gridcolor="rgba(224,224,224,0.3)"
+                gridcolor="rgba(224,224,224,0.3)",
             ),
             legend=dict(
                 title=None,
-                x=1.02, y=1,
+                x=1.02,
+                y=1,
                 xanchor="left",
                 yanchor="top",
                 bgcolor="rgba(0,0,0,0)",
                 orientation="v",
-                font=dict(size=11)
-            )
+                font=dict(size=11),
+            ),
         )
 
-        
-        # Tooltip формат (Monthly, Quarterly формат ялгана)
+        # Tooltip формат (Monthly, Quarterly)
         if freq == "Monthly":
             hoverfmt = "%Y-%m"
         else:
-            # Quarter-г text болгож үзүүлэхийн тулд custom hovertemplate ашиглаж болно
-            hoverfmt = "%Y-%m"
-        
+            hoverfmt = "%Y-%m"  # Хэрэв хүсвэл дараа нь %Y-Q%q гэж ялгаж өөрчилж болно
+
         fig.update_traces(
-            hovertemplate="Time: %{x|" + hoverfmt + "}<br>Value: %{y:.2f}<extra>%{fullData.name}</extra>"
+            hovertemplate=(
+                "Time: %{x|" + hoverfmt + "}"
+                "<br>Value: %{y:.2f}"
+                "<extra>%{fullData.name}</extra>"
+            )
         )
-        
+
         # Streamlit дээр харуулах
         st.plotly_chart(fig, use_container_width=True)
 
