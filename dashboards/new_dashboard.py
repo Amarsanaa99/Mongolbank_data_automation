@@ -2,8 +2,15 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 from pathlib import Path
+import sys
 
-# ⬇️ ШИНЭ: custom component импорт
+# === ROOT ФОЛДЕРЫГ PYTHON PATH-Д НЭМЭХ ===
+# /Mongolbank_data_automation гэсэн root фолдер
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+
+# ⬇️ Одоо fred_chart_component-оос import хийж чадна
 from fred_chart_component import render_fred_chart
 # ======================
 # PAGE
