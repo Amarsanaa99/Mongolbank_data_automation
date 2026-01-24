@@ -635,14 +635,6 @@ with right:
         return pd.DataFrame(stats)
 
 
-    # ======================
-    # 📊 KPI CALCULATION (INDICATOR LEVEL)
-    # ======================
-    
-    group_indicators = [
-        col[1] for col in df_data.columns
-        if col[0] == group
-    ]
     
     # ======================
     # 📊 KPI CALCULATION (INDICATOR LEVEL)
@@ -663,10 +655,10 @@ with right:
     kpi_main = kpi_df[kpi_df["Indicator"] == primary_indicator]
     kpi_rest = kpi_df[kpi_df["Indicator"] != primary_indicator]
     
-    # 🔥 ENHANCED PRO-LEVEL STYLING
+    # 🔥 FIXED STYLING (no purple gradient, compact)
     st.markdown("""
     <style>
-    /* ===== KPI CARDS (BLOOMBERG/TERMINAL STYLE) ===== */
+    /* ===== KPI CARDS ===== */
     .kpi-card {
         background: linear-gradient(
             135deg,
@@ -677,32 +669,14 @@ with right:
         border-radius: 12px;
         padding: 16px 18px;
         margin: 8px 0;
-        position: relative;
-        overflow: hidden;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .kpi-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
-        opacity: 0;
-        transition: opacity 0.3s ease;
     }
     
     .kpi-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 12px 28px rgba(59,130,246,0.25);
         border-color: rgba(59,130,246,0.6);
-    }
-    
-    .kpi-card:hover::before {
-        opacity: 1;
     }
     
     .kpi-label {
@@ -764,7 +738,7 @@ with right:
     </style>
     """, unsafe_allow_html=True)
     
-    # ===== KPI CARD HELPER (ENHANCED)
+    # ===== KPI CARD HELPER
     def kpi_card(label, value, sublabel=None):
         sub = ""
         if sublabel is not None:
@@ -781,7 +755,7 @@ with right:
             unsafe_allow_html=True
         )
     
-    # 🔥 ENHANCED HEADER
+    # 🔥 HEADER
     st.markdown(
         f"""
         <div class="kpi-header">
@@ -799,7 +773,7 @@ with right:
     
     row = kpi_main.iloc[0]
     
-    # 🔽 KPI CARDS (ЯГ ӨМНӨХ ДАРААЛАЛ)
+    # 🔽 KPI CARDS
     cols = st.columns(6)
     
     with cols[0]:
@@ -834,7 +808,7 @@ with right:
             )
     
     # ======================
-    # 📉 CHANGE SUMMARY — ENHANCED PRO STYLE
+    # 📉 CHANGE SUMMARY — COMPACT VERSION
     # ======================
     st.markdown("### 📉 Change summary")
     
@@ -864,25 +838,20 @@ with right:
                 changes = None
             
             if changes:
-                # 🔹 Өнгөний логик (up=green, down=red)
+                # 🔹 Compact metrics
                 def render_metric(label, value):
                     if value is None or (isinstance(value, float) and pd.isna(value)):
-                        return f"<span class='metric-item metric-neutral'><span class='metric-label'>{label}</span><span class='metric-value'>N/A</span></span>"
+                        return f"<span class='metric-compact'>{label}: <span style='color:#94a3b8'>N/A</span></span>"
                     
-                    cls = "metric-up" if value > 0 else "metric-down" if value < 0 else "metric-neutral"
+                    color = "#22c55e" if value > 0 else "#ef4444" if value < 0 else "#94a3b8"
                     arrow = "▲" if value > 0 else "▼" if value < 0 else "─"
                     
-                    return (
-                        f"<span class='metric-item {cls}'>"
-                        f"<span class='metric-label'>{label}</span>"
-                        f"<span class='metric-value'>{arrow} {value:.1f}%</span>"
-                        f"</span>"
-                    )
+                    return f"<span class='metric-compact'>{label}: <span style='color:{color}'>{arrow} {value:.1f}%</span></span>"
                 
                 cards_html += f"""
-                <div class="change-card-pro">
-                    <div class="change-title-pro">{ind}</div>
-                    <div class="change-metrics-pro">
+                <div class="change-card-compact">
+                    <div class="change-title-compact">{ind}</div>
+                    <div class="change-metrics-compact">
                         {render_metric("YoY", changes.get("yoy"))}
                         {render_metric("YTD", changes.get("ytd"))}
                         {render_metric("Prev", changes.get("prev"))}
@@ -890,7 +859,7 @@ with right:
                 </div>
                 """
         
-        # ✅ ENHANCED STYLING
+        # ✅ COMPACT STYLING
         if cards_html:
             components.html(
                 """
@@ -901,124 +870,74 @@ with right:
                     box-sizing: border-box;
                 }
                 
-                .change-grid-pro {
+                .change-grid-compact {
                     display: flex;
-                    gap: 14px;
+                    gap: 10px;
                     overflow-x: auto;
-                    padding: 8px 4px;
+                    padding: 4px 2px;
                 }
                 
-                .change-card-pro {
-                    min-width: 260px;
-                    padding: 16px 18px;
+                .change-card-compact {
+                    min-width: 200px;
+                    padding: 12px 14px;
                     background: linear-gradient(
                         135deg,
                         rgba(15, 23, 42, 0.95),
                         rgba(30, 41, 59, 0.85)
                     );
                     border: 1px solid rgba(148,163,184,0.25);
-                    border-radius: 12px;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                }
-                
-                .change-card-pro:hover {
-                    transform: translateY(-5px);
-                    border-color: rgba(148,163,184,0.5);
-                    box-shadow: 0 16px 32px rgba(0,0,0,0.25);
-                }
-                
-                .change-title-pro {
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: #e2e8f0;
-                    margin-bottom: 14px;
-                    padding-bottom: 10px;
-                    border-bottom: 1px solid rgba(148,163,184,0.2);
-                }
-                
-                .change-metrics-pro {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                }
-                
-                .metric-item {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 8px 12px;
-                    background: rgba(30,41,59,0.6);
-                    border-radius: 8px;
-                    border-left: 3px solid transparent;
+                    border-radius: 10px;
                     transition: all 0.2s ease;
                 }
                 
-                .metric-item:hover {
-                    background: rgba(30,41,59,0.9);
+                .change-card-compact:hover {
+                    transform: translateY(-3px);
+                    border-color: rgba(148,163,184,0.4);
+                    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
                 }
                 
-                .metric-label {
-                    font-size: 11px;
+                .change-title-compact {
+                    font-size: 13px;
                     font-weight: 600;
-                    color: #94a3b8;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
+                    color: #e2e8f0;
+                    margin-bottom: 8px;
+                    padding-bottom: 6px;
+                    border-bottom: 1px solid rgba(148,163,184,0.2);
                 }
                 
-                .metric-value {
-                    font-size: 15px;
-                    font-weight: 700;
-                    font-family: 'Monaco', 'Courier New', monospace;
+                .change-metrics-compact {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
                 }
                 
-                .metric-up {
-                    border-left-color: #22c55e;
-                }
-                
-                .metric-up .metric-value {
-                    color: #22c55e;
-                    text-shadow: 0 0 8px rgba(34,197,94,0.4);
-                }
-                
-                .metric-down {
-                    border-left-color: #ef4444;
-                }
-                
-                .metric-down .metric-value {
-                    color: #ef4444;
-                    text-shadow: 0 0 8px rgba(239,68,68,0.4);
-                }
-                
-                .metric-neutral .metric-value {
-                    color: #94a3b8;
+                .metric-compact {
+                    font-size: 12px;
+                    color: #cbd5e1;
+                    font-weight: 500;
                 }
                 
                 /* Scrollbar */
                 ::-webkit-scrollbar {
-                    height: 8px;
+                    height: 6px;
                 }
                 
                 ::-webkit-scrollbar-track {
                     background: rgba(30,41,59,0.5);
-                    border-radius: 4px;
+                    border-radius: 3px;
                 }
                 
                 ::-webkit-scrollbar-thumb {
                     background: rgba(148,163,184,0.4);
-                    border-radius: 4px;
-                }
-                
-                ::-webkit-scrollbar-thumb:hover {
-                    background: rgba(148,163,184,0.6);
+                    border-radius: 3px;
                 }
                 </style>
                 
-                <div class="change-grid-pro">
+                <div class="change-grid-compact">
                 """ + cards_html + """
                 </div>
                 """,
-                height=140
+                height=100
             )
         else:
             st.caption("No data yet")
