@@ -13,6 +13,7 @@ secondaryBackgroundColor = "#0F2F6B"  # sidebar background
 showWidgetBorder = true
 borderColor = "#314158"
 
+
 # Dataframes
 dataframeHeaderBackgroundColor = "#1d293d"
 
