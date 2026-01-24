@@ -769,9 +769,6 @@ with right:
         col[1] for col in df_data.columns
         if col[0] == group
     ]
-    # ======================
-    # 📊 KPI CALCULATION (INDICATOR LEVEL)
-    # ======================
     
     # 🔹 БҮХ indicator-уудын KPI-г НЭГ УДАА бодно
     kpi_df = compute_group_kpis(chart_df, group_indicators)
