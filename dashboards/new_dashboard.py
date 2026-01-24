@@ -892,7 +892,14 @@ with right:
                     padding: 0;
                     box-sizing: border-box;
                 }
-                
+                .change-container-pro {
+                    display: flex;
+                    flex-wrap: wrap;  /* Олон мөр болгох */
+                    gap: 14px;
+                    padding: 8px 0;
+                    max-height: none;
+                    overflow: visible;
+                }
                 .change-grid-pro {
                     display: flex;
                     gap: 14px;
@@ -902,22 +909,23 @@ with right:
                 
                 .change-card-pro {
                     min-width: 260px;
+                    max-width: 300px;  /* Card-ын хамгийн их өргөн */
+                    flex: 1 1 260px;  /* Flexible sizing */
                     padding: 16px 18px;
                     background: linear-gradient(
                         135deg,
-                        rgba(15, 23, 42, 0.95),
-                        rgba(30, 41, 59, 0.85)
+                        rgba(19, 47, 94, 0.85),
+                        rgba(15, 41, 83, 0.75)
                     );
-                    border: 1px solid rgba(148,163,184,0.25);
-                    border-radius: 12px;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    border: 1px solid rgba(20, 52, 124, 0.35);
+                    border-radius: 10px;
+                    transition: all 0.25s ease;
                 }
                 
                 .change-card-pro:hover {
-                    transform: translateY(-5px);
-                    border-color: rgba(148,163,184,0.5);
-                    box-shadow: 0 16px 32px rgba(0,0,0,0.25);
+                    transform: translateY(-3px);
+                    border-color: rgba(20, 52, 124, 0.6);
+                    box-shadow: 0 6px 20px rgba(20, 52, 124, 0.25);
                 }
                 
                 .change-title-pro {
