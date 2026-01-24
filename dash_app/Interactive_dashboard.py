@@ -17,7 +17,7 @@ app = dash.Dash(__name__,
 
 # Өгөгдөл унших
 BASE_DIR = Path(__file__).resolve().parent
-EXCEL_PATH = BASE_DIR / "assets" / "Dashboard_cleaned_data.xlsx"
+EXCEL_PATH = "Dashboard_cleaned_data.xlsx"
 
 # Өгөгдөл cache-лах
 def read_sheet(sheet):
