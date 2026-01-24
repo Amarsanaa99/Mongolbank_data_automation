@@ -478,18 +478,13 @@ with right:
         end_year_int = int(end_year) if isinstance(end_year, str) else end_year
         year_count = end_year_int - start_year_int + 1
         
-        if year_count > 12:
-            tick_step = 2
-        else:
-            tick_step = 1
-        
         # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
         fig = go.Figure()
         
         # Өнгөний палитр (professional colors)
         colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
         
-        # 🔥 LINE TRACES + MARKERS
+        # 🔥 LINE TRACES (markers-гүйгээр эхлээд)
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
@@ -497,19 +492,35 @@ with right:
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines+markers",  # 🔥 lines + markers
+                    mode="lines",  # ❌ markers-гүй (эхлээд зөвхөн шугам)
                     name=col,
                     line=dict(width=2.4, color=color),
-                    marker=dict(
-                        size=6,
-                        color=color,
-                        line=dict(width=1, color='white')
-                    ),
                     hovertemplate=(
                         "<b>%{fullData.name}</b><br>" +
                         "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
                         "Value: %{y:.2f}<extra></extra>"
                     )
+                )
+            )
+        
+        # 🔥 MARKERS ЗӨВХӨН HOVER ҮЕД (scatter trace нэмнэ)
+        for i, col in enumerate(valid_indicators):
+            color = colors[i % len(colors)]
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=chart_df["time_dt"],
+                    y=chart_df[col],
+                    mode="markers",  # 🔥 зөвхөн цэг
+                    name=col,
+                    marker=dict(
+                        size=8,
+                        color=color,
+                        line=dict(width=2, color='white')
+                    ),
+                    showlegend=False,  # ❌ legend дээр давхцахгүй байх
+                    hoverinfo='skip',  # ❌ tooltip давхцахгүй
+                    visible='legendonly'  # 🔥 анхдаа харагдахгүй
                 )
             )
         
@@ -519,42 +530,27 @@ with right:
             margin=dict(l=40, r=140, t=40, b=60),
             template="plotly_dark",
             
-            # 🔥 CROSSHAIR HOVER (mouse-ыг дагах босоо шулуун)
-            hovermode='x unified',  # 🔥 ЭНЭ ЧУХАЛ
+            # 🔥 CROSSHAIR HOVER
+            hovermode='x unified',
             
             xaxis=dict(
                 title=None,
                 type="date",
                 rangeslider=dict(
                     visible=True,
-                    thickness=0.05  # mini window-ыг бага зэрэг нимгэн болгоно
+                    thickness=0.05
                 ),
                 showgrid=False,
                 
-                # 🔥 SPIKE LINES (босоо шулуун зураас)
+                # 🔥 SPIKE LINES (босоо шулуун)
                 showspikes=True,
                 spikemode='across',
                 spikesnap='cursor',
                 spikecolor='rgba(170, 170, 170, 0.6)',
                 spikethickness=1.5,
-                spikedash='solid',
+                spikedash='solid'
                 
-                # 🔥 RANGE SELECTOR BUTTONS (1Y, 3Y, 5Y, All)
-                rangeselector=dict(
-                    buttons=list([
-                        dict(count=1, label="1Y", step="year", stepmode="backward"),
-                        dict(count=3, label="3Y", step="year", stepmode="backward"),
-                        dict(count=5, label="5Y", step="year", stepmode="backward"),
-                        dict(step="all", label="All")
-                    ]),
-                    bgcolor="rgba(59,130,246,0.1)",
-                    activecolor="rgba(59,130,246,0.3)",
-                    font=dict(size=10),
-                    x=0,
-                    y=1.08,
-                    xanchor='left',
-                    yanchor='top'
-                )
+                # ❌ RANGE SELECTOR УСТГАСАН
             ),
             
             yaxis=dict(
@@ -584,7 +580,7 @@ with right:
             )
         )
         
-        # 🔥 MODEBAR CONFIGURATION (toolbar buttons)
+        # 🔥 MODEBAR CONFIGURATION
         config = {
             'displayModeBar': True,
             'displaylogo': False,
