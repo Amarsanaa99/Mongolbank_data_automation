@@ -391,7 +391,6 @@ plot_data = (
     .set_index("time")
     .sort_index()
 )
-
 # ======================
 # SPLIT: DATA vs NO DATA
 # ======================
@@ -449,7 +448,7 @@ with right:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
 
-        import altair as alt
+        import plotly.graph_objects as go
         
         # ===== 3️⃣ TIME FORMATTING =====
         chart_df = chart_df.copy()
@@ -473,255 +472,83 @@ with right:
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
-
-        # ===== 4️⃣ X-AXIS CONFIGURATION =====
+        
+        # ===== 4️⃣ X-AXIS CONFIGURATION ( жилийн тооцоолол чинь үлдэж болно, 
+        # гэхдээ Plotly өөрөө tick-ээ тооцдог тул энд зөвхөн хэрэгтэй бол ашиглана ) =====
         start_year_int = int(start_year) if isinstance(start_year, str) else start_year
         end_year_int = int(end_year) if isinstance(end_year, str) else end_year
         year_count = end_year_int - start_year_int + 1
         
-        # ✅ ЯГ ӨМНӨХ ШИГЭЭ: 2 ЖИЛИЙН ИНТЕРВАЛТАЙ ШОШГО
-        # Хэрэв year_count 12-оос их бол 2 жил тутамд, бага бол жил бүр
         if year_count > 12:
             tick_step = 2
         else:
             tick_step = 1
         
-        # X тэнхлэгийн тохируулга - ЯГ ӨМНӨХ ШИГ
-        x_axis = alt.Axis(
-            title=None,
-            labelAngle=0,
-            labelFontSize=11,
-            grid=False,
-            domain=True,
-            orient='bottom',
+        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
+        fig = go.Figure()
         
-            labelExpr="""
-            timeFormat(
-              datum.value,
-              (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
-                ? '%Y-%m'
-                : '%Y'
+        # Өнгө, нэршлийг Plotly өөрөө legend дээр харуулна (баруун талд)
+        for col in valid_indicators:
+            fig.add_trace(
+                go.Scatter(
+                    x=chart_df["time_dt"],
+                    y=chart_df[col],
+                    mode="lines",
+                    name=col,
+                    line=dict(width=2.4)  # Altair lineWidth-тэй ойролцоо
+                )
             )
-            """
+        
+        # === Layout: FRED-style interaction ===
+        fig.update_layout(
+            height=460,
+            margin=dict(l=40, r=140, t=40, b=60),  # баруун талд legend-д зай гаргана
+            template="plotly_dark",                # чиний dark dashboard-т тааруулах
+            xaxis=dict(
+                title=None,
+                type="date",
+                rangeslider=dict(
+                    visible=True  # 🔥 Доод талын mini window (range slider)
+                ),
+                showgrid=False,
+            ),
+            yaxis=dict(
+                title=None,
+                zeroline=False,
+                showgrid=True,
+                gridcolor="rgba(224,224,224,0.3)"
+            ),
+            legend=dict(
+                title=None,
+                x=1.02, y=1,
+                xanchor="left",
+                yanchor="top",
+                bgcolor="rgba(0,0,0,0)",
+                orientation="v",
+                font=dict(size=11)
+            )
         )
+        
+        # X тэнхлэгийн tick-үүдийг жил/сар холимог болгохыг Plotly автоматаар хийнэ.
+        # Хэрэв заавал жил тутам 1,2 жилийн алхамтай байлгахыг хүсвэл:
+        # fig.update_xaxes(
+        #     dtick="M24" if year_count > 12 else "M12"
+        # )
+        
+        # Tooltip формат (Monthly, Quarterly формат ялгана)
+        if freq == "Monthly":
+            hoverfmt = "%Y-%m"
+        else:
+            # Quarter-г text болгож үзүүлэхийн тулд custom hovertemplate ашиглаж болно
+            hoverfmt = "%Y-%m"
+        
+        fig.update_traces(
+            hovertemplate="Time: %{x|" + hoverfmt + "}<br>Value: %{y:.2f}<extra>%{fullData.name}</extra>"
+        )
+        
+        # Streamlit дээр харуулах
+        st.plotly_chart(fig, use_container_width=True)
 
-        # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
-        legend_config = alt.Legend(
-            title=None,
-            orient='right',  
-            offset=0,
-            padding=0,
-            labelFontSize=11,
-            symbolType="stroke",
-            symbolSize=80,
-            direction='vertical',
-            # ✅ ЯГ ӨМНӨХ ШИГЭЭ ДЭВСГЭРГҮЙ, ЦЭВЭР
-            fillColor=None,
-            strokeColor=None,
-            cornerRadius=0,
-            labelLimit=180
-        )
-        # ===== 6️⃣ SHARED BRUSH/ZOOM SELECTION =====
-        # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
-        zoom_brush = alt.selection_interval(
-            encodings=['x'],
-            bind='scales',  # Mouse wheel zoom + drag pan
-            translate=True,  # Зүүн баруун тийш гүйлгэх
-            zoom=True,       # Zoom идэвхжүүлэх
-            empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
-        )
-        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
-        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
-        mini_brush = alt.selection_interval(
-            encodings=['x'],
-            translate=True,   # Зүүн баруун тийш гүйлгэх
-            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
-            empty=False
-        )
-        
-        # ===== 7️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
-        base = (
-            alt.Chart(chart_df)
-            .transform_fold(
-                valid_indicators,
-                as_=["Indicator", "Value"]
-            )
-            .encode(
-                x=alt.X(
-                    "time_dt:T",
-                    title=None,
-                    axis=x_axis,
-                    scale=alt.Scale(
-                        zero=False,
-                        domain=mini_brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
-                    )
-                ),
-                y=alt.Y(
-                    "Value:Q",
-                    title=None,
-                    axis=alt.Axis(
-                        grid=True,
-                        gridOpacity=0.25,
-                        domain=True,  # ✅ ЯГ ӨМНӨХ ШИГ
-                        labelFontSize=11,
-                        offset=5
-                    )
-                ),
-                color=alt.Color(
-                    "Indicator:N",
-                    legend=legend_config  # ✅ ЯГ ӨМНӨХ ШИГЭЭ LEGEND
-                ),
-                tooltip=[
-                    alt.Tooltip(
-                        "time_dt:T",
-                        title="Time",
-                        format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
-                    ),
-                    alt.Tooltip("Indicator:N"),
-                    alt.Tooltip("Value:Q", format=",.2f")
-                ]
-            )
-        )
-        
-        # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
-        hover = alt.selection_single(
-            fields=["time_dt"],
-            nearest=True,
-            on="mouseover",
-            empty=False,
-            clear="mouseout"
-        )
-        
-        # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
-        line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
-        
-        points = (
-            base
-            .mark_circle(
-                size=65,  # ✅ ЯГ ӨМНӨХ ШИГ (65)
-                filled=True,
-                stroke="#ffffff",
-                strokeWidth=2  # ✅ ЯГ ӨМНӨХ ШИГ
-            )
-            .encode(
-                opacity=alt.condition(hover, alt.value(1), alt.value(0))
-            )
-            .add_params(hover)
-        )
-
-        # Босоо шулуун - ЯГ ӨМНӨХ ШИГ
-        vline = (
-            alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  # ✅ ЯГ ӨМНӨХ ШИГ
-            .encode(
-                x='time_dt:T',
-                opacity=alt.condition(hover, alt.value(1), alt.value(0))
-            )
-            .transform_filter(hover)
-        )
-
-        
-        # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
-        # 🔍 FRED-STYLE ZOOM (MAIN CHART)
-        main_chart = (
-            alt.layer(
-                line,
-                vline,
-                points
-            )
-            .properties(
-                height=400,
-                width=850
-            )
-            .add_params(zoom_brush)   # 🔥 ШИНЭ: zoom_brush ашиглах
-        )
-        
-        # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
-        mini_line = (
-            alt.Chart(chart_df)
-            .transform_fold(
-                valid_indicators,
-                as_=["Indicator", "Value"]
-            )
-            .mark_line(strokeWidth=1.2)
-            .encode(
-                x=alt.X("time_dt:T", 
-                        axis=None,
-                        # 🔥 MINI CHART НЬ ХЭЗЭЭ Ч ZOOM ХИЙХГҮЙ - БҮХ ӨГӨГДӨЛ ҮРГЭЛЖ ХАРАГДДАГ
-                        scale=alt.Scale(domain=[chart_df["time_dt"].min(), chart_df["time_dt"].max()])
-                ),
-                y=alt.Y(
-                    "Value:Q",
-                    axis=alt.Axis(
-                        labels=False,
-                        ticks=False,
-                        grid=False,
-                        domain=False
-                    ),
-                    scale=alt.Scale(zero=False)
-                ),
-                color=alt.Color("Indicator:N", legend=None)
-            )
-        )
-        
-        # MINI WINDOW - ЗӨВХӨН zoom_brush-ийн domain-ыг ХАРУУЛНА
-        # zoom_brush өөрчлөгдөх бүрт window шинэчлэгдэнэ
-        mini_window = (
-            alt.Chart(chart_df)
-            .mark_rect(
-                fill="#888888",          # ✅ ӨНГӨТЭЙ (FRED шиг)
-                fillOpacity=0.15,
-                stroke="#777777",
-                strokeWidth=1.2
-            )
-            .encode(
-                x=alt.X('min(time_dt):T', title=None),
-                x2=alt.X2('max(time_dt):T')
-            )
-            .transform_filter(zoom_brush)  # 🔥 zoom_brush-ын domain-ыг ашиглана
-        )
-        
-        mini_chart = (
-            alt.layer(
-                mini_line,
-                mini_window
-            )
-            .properties(
-                height=60,
-                width=780
-            )
-            # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
-            .add_params(mini_brush)
-        )
-        
-        
-        # ===== 1️⃣2️⃣ НЭГТГЭСЭН ГРАФИК =====
-        final_chart = (
-            alt.vconcat(
-                main_chart,
-                mini_chart,
-                spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
-            )
-            .resolve_scale(
-                x='independent',
-                color='shared'
-            )
-            .properties(
-                # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
-                padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
-            )
-            .configure_view(
-                strokeWidth=0
-            )
-            .configure_axis(
-                grid=True,
-                gridColor='#e0e0e0',
-                gridOpacity=0.3
-            )
-        )
-
-        st.altair_chart(final_chart, use_container_width=True)
-        
     
     def compute_group_kpis(df, indicators):
         stats = []
