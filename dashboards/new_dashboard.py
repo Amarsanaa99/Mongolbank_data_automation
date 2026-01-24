@@ -484,7 +484,20 @@ with right:
         # Өнгөний палитр (professional colors)
         colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
         
-        # 🔥 LINE TRACES (markers-гүйгээр эхлээд)
+        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
+        fig = go.Figure()
+        
+        # Өнгөний палитр (Mongolbank colors)
+        colors = [
+            '#3b82f6',  # Mongolbank primary blue
+            '#D4AF37',  # Accent gold
+            '#06B6D4',  # Cyan
+            '#10B981',  # Green
+            '#EF4444',  # Red
+            '#8B5CF6'   # Purple
+        ]
+        
+        # 🔥 LINE TRACES
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
@@ -492,7 +505,7 @@ with right:
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines",  # ❌ markers-гүй (эхлээд зөвхөн шугам)
+                    mode="lines",
                     name=col,
                     line=dict(width=2.4, color=color),
                     hovertemplate=(
@@ -503,7 +516,7 @@ with right:
                 )
             )
         
-        # 🔥 MARKERS ЗӨВХӨН HOVER ҮЕД (scatter trace нэмнэ)
+        # 🔥 MARKERS (HOVER-only)
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
@@ -511,16 +524,16 @@ with right:
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="markers",  # 🔥 зөвхөн цэг
+                    mode="markers",
                     name=col,
                     marker=dict(
                         size=8,
                         color=color,
                         line=dict(width=2, color='white')
                     ),
-                    showlegend=False,  # ❌ legend дээр давхцахгүй байх
-                    hoverinfo='skip',  # ❌ tooltip давхцахгүй
-                    visible='legendonly'  # 🔥 анхдаа харагдахгүй
+                    showlegend=False,
+                    hoverinfo='skip',
+                    visible='legendonly'
                 )
             )
         
@@ -530,8 +543,15 @@ with right:
             margin=dict(l=40, r=140, t=40, b=60),
             template="plotly_dark",
             
+            # ✅ DRAG MODE (BOX ZOOM)
+            dragmode='zoom',
+            
             # 🔥 CROSSHAIR HOVER
             hovermode='x unified',
+            
+            # 🎨 BACKGROUNDS
+            paper_bgcolor="rgba(15, 41, 83, 0.3)",
+            plot_bgcolor="rgba(11, 37, 84, 0.5)",
             
             xaxis=dict(
                 title=None,
@@ -542,17 +562,14 @@ with right:
                 ),
                 showgrid=False,
                 
-                # 🔥 SPIKE LINES (босоо шулуун)
+                # 🔥 SPIKE LINES
                 showspikes=True,
                 spikemode='across',
                 spikesnap='cursor',
                 spikecolor='rgba(170, 170, 170, 0.6)',
                 spikethickness=1.5,
-                spikedash='solid'
+                spikedash='solid',
                 
-                # ❌ RANGE SELECTOR УСТГАСАН
-            ),
-            
             yaxis=dict(
                 title=None,
                 zeroline=False,
@@ -570,7 +587,7 @@ with right:
             
             legend=dict(
                 title=None,
-                x=1.02, 
+                x=1.02,
                 y=1,
                 xanchor="left",
                 yanchor="top",
@@ -587,14 +604,15 @@ with right:
             'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
             'toImageButtonOptions': {
                 'format': 'png',
-                'filename': 'macro_dashboard_chart',
+                'filename': 'mongolbank_macro_chart',
                 'height': 800,
                 'width': 1400,
                 'scale': 2
-            }
+            },
+            'doubleClick': 'reset',
+            'scrollZoom': True
         }
         
-        # Streamlit дээр харуулах
         st.plotly_chart(fig, use_container_width=True, config=config)
 
     
