@@ -391,6 +391,7 @@ plot_data = (
     .set_index("time")
     .sort_index()
 )
+
 # ======================
 # SPLIT: DATA vs NO DATA
 # ======================
