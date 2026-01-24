@@ -808,7 +808,7 @@ with right:
             )
     
     # ======================
-    # 📉 CHANGE SUMMARY — COMPACT VERSION
+    # 📉 CHANGE SUMMARY — ENHANCED PRO STYLE
     # ======================
     st.markdown("### 📉 Change summary")
     
@@ -838,20 +838,25 @@ with right:
                 changes = None
             
             if changes:
-                # 🔹 Compact metrics
+                # 🔹 Өнгөний логик (up=green, down=red)
                 def render_metric(label, value):
                     if value is None or (isinstance(value, float) and pd.isna(value)):
-                        return f"<span class='metric-compact'>{label}: <span style='color:#94a3b8'>N/A</span></span>"
+                        return f"<span class='metric-item metric-neutral'><span class='metric-label'>{label}</span><span class='metric-value'>N/A</span></span>"
                     
-                    color = "#22c55e" if value > 0 else "#ef4444" if value < 0 else "#94a3b8"
+                    cls = "metric-up" if value > 0 else "metric-down" if value < 0 else "metric-neutral"
                     arrow = "▲" if value > 0 else "▼" if value < 0 else "─"
                     
-                    return f"<span class='metric-compact'>{label}: <span style='color:{color}'>{arrow} {value:.1f}%</span></span>"
+                    return (
+                        f"<span class='metric-item {cls}'>"
+                        f"<span class='metric-label'>{label}</span>"
+                        f"<span class='metric-value'>{arrow} {value:.1f}%</span>"
+                        f"</span>"
+                    )
                 
                 cards_html += f"""
-                <div class="change-card-compact">
-                    <div class="change-title-compact">{ind}</div>
-                    <div class="change-metrics-compact">
+                <div class="change-card-pro">
+                    <div class="change-title-pro">{ind}</div>
+                    <div class="change-metrics-pro">
                         {render_metric("YoY", changes.get("yoy"))}
                         {render_metric("YTD", changes.get("ytd"))}
                         {render_metric("Prev", changes.get("prev"))}
@@ -859,7 +864,7 @@ with right:
                 </div>
                 """
         
-        # ✅ COMPACT STYLING
+        # ✅ ENHANCED STYLING
         if cards_html:
             components.html(
                 """
@@ -870,74 +875,124 @@ with right:
                     box-sizing: border-box;
                 }
                 
-                .change-grid-compact {
+                .change-grid-pro {
                     display: flex;
-                    gap: 10px;
+                    gap: 14px;
                     overflow-x: auto;
-                    padding: 4px 2px;
+                    padding: 8px 4px;
                 }
                 
-                .change-card-compact {
-                    min-width: 200px;
-                    padding: 12px 14px;
+                .change-card-pro {
+                    min-width: 260px;
+                    padding: 16px 18px;
                     background: linear-gradient(
                         135deg,
                         rgba(15, 23, 42, 0.95),
                         rgba(30, 41, 59, 0.85)
                     );
                     border: 1px solid rgba(148,163,184,0.25);
-                    border-radius: 10px;
-                    transition: all 0.2s ease;
+                    border-radius: 12px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
                 }
                 
-                .change-card-compact:hover {
-                    transform: translateY(-3px);
-                    border-color: rgba(148,163,184,0.4);
-                    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+                .change-card-pro:hover {
+                    transform: translateY(-5px);
+                    border-color: rgba(148,163,184,0.5);
+                    box-shadow: 0 16px 32px rgba(0,0,0,0.25);
                 }
                 
-                .change-title-compact {
-                    font-size: 13px;
-                    font-weight: 600;
+                .change-title-pro {
+                    font-size: 14px;
+                    font-weight: 700;
                     color: #e2e8f0;
-                    margin-bottom: 8px;
-                    padding-bottom: 6px;
+                    margin-bottom: 14px;
+                    padding-bottom: 10px;
                     border-bottom: 1px solid rgba(148,163,184,0.2);
                 }
                 
-                .change-metrics-compact {
+                .change-metrics-pro {
                     display: flex;
                     flex-direction: column;
-                    gap: 4px;
+                    gap: 10px;
                 }
                 
-                .metric-compact {
-                    font-size: 12px;
-                    color: #cbd5e1;
-                    font-weight: 500;
+                .metric-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 8px 12px;
+                    background: rgba(30,41,59,0.6);
+                    border-radius: 8px;
+                    border-left: 3px solid transparent;
+                    transition: all 0.2s ease;
+                }
+                
+                .metric-item:hover {
+                    background: rgba(30,41,59,0.9);
+                }
+                
+                .metric-label {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                
+                .metric-value {
+                    font-size: 15px;
+                    font-weight: 700;
+                    font-family: 'Monaco', 'Courier New', monospace;
+                }
+                
+                .metric-up {
+                    border-left-color: #22c55e;
+                }
+                
+                .metric-up .metric-value {
+                    color: #22c55e;
+                    text-shadow: 0 0 8px rgba(34,197,94,0.4);
+                }
+                
+                .metric-down {
+                    border-left-color: #ef4444;
+                }
+                
+                .metric-down .metric-value {
+                    color: #ef4444;
+                    text-shadow: 0 0 8px rgba(239,68,68,0.4);
+                }
+                
+                .metric-neutral .metric-value {
+                    color: #94a3b8;
                 }
                 
                 /* Scrollbar */
                 ::-webkit-scrollbar {
-                    height: 6px;
+                    height: 8px;
                 }
                 
                 ::-webkit-scrollbar-track {
                     background: rgba(30,41,59,0.5);
-                    border-radius: 3px;
+                    border-radius: 4px;
                 }
                 
                 ::-webkit-scrollbar-thumb {
                     background: rgba(148,163,184,0.4);
-                    border-radius: 3px;
+                    border-radius: 4px;
+                }
+                
+                ::-webkit-scrollbar-thumb:hover {
+                    background: rgba(148,163,184,0.6);
                 }
                 </style>
                 
-                <div class="change-grid-compact">
+                <div class="change-grid-pro">
                 """ + cards_html + """
                 </div>
                 """,
-                height=100
+                height=140
             )
         else:
             st.caption("No data yet")
