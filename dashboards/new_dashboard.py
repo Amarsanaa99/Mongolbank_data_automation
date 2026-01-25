@@ -508,17 +508,11 @@ with right:
                     mode="lines",   # ← lines + дугуй цагираг
                     name=col,
                     line=dict(width=2.4, color=color),
-                    marker=dict(
-                        size=10,             # дугуй цагираг
-                        color=color,
-                        line=dict(width=2, color='white')
-                    ),
                     hovertemplate=(
                         "<b>%{fullData.name}</b><br>" +
                         "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
                         "Value: %{y:.2f}<extra></extra>"
-                    ),
-                    hoverinfo='x+y+name'
+                    )
                 )
             )
 
@@ -538,9 +532,7 @@ with right:
                         color=color,
                         line=dict(width=2, color='white')
                     ),
-                    showlegend=False,
-                    hoverinfo='skip',
-                    visible='legendonly'
+                    showlegend=False
                 )
             )
         
@@ -571,12 +563,7 @@ with right:
                 zeroline=False,
                 showgrid=True,
                 gridcolor="rgba(224,224,224,0.3)",
-                showspikes=False,
-                spikemode='across',
-                spikesnap='cursor',
-                spikecolor='rgba(170, 170, 170, 0.6)',
-                spikethickness=1.5,
-                spikedash='solid'
+                showspikes=False
             ),
             legend=dict(
                 title=None,
