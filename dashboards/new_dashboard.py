@@ -597,10 +597,8 @@ with right:
         points = (
             base
             .mark_circle(
-                size=65,  # ✅ ЯГ ӨМНӨХ ШИГ (65)
+                size=80,  
                 filled=True,
-                stroke="#ffffff",
-                strokeWidth=2  # ✅ ЯГ ӨМНӨХ ШИГ
             )
             .encode(
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
