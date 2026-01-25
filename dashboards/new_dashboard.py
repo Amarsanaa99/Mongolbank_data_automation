@@ -601,9 +601,8 @@ with right:
         config = {
             'displayModeBar': True,
             'displaylogo': False,
-            # ✅ Хэрэггүй товчлууруудыг устгах
-            'modeBarButtonsToRemove': ['zoomIn2d', 'zoomOut2d', 'lasso2d', 'select2d'],
-            # ✅ PNG болон CSV татах товч нэмэх
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
+            'modeBarButtonsToAdd': ['downloadData'],
             'toImageButtonOptions': {
                 'format': 'png',
                 'filename': 'mongolbank_macro_chart',
@@ -616,6 +615,15 @@ with right:
         }
         
         st.plotly_chart(fig, use_container_width=True, config=config)
+        # 🔹 Chart-ийн өгөгдлийг CSV болгон татах
+        csv = chart_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download chart data (CSV)",
+            data=csv,
+            file_name='main_chart_data.csv',
+            mime='text/csv'
+        )
+
 
 
     
