@@ -614,7 +614,6 @@ with right:
             'scrollZoom': True
         }
         
-        st.plotly_chart(fig, use_container_width=True, config=config)
         row = st.columns([20,1])  # 20:1 харьцаатай
         with row[0]:
             st.plotly_chart(fig, use_container_width=True, config=config)
