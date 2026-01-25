@@ -599,7 +599,6 @@ with right:
         
         # 🔥 MODEBAR CONFIGURATION
         config = {
-        config = {
             'displayModeBar': True,
             'displaylogo': False,
             'modeBarButtons': [
