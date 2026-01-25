@@ -421,9 +421,8 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
         
-
 # ======================
-# MAIN CHART (PLOTLY VERSION - ALTAIR LOGIC)
+# MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
     with st.container(border=True):
@@ -474,21 +473,31 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
         
-        # ===== 4️⃣ PLOTLY FIGURE =====
+        # ===== 4️⃣ X-AXIS CONFIGURATION
+        start_year_int = int(start_year) if isinstance(start_year, str) else start_year
+        end_year_int = int(end_year) if isinstance(end_year, str) else end_year
+        year_count = end_year_int - start_year_int + 1
+        
+        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
         fig = go.Figure()
         
-        # Өнгөний палитр
+        # Өнгөний палитр (professional colors)
+        colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+        
+        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
+        fig = go.Figure()
+        
+        # Өнгөний палитр (Mongolbank colors)
         colors = [
-            '#3b82f6',  # Blue
-            '#D4AF37',  # Gold
+            '#3b82f6',  # Mongolbank primary blue
+            '#D4AF37',  # Accent gold
             '#06B6D4',  # Cyan
             '#10B981',  # Green
             '#EF4444',  # Red
             '#8B5CF6'   # Purple
         ]
         
-
-        # 🔥 1️⃣ ҮНДСЭН ШУГАМ (ЗӨВХӨН LINES)
+        # 🔥 LINE TRACES
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
@@ -499,12 +508,15 @@ with right:
                     mode="lines",
                     name=col,
                     line=dict(width=2.4, color=color),
-                    hoverinfo='skip',  # ← Энэ trace-д tooltip үзүүлэхгүй
-                    showlegend=True
+                    hovertemplate=(
+                        "<b>%{fullData.name}</b><br>" +
+                        "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
+                        "Value: %{y:.2f}<extra></extra>"
+                    )
                 )
             )
         
-        # 🔥 2️⃣ HOVER ЦЭГҮҮД (MARKERS ONLY, HOVER ҮЕД Л ХАРАГДАХ)
+        # 🔥 MARKERS (HOVER-only)
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
@@ -519,26 +531,25 @@ with right:
                         color=color,
                         line=dict(width=2, color='white')
                     ),
-                    showlegend=False,  # ← Legend-д давхардуулахгүй
-                    hovertemplate=(
-                        "<b>%{fullData.name}</b><br>" +
-                        "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
-                        "Value: %{y:.2f}<extra></extra>"
-                    )
+                    showlegend=False,
+                    hoverinfo='skip',
+                    visible='legendonly'
                 )
             )
         
-        # === Layout ===
+        # === Layout: FRED-style interaction ===
         fig.update_layout(
             height=460,
             margin=dict(l=40, r=140, t=40, b=60),
             template="plotly_dark",
-            dragmode='pan',
             
-            # 🔥 БОСОО ШУЛУУН + TOOLTIP
+            # ✅ DRAG MODE (BOX ZOOM)
+            dragmode='zoom',
+            
+            # 🔥 CROSSHAIR HOVER
             hovermode='x unified',
-            hoverdistance=10,
             
+            # 🎨 BACKGROUNDS
             paper_bgcolor="rgba(15, 41, 83, 0.3)",
             plot_bgcolor="rgba(11, 37, 84, 0.5)",
             
@@ -550,6 +561,8 @@ with right:
                     thickness=0.05
                 ),
                 showgrid=False,
+                
+                # 🔥 SPIKE LINES
                 showspikes=True,
                 spikemode='across',
                 spikesnap='cursor',
@@ -562,7 +575,14 @@ with right:
                 zeroline=False,
                 showgrid=True,
                 gridcolor="rgba(224,224,224,0.3)",
-                showspikes=False  # ← ХЭВТЭЭ ШУЛУУН БАЙХГҮЙ
+                
+                # 🔥 Y-AXIS SPIKE LINES
+                showspikes=True,
+                spikemode='across',
+                spikesnap='cursor',
+                spikecolor='rgba(170, 170, 170, 0.6)',
+                spikethickness=1.5,
+                spikedash='solid'
             ),
             
             legend=dict(
@@ -590,7 +610,7 @@ with right:
                 'scale': 2
             },
             'doubleClick': 'reset',
-            'scrollZoom': True  # ← Scroll дээр zoom
+            'scrollZoom': True
         }
         
         st.plotly_chart(fig, use_container_width=True, config=config)
