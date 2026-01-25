@@ -901,16 +901,16 @@ with right:
                     overflow: visible;
                 }
                 .change-grid-pro {
-                    display: inline-flex;
+                    display: flex;
+                    flex-wrap: wrap;
                     gap: 6px;
-                    overflow-x: auto;
                     padding: 8px 4px;
+                    overflow: visible;
                 }
-                
                 .change-card-pro {
-                    min-width: 100px;
-                    max-width: 300px;  /* Card-ын хамгийн их өргөн */
-                    flex: 1 1 260px;  /* Flexible sizing */
+                    min-width: 200px;
+                    max-width: 400px;
+                    flex: 1 1 200px;
                     padding: 16px 18px;
                     background: linear-gradient(
                         135deg,
