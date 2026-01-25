@@ -544,7 +544,7 @@ with right:
             template="plotly_dark",
             
             # ✅ DRAG MODE (BOX ZOOM)
-            dragmode='zoom',
+            dragmode='pan',
             
             # 🔥 CROSSHAIR HOVER
             hovermode='x unified',
