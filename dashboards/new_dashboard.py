@@ -434,7 +434,7 @@ with right:
         
         # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
         chart_df = chart_df[
-            (chart_df["time"] >= start_time) &
+            (chart_df["time"] >= start_time) & 
             (chart_df["time"] <= end_time)
         ]
         
@@ -447,8 +447,8 @@ with right:
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
-        
-        import plotly.graph_objects as go
+
+        import altair as alt
         
         # ===== 3️⃣ TIME FORMATTING =====
         chart_df = chart_df.copy()
@@ -472,147 +472,273 @@ with right:
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
-        
-        # ===== 4️⃣ X-AXIS CONFIGURATION
+
+        # ===== 4️⃣ X-AXIS CONFIGURATION =====
+        # Жилийн тооцоо
         start_year_int = int(start_year) if isinstance(start_year, str) else start_year
         end_year_int = int(end_year) if isinstance(end_year, str) else end_year
         year_count = end_year_int - start_year_int + 1
         
-        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
-        fig = go.Figure()
-        
-        # Өнгөний палитр (professional colors)
-        colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
-        
-        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
-        fig = go.Figure()
-        
-        # Өнгөний палитр (Mongolbank colors)
-        colors = [
-            '#3b82f6',  # Mongolbank primary blue
-            '#D4AF37',  # Accent gold
-            '#06B6D4',  # Cyan
-            '#10B981',  # Green
-            '#EF4444',  # Red
-            '#8B5CF6'   # Purple
-        ]
-        
-        # 🔥 LINE + HOVER MARKERS (дэмжиж дугуй цагираг дагах)
-        for i, col in enumerate(valid_indicators):
-            color = colors[i % len(colors)]
-            
-            fig.add_trace(
-                go.Scatter(
-                    x=chart_df["time_dt"],
-                    y=chart_df[col],
-                    mode="lines",   # ← lines + дугуй цагираг
-                    name=col,
-                    line=dict(width=2.4, color=color),
-                    marker=dict(
-                        size=10,             # дугуй цагираг
-                        color=color,
-                        line=dict(width=2, color='white')
-                    ),
-                    hovertemplate=(
-                        "<b>%{fullData.name}</b><br>" +
-                        "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
-                        "Value: %{y:.2f}<extra></extra>"
-                    ),
-                    hoverinfo='x+y+name'
+        # ✅ ЯГ ӨМНӨХ ШИГЭЭ: 2 ЖИЛИЙН ИНТЕРВАЛТАЙ ШОШГО
+        # Хэрэв year_count 12-оос их бол 2 жил тутамд, бага бол жил бүр
+        if year_count > 12:
+            tick_step = 2
+        else:
+            tick_step = 1
+
+        # ===== X-AXIS (FRED STYLE) =====
+        if year_count > 8:
+            # 🔥 DEFAULT VIEW → ЗӨВХӨН ОН
+            x_axis = alt.Axis(
+                title=None,
+                labelAngle=0,
+                labelFontSize=11,
+                grid=False,
+                domain=True,
+                orient='bottom',
+                format="%Y"
+            )
+        else:
+            # 🔥 ZOOMED VIEW → SAR / ULIRAL
+            x_axis = alt.Axis(
+                title=None,
+                labelAngle=0,
+                labelFontSize=11,
+                grid=False,
+                domain=True,
+                orient='bottom',
+                labelExpr="""
+                timeFormat(
+                  datum.value,
+                  (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
+                    ? '%Y-%m'
+                    : '%Y'
                 )
+                """
             )
 
         
-        # 🔥 MARKERS (HOVER-only)
-        for i, col in enumerate(valid_indicators):
-            color = colors[i % len(colors)]
-            
-            fig.add_trace(
-                go.Scatter(
-                    x=chart_df["time_dt"],
-                    y=chart_df[col],
-                    mode="markers",
-                    name=col,
-                    marker=dict(
-                        size=8,
-                        color=color,
-                        line=dict(width=2, color='white')
-                    ),
-                    showlegend=False,
-                    hoverinfo='skip',
-                    visible='legendonly'
-                )
+        # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
+        legend_config = alt.Legend(
+            title=None,
+            orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
+            offset=0,
+            padding=0,
+            labelFontSize=11,
+            symbolType="stroke",
+            symbolSize=80,
+            direction='vertical',
+            # ✅ ЯГ ӨМНӨХ ШИГЭЭ ДЭВСГЭРГҮЙ, ЦЭВЭР
+            fillColor=None,
+            strokeColor=None,
+            cornerRadius=0,
+            labelLimit=180
+        )
+                # 🔑 FRED-STYLE BRUSH (PAN ONLY, NO ZOOM)
+        brush = alt.selection_interval(
+            encodings=["x"],
+            translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
+            zoom=False,
+            empty=False     # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
+        )
+        
+        # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
+        base = (
+            alt.Chart(chart_df)
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
             )
-        
-        # === Layout: FRED-style interaction ===
-        fig.update_layout(
-            dragmode='pan',
-            
-            # ✅ Ганц босоо шулуун дагах hover
-            hovermode='x unified',    
-            
-            paper_bgcolor="rgba(15, 41, 83, 0.3)",
-            plot_bgcolor="rgba(11, 37, 84, 0.5)",
-        
-            xaxis=dict(
-                title=None,
-                type="date",
-                rangeslider=dict(visible=True, thickness=0.05),
-                showgrid=False,
-                showspikes=True,
-                spikemode='across',
-                spikesnap='cursor',
-                spikecolor='rgba(170, 170, 170, 0.6)',
-                spikethickness=1.5,
-                spikedash='solid',
-            ),
-            yaxis=dict(
-                title=None,
-                zeroline=False,
-                showgrid=True,
-                gridcolor="rgba(224,224,224,0.3)",
-                showspikes=False,
-                spikemode='across',
-                spikesnap='cursor',
-                spikecolor='rgba(170, 170, 170, 0.6)',
-                spikethickness=1.5,
-                spikedash='solid'
-            ),
-            legend=dict(
-                title=None,
-                x=1.02,
-                y=1,
-                xanchor="left",
-                yanchor="top",
-                bgcolor="rgba(0,0,0,0)",
-                orientation="v",
-                font=dict(size=11)
+            .encode(
+                x=alt.X(
+                    "time_dt:T",
+                    title=None,
+                    axis=x_axis,
+                    scale=alt.Scale(
+                        zero=False,
+                        domain=brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
+                    )
+                ),
+                y=alt.Y(
+                    "Value:Q",
+                    title=None,
+                    axis=alt.Axis(
+                        grid=True,
+                        gridOpacity=0.25,
+                        domain=True,  # ✅ ЯГ ӨМНӨХ ШИГ
+                        labelFontSize=11,
+                        offset=5
+                    )
+                ),
+                color=alt.Color(
+                    "Indicator:N",
+                    legend=legend_config  # ✅ ЯГ ӨМНӨХ ШИГЭЭ LEGEND
+                ),
+                tooltip=[
+                    alt.Tooltip(
+                        "time_dt:T",
+                        title="Time",
+                        format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
+                    ),
+                    alt.Tooltip("Indicator:N"),
+                    alt.Tooltip("Value:Q", format=",.2f")
+                ]
             )
         )
         
-        # 🔥 MODEBAR CONFIGURATION
-        config = {
-            'displayModeBar': True,
-            'displaylogo': False,
-            'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
-            'modeBarButtonsToAdd': ['downloadData'],
-            'toImageButtonOptions': {
-                'format': 'png',
-                'filename': 'mongolbank_macro_chart',
-                'height': 800,
-                'width': 1400,
-                'scale': 2
-            },
-            'doubleClick': 'reset',
-            'scrollZoom': True
-        }
+        # ===== 7️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
+        hover = alt.selection_single(
+            fields=["time_dt"],
+            nearest=True,
+            on="mouseover",
+            empty=False,
+            clear="mouseout"
+        )
         
-        row = st.columns([20,1])  # 20:1 харьцаатай
-        with row[0]:
-            st.plotly_chart(fig, use_container_width=True, config=config)
-        with row[1]:
-            csv = chart_df.to_csv(index=False).encode('utf-8')
-            st.download_button("📥", data=csv, file_name="main_chart_data.csv", mime="text/csv")
+        # ===== 8️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
+        line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
+        
+        points = (
+            base
+            .mark_circle(
+                size=65,  # ✅ ЯГ ӨМНӨХ ШИГ (65)
+                filled=True,
+                stroke="#ffffff",
+                strokeWidth=2  # ✅ ЯГ ӨМНӨХ ШИГ
+            )
+            .encode(
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            )
+            .add_params(hover)
+        )
+
+        # Босоо шулуун - ЯГ ӨМНӨХ ШИГ
+        vline = (
+            alt.Chart(chart_df)
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  # ✅ ЯГ ӨМНӨХ ШИГ
+            .encode(
+                x='time_dt:T',
+                opacity=alt.condition(hover, alt.value(1), alt.value(0))
+            )
+            .transform_filter(hover)
+        )
+        
+        # ===== 9️⃣ ҮНДСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        zoom = alt.selection_interval(
+            bind='scales',
+            encodings=['x']
+        )
+
+        main_chart = (
+            alt.layer(
+                line,
+                vline,
+                points
+            )
+            .properties(
+                height=400,
+                width=800
+            )
+            .add_params(zoom)   # 🔥 FRED STYLE ZOOM
+        )
+
+        
+        # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        mini_window = (
+            alt.Chart(chart_df)
+            .mark_rect(
+                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
+                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
+                strokeWidth=1.2
+            )
+            .encode(
+                x="time_dt:T"
+            )
+            .transform_filter(brush)
+        )
+
+
+
+        mini_chart = (
+            alt.layer(
+                alt.Chart(chart_df)
+                .transform_fold(
+                    valid_indicators,
+                    as_=["Indicator", "Value"]
+                )
+                .mark_line(strokeWidth=1.2)
+                .encode(
+                    x=alt.X("time_dt:T", axis=None),
+                    y=alt.Y(
+                        "Value:Q",
+                        axis=alt.Axis(
+                            labels=False,
+                            ticks=False,
+                            grid=False,
+                            domain=False
+                        )
+                    ),
+                    color=alt.Color("Indicator:N", legend=None)
+                ),
+        
+                mini_window     # 🔥 SHADED WINDOW
+            )
+            .properties(
+                height=60,
+                width=800
+            )
+            .add_params(brush)
+        )
+
+
+        
+        # ===== 1️⃣1️⃣ НЭГТГЭСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ПАРАМЕТРҮҮД =====
+        final_chart = (
+            alt.vconcat(
+                main_chart,
+                mini_chart,
+                spacing=20  # ✅ ЯГ ӨМНӨХ ШИГЭЭ 20
+            )
+            .resolve_scale(
+                x='independent',
+                color='shared'
+            )
+            .properties(
+                # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
+                padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
+            )
+            .configure_view(
+                strokeWidth=0
+            )
+            .configure_axis(
+                grid=True,
+                gridColor='#e0e0e0',
+                gridOpacity=0.3
+            )
+        )
+
+        # ==== 1️⃣ Баруун талд container үүсгэх ====
+    row = st.columns([20, 1])  # 20:1 харьцаатай
+    
+    with row[0]:
+        # ===== Altair chart =====
+        base = alt.Chart(chart_df).transform_fold(
+            valid_indicators, as_=["Indicator", "Value"]
+        ).encode(
+            x=alt.X("time:T", title=None),
+            y=alt.Y("Value:Q", title=None),
+            color=alt.Color("Indicator:N")
+        )
+    
+        line = base.mark_line()
+        st.altair_chart(line, use_container_width=True)
+    
+    with row[1]:
+        # ===== CSV download button =====
+        csv = chart_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            "📥", data=csv, file_name="main_chart_data.csv", mime="text/csv"
+        )
 
 
 
