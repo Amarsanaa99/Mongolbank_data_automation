@@ -1417,61 +1417,118 @@ def group_chart(group_name):
         ]
     )
     
+
     # ======================
     # 🔥 CREDIT SUPPLY CHART (QUARTERLY ONLY)
     # ======================
-    if group_name == "Credit supply indicator" and freq == "Quarterly":
-        # Survey indicators
-        survey_inds = [
-            "Issued loan to household",
-            "Issued loan to corporate", 
-            "Corporate loan supply",
-            "Household loan"
-        ]
+    if group_name == "Credit supply" and freq == "Quarterly":
+        # Bar indicators (зээлийн гаргалт - баганаар)
+        bar_inds = ["Issued loan to household", "Issued loan to corporate"]
         
-        # Filter to valid survey indicators
-        valid_survey = [ind for ind in survey_inds if ind in valid_inds]
+        # Line indicators (зээлийн эрэлт - шугамаар)
+        line_inds = ["Household loan supply", "Corporate loan supply"]
         
-        if valid_survey:
-            # Survey chart (separate Y-axis)
-            survey_chart = (
-                alt.Chart(gdf)
-                .transform_fold(
-                    valid_survey,
-                    as_=["Indicator", "Value"]
+        # Filter to valid indicators
+        valid_bars = [ind for ind in bar_inds if ind in valid_inds]
+        valid_lines = [ind for ind in line_inds if ind in valid_inds]
+        
+        if valid_bars or valid_lines:
+            layers = []
+            
+            # 1️⃣ BAR CHART (зүүн Y-axis)
+            if valid_bars:
+                bars = (
+                    base
+                    .transform_fold(valid_bars, as_=["Indicator", "Value"])
+                    .mark_bar(opacity=0.7, size=14)
+                    .encode(
+                        y=alt.Y(
+                            "Value:Q",
+                            title=None,
+                            axis=alt.Axis(
+                                grid=True,
+                                gridColor="#334155",
+                                gridOpacity=0.45,
+                                labelColor="#cbd5e1",
+                                labelFontSize=11
+                            )
+                        ),
+                        color=alt.Color(
+                            "Indicator:N",
+                            scale=alt.Scale(range=["#3b82f6", "#8b5cf6"]),
+                            legend=None
+                        ),
+                        tooltip=[
+                            alt.Tooltip("time:N"),
+                            alt.Tooltip("Indicator:N"),
+                            alt.Tooltip("Value:Q", format=",.2f")
+                        ]
+                    )
                 )
-                .mark_line(strokeWidth=2, strokeDash=[5, 5])
+                layers.append(bars)
+            
+            # 2️⃣ LINE CHART (баруун Y-axis)
+            if valid_lines:
+                lines_survey = (
+                    base
+                    .transform_fold(valid_lines, as_=["Indicator", "Value"])
+                    .mark_line(strokeWidth=2.8, point=alt.OverlayMarkDef(size=60, filled=True))
+                    .encode(
+                        y=alt.Y(
+                            "Value:Q",
+                            title=None,
+                            axis=alt.Axis(
+                                orient="right",
+                                grid=False,
+                                labelColor="#fbbf24",
+                                labelFontSize=11
+                            )
+                        ),
+                        color=alt.Color(
+                            "Indicator:N",
+                            scale=alt.Scale(range=["#f59e0b", "#ef4444"]),
+                            legend=None
+                        ),
+                        tooltip=[
+                            alt.Tooltip("time:N"),
+                            alt.Tooltip("Indicator:N"),
+                            alt.Tooltip("Value:Q", format=",.2f")
+                        ]
+                    )
+                )
+                layers.append(lines_survey)
+            
+            # 3️⃣ COMBINE & LEGEND
+            combined = alt.layer(*layers).resolve_scale(y='independent')
+            
+            # Legend доод талд
+            all_inds = valid_bars + valid_lines
+            legend_chart = (
+                base
+                .transform_fold(all_inds, as_=["Indicator", "Value"])
+                .mark_point(size=0, opacity=0)
                 .encode(
-                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
-                    y=alt.Y(
-                        "Value:Q",
-                        title="Survey Index",
-                        axis=alt.Axis(
-                            orient="right",
-                            grid=False,
-                            labelColor="#f59e0b",
-                            titleColor="#f59e0b",
-                            labelFontSize=10,
-                            titleFontSize=11
-                        )
-                    ),
                     color=alt.Color(
                         "Indicator:N",
-                        scale=alt.Scale(scheme="set2"),
-                        legend=None
-                    ),
-                    tooltip=[
-                        alt.Tooltip("time:N"),
-                        alt.Tooltip("Indicator:N"),
-                        alt.Tooltip("Value:Q", format=",.2f")
-                    ]
+                        legend=alt.Legend(
+                            orient="bottom",
+                            direction="horizontal",
+                            title=None,
+                            labelLimit=150,
+                            labelFontSize=11,
+                            symbolSize=80,
+                            columnPadding=4,
+                            padding=0,
+                            offset=2
+                        )
+                    )
                 )
             )
             
-            # Combine main + survey
-            return alt.layer(lines, survey_chart).resolve_scale(y='independent')
+            return alt.layer(combined, legend_chart)
     
     return lines
+
 
 
 
