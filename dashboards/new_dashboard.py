@@ -524,19 +524,19 @@ with right:
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="markers",
-                    name=col,
+                    mode="lines+markers",
                     marker=dict(
                         size=8,
                         color=color,
-                        line=dict(width=2, color='white')
+                        line=dict(width=2, color="white"),
+                        opacity=0   # 🔥 default invisible
                     ),
-                    showlegend=False,
-                    hoverinfo='skip',
-                    visible='legendonly'
+                    hoveron="points+fills",
                 )
-            )
-        
+        fig.update_traces(
+            marker_opacity=1,
+            selector=dict(mode="lines+markers")
+        )
         # === Layout: FRED-style interaction ===
         fig.update_layout(
             height=460,
@@ -544,23 +544,29 @@ with right:
             template="plotly_dark",
             
             # ✅ DRAG MODE (BOX ZOOM)
-            dragmode='zoom',
+            dragmode='pan',
             
             # 🔥 CROSSHAIR HOVER
-            hovermode='x unified',
+            hovermode='x',
             
             # 🎨 BACKGROUNDS
             paper_bgcolor="rgba(15, 41, 83, 0.3)",
             plot_bgcolor="rgba(11, 37, 84, 0.5)",
             
             xaxis=dict(
+            xaxis=dict(
                 title=None,
                 type="date",
                 rangeslider=dict(
                     visible=True,
-                    thickness=0.05
+                    thickness=0.08,                       
+                    bgcolor="rgba(0,0,0,0)",              
+                    borderwidth=1,                        
+                    bordercolor="rgba(120,120,120,0.6)"   
                 ),
-                showgrid=False,
+                showgrid=False
+            ),
+
                 
                 # 🔥 SPIKE LINES
                 showspikes=True,
@@ -577,7 +583,7 @@ with right:
                 gridcolor="rgba(224,224,224,0.3)",
                 
                 # 🔥 Y-AXIS SPIKE LINES
-                showspikes=True,
+                showspikes=False,
                 spikemode='across',
                 spikesnap='cursor',
                 spikecolor='rgba(170, 170, 170, 0.6)',
