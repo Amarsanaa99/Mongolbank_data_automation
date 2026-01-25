@@ -608,21 +608,33 @@ with right:
             .add_params(hover)
         )
 
-        # ХАМГИЙН СҮҮЛИЙН ЦЭГ (ҮРГЭЛЖ ХАРАГДАХ)
+        # 1️⃣ Indicator бүрийн хамгийн сүүлийн цэгийг олох
+        last_point_df = (
+            chart_df
+            .sort_values('time_dt')
+            .groupby(lambda x: True, group_keys=False)  # Dummy group
+            .apply(lambda df: df[valid_indicators].apply(
+                lambda col: df[df[col.name].notna()].iloc[-1] if df[col.name].notna().any() else None
+            ))
+        )
+        
+        # 2️⃣ Reshape for Altair
+        last_data = []
+        for ind in valid_indicators:
+            subset = chart_df[chart_df[ind].notna()]
+            if len(subset) > 0:
+                last_row = subset.sort_values('time_dt').iloc[-1]
+                last_data.append({
+                    'time_dt': last_row['time_dt'],
+                    'Indicator': ind,
+                    'Value': last_row[ind]
+                })
+        
+        last_df = pd.DataFrame(last_data)
+        
+        # 3️⃣ Altair chart
         last_points = (
-            base
-            .transform_joinaggregate(
-                max_row='max(row_number)',
-                groupby=['Indicator']
-            )
-            .transform_window(
-                row_number='row_number()',
-                sort=[alt.SortField('time_dt', order='ascending')],
-                groupby=['Indicator']
-            )
-            .transform_filter(
-                'datum.row_number == datum.max_row'
-            )
+            alt.Chart(last_df)
             .mark_circle(
                 size=80,
                 filled=True,
@@ -630,7 +642,14 @@ with right:
                 strokeWidth=2.5
             )
             .encode(
-                opacity=alt.value(1)
+                x=alt.X('time_dt:T', title=None, axis=x_axis, scale=alt.Scale(zero=False, domain=mini_brush)),
+                y=alt.Y('Value:Q', title=None),
+                color=alt.Color('Indicator:N', legend=None),
+                tooltip=[
+                    alt.Tooltip('time_dt:T', title="Time", format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"),
+                    alt.Tooltip('Indicator:N'),
+                    alt.Tooltip('Value:Q', format=",.2f")
+                ]
             )
         )
         # Босоо шулуун 
