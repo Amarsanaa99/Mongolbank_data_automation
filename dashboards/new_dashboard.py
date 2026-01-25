@@ -522,22 +522,6 @@ with right:
                 )
             )
 
-            
-            # 🔹 Marker (hover only)
-            fig.add_trace(
-                go.Scatter(
-                    x=chart_df["time_dt"],
-                    y=chart_df[col],
-                    mode="markers",
-                    marker=dict(
-                        size=8,
-                        color=color,
-                        line=dict(width=2, color="white")
-                    ),
-                    showlegend=False,
-                    hoverinfo='skip'
-                )
-            )
 
 
         fig.update_traces(
