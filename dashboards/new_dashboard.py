@@ -1456,7 +1456,7 @@ def group_chart(group_name):
                             grid=False,
                             labelFontSize=10,
                             labelExpr="split(datum.value, '-')[1] + '\\n' + split(datum.value, '-')[0]",
-                            label=8,
+                            labelPadding=8,
                             domain=True
                         )
                     ),
