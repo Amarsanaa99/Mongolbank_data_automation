@@ -1456,6 +1456,8 @@ def group_chart(group_name):
                             grid=False,
                             labelFontSize=10,
                             labelExpr="split(datum.value, '-')[1] + '\\n' + split(datum.value, '-')[0]"
+                            label=8,
+                            domain=True
                         )
                     ),
                     y=alt.Y(
@@ -1583,6 +1585,7 @@ def group_chart(group_name):
                 alt.layer(combined, legend_chart)
                 .properties(
                     height=320,
+                    width=800,
                     padding={"top": 6, "bottom": 0, "left": 6, "right": 6},
                     title=alt.TitleParams(
                         text=group_name,
