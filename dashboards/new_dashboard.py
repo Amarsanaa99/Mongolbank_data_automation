@@ -486,18 +486,24 @@ with right:
         
         # ===== 5️⃣ MINI OVERVIEW CHART =====
         for indicator in valid_indicators:
+            hovertemplate = (
+                '<b>Time:</b> %{x|%Y-%m}<br>' if freq=="Monthly" else '<b>Time:</b> %{x|%Y-Q%q}<br>'
+            ) + '<b>' + indicator + ':</b> %{y:,.2f}<extra></extra>'
+        
             fig.add_trace(
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[indicator],
-                    mode='lines',
+                    mode='lines+markers',
                     name=indicator,
-                    line=dict(width=1.2),
-                    showlegend=False
+                    marker=dict(size=8, line=dict(width=2, color='white')),
+                    line=dict(width=2.4),
+                    hovertemplate=hovertemplate,
                 ),
-                row=2,
+                row=1,
                 col=1
             )
+
         
         # ===== 6️⃣ UPDATE LAYOUT =====
         fig.update_layout(
