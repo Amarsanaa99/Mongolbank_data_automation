@@ -908,7 +908,7 @@ with right:
                 }
                 
                 .change-card-pro {
-                    min-width: 200px;
+                    min-width: 100px;
                     max-width: 300px;  /* Card-ын хамгийн их өргөн */
                     flex: 1 1 260px;  /* Flexible sizing */
                     padding: 16px 18px;
