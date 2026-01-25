@@ -505,7 +505,7 @@ with right:
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines+markers",   # ← lines + дугуй цагираг
+                    mode="lines",   # ← lines + дугуй цагираг
                     name=col,
                     line=dict(width=2.4, color=color),
                     marker=dict(
@@ -517,7 +517,8 @@ with right:
                         "<b>%{fullData.name}</b><br>" +
                         "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
                         "Value: %{y:.2f}<extra></extra>"
-                    )
+                    ),
+                    hoverinfo='x+y+name'
                 )
             )
 
@@ -548,7 +549,7 @@ with right:
             dragmode='pan',
             
             # ✅ Ганц босоо шулуун дагах hover
-            hovermode='x',    # ← 'x unified' биш
+            hovermode='x unified',    
             
             paper_bgcolor="rgba(15, 41, 83, 0.3)",
             plot_bgcolor="rgba(11, 37, 84, 0.5)",
