@@ -946,7 +946,7 @@ with right:
                 .metric-item {
                     width: fit-content;
                     max-width: 100%;
-                    display: flex;
+                    display: inline-flex;
                     justify-content: space-between;
                     align-items: center;
                     gap: 6px;
