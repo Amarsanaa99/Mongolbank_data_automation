@@ -615,14 +615,11 @@ with right:
         }
         
         st.plotly_chart(fig, use_container_width=True, config=config)
-        # 🔹 Chart-ийн өгөгдлийг CSV болгон татах
-        csv = chart_df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Download chart data (CSV)",
-            data=csv,
-            file_name='main_chart_data.csv',
-            mime='text/csv'
-        )
+        cols = st.columns([8,1])  # 8:1 харьцаатай
+        with cols[1]:
+            csv = chart_df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥", data=csv, file_name="main_chart_data.csv", mime="text/csv")
+
 
 
 
