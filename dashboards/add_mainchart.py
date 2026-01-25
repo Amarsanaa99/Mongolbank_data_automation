@@ -720,8 +720,25 @@ with right:
             )
         )
 
+       # ===== HEADER ROW: Chart title + download button =====
+        header_col1, header_col2 = st.columns([6, 1])
+        
+        with header_col1:
+            st.subheader("📈 Main chart")
+        
+        with header_col2:
+            csv = chart_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                "📥 CSV",
+                data=csv,
+                file_name="main_chart_data.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        
+        # ===== MAIN CHART DISPLAY =====
         st.altair_chart(final_chart, use_container_width=True)
-    
+
     
     def compute_group_kpis(df, indicators):
         stats = []
