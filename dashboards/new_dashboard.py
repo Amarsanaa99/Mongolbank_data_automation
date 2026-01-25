@@ -947,7 +947,7 @@ with right:
                     width: fit-content;
                     max-width: 100%;
                     display: inline-flex;
-                    justify-content: space-between;
+                    justify-content: flex-start;
                     align-items: center;
                     gap: 6px;
                     padding: 4px 8px;
