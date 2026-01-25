@@ -627,9 +627,7 @@ with right:
             )
             .mark_circle(
                 size=140,
-                filled=True,
-                stroke="white",
-                strokeWidth=2.5
+                filled=True
             )
         )
 
