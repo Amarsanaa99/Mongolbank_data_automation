@@ -938,7 +938,7 @@ with right:
                 }
                 
                 .change-metrics-pro {
-                    display: flex;
+                    display: inline-flex;
                     flex-direction: column;
                     gap: 4px;
                 }
