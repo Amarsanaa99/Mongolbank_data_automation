@@ -1422,115 +1422,150 @@ def group_chart(group_name):
     # 🔥 CREDIT SUPPLY CHART (QUARTERLY ONLY)
     # ======================
     if group_name == "Credit supply" and freq == "Quarterly":
-        # Bar indicators (зээлийн гаргалт - баганаар)
-        bar_inds = ["Issued loan to household", "Issued loan to corporate"]
+        # Required indicators
+        required_inds = [
+            "Issued loan to household",
+            "Issued loan to corporate",
+            "Household loan supply",
+            "Corporate loan supply"
+        ]
         
-        # Line indicators (зээлийн эрэлт - шугамаар)
-        line_inds = ["Household loan supply", "Corporate loan supply"]
-        
-        # Filter to valid indicators
-        valid_bars = [ind for ind in bar_inds if ind in valid_inds]
-        valid_lines = [ind for ind in line_inds if ind in valid_inds]
-        
-        if valid_bars or valid_lines:
-            layers = []
+        # Check all exist
+        if all(ind in valid_inds for ind in required_inds):
+            # Prepare data for stacked bars
+            bar_data = gdf[["time", "Issued loan to household", "Issued loan to corporate"]].copy()
             
-            # 1️⃣ BAR CHART (зүүн Y-axis)
-            if valid_bars:
-                bars = (
-                    alt.Chart(gdf)
-                    .transform_fold(valid_bars, as_=["Indicator", "Value"])
-                    .mark_bar(opacity=0.7, size=14)
-                    .encode(
-                        x=alt.X(
-                            "time:N",
-                            title=None,
-                            sort="ascending",
-                            axis=alt.Axis(
-                                labelAngle=0,
-                                grid=False,
-                                labelFontSize=11,
-                                labelExpr="substring(datum.value, 0, 4)"
-                            )
-                        ),
-                        y=alt.Y(
-                            "Value:Q",
-                            title=None,
-                            axis=alt.Axis(
-                                grid=True,
-                                gridColor="#334155",
-                                gridOpacity=0.45,
-                                labelColor="#cbd5e1",
-                                labelFontSize=11
-                            )
-                        ),
-                        color=alt.Color(
-                            "Indicator:N",
-                            scale=alt.Scale(range=["#3b82f6", "#8b5cf6"]),
-                            legend=None
-                        ),
-                        tooltip=[
-                            alt.Tooltip("time:N"),
-                            alt.Tooltip("Indicator:N"),
-                            alt.Tooltip("Value:Q", format=",.2f")
-                        ]
-                    )
-                )
-                layers.append(bars)
-            
-            # 2️⃣ LINE CHART (баруун Y-axis)
-            if valid_lines:
-                lines_survey = (
-                    alt.Chart(gdf)
-                    .transform_fold(valid_lines, as_=["Indicator", "Value"])
-                    .mark_line(strokeWidth=2.8, point=alt.OverlayMarkDef(size=60, filled=True))
-                    .encode(
-                        x=alt.X("time:N", title=None, sort="ascending", axis=None),
-                        y=alt.Y(
-                            "Value:Q",
-                            title=None,
-                            axis=alt.Axis(
-                                orient="right",
-                                grid=False,
-                                labelColor="#fbbf24",
-                                labelFontSize=11
-                            )
-                        ),
-                        color=alt.Color(
-                            "Indicator:N",
-                            scale=alt.Scale(range=["#f59e0b", "#ef4444"]),
-                            legend=None
-                        ),
-                        tooltip=[
-                            alt.Tooltip("time:N"),
-                            alt.Tooltip("Indicator:N"),
-                            alt.Tooltip("Value:Q", format=",.2f")
-                        ]
-                    )
-                )
-                layers.append(lines_survey)
-            
-            # 3️⃣ COMBINE with independent Y-scales
-            combined = alt.layer(*layers).resolve_scale(y='independent')
-            
-            # 4️⃣ LEGEND (доод талд)
-            all_inds = valid_bars + valid_lines
-            legend_chart = (
+            # 1️⃣ STACKED BAR CHART (зүүн Y-axis)
+            bars = (
                 alt.Chart(gdf)
-                .transform_fold(all_inds, as_=["Indicator", "Value"])
-                .mark_point(size=0, opacity=0)
+                .transform_fold(
+                    ["Issued loan to household", "Issued loan to corporate"],
+                    as_=["Indicator", "Value"]
+                )
+                .mark_bar()
                 .encode(
-                    x=alt.X("time:N", axis=None),
+                    x=alt.X(
+                        "time:N",
+                        title=None,
+                        sort="ascending",
+                        axis=alt.Axis(
+                            labelAngle=0,
+                            grid=False,
+                            labelFontSize=10,
+                            labelExpr="split(datum.value, '-')[1] + '\\n' + split(datum.value, '-')[0]"
+                        )
+                    ),
+                    y=alt.Y(
+                        "Value:Q",
+                        title=None,
+                        stack="zero",
+                        axis=alt.Axis(
+                            grid=True,
+                            gridColor="#334155",
+                            gridOpacity=0.45,
+                            labelColor="#cbd5e1",
+                            labelFontSize=11,
+                            orient="left"
+                        )
+                    ),
                     color=alt.Color(
                         "Indicator:N",
+                        scale=alt.Scale(
+                            domain=["Issued loan to household", "Issued loan to corporate"],
+                            range=["#fbbf24", "#3b82f6"]
+                        ),
+                        legend=None
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time:N"),
+                        alt.Tooltip("Indicator:N"),
+                        alt.Tooltip("Value:Q", format=",.2f")
+                    ]
+                )
+            )
+            
+            # 2️⃣ HOUSEHOLD LINE (баруун Y-axis, шар)
+            line_household = (
+                alt.Chart(gdf)
+                .mark_line(
+                    strokeWidth=2.5,
+                    color="#fbbf24",
+                    point=alt.OverlayMarkDef(size=60, filled=True, color="#fbbf24")
+                )
+                .encode(
+                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
+                    y=alt.Y(
+                        "Household loan supply:Q",
+                        title=None,
+                        axis=alt.Axis(
+                            orient="right",
+                            grid=False,
+                            labelColor="#fbbf24",
+                            labelFontSize=11
+                        )
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time:N"),
+                        alt.Tooltip("Household loan supply:Q", format=",.2f")
+                    ]
+                )
+            )
+            
+            # 3️⃣ CORPORATE LINE (баруун Y-axis, цэнхэр тасархай)
+            line_corporate = (
+                alt.Chart(gdf)
+                .mark_line(
+                    strokeWidth=2.5,
+                    strokeDash=[5, 5],
+                    color="#3b82f6",
+                    point=alt.OverlayMarkDef(size=60, filled=True, color="#3b82f6")
+                )
+                .encode(
+                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
+                    y=alt.Y(
+                        "Corporate loan supply:Q",
+                        title=None,
+                        axis=None
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time:N"),
+                        alt.Tooltip("Corporate loan supply:Q", format=",.2f")
+                    ]
+                )
+            )
+            
+            # 4️⃣ COMBINE with independent Y-scales
+            combined = (
+                alt.layer(bars, line_household, line_corporate)
+                .resolve_scale(y='independent')
+            )
+            
+            # 5️⃣ LEGEND
+            legend_chart = (
+                alt.Chart(
+                    pd.DataFrame({
+                        "Indicator": required_inds,
+                        "Type": ["Bar", "Bar", "Line", "Line"],
+                        "Order": [1, 2, 3, 4]
+                    })
+                )
+                .mark_point(size=0, opacity=0)
+                .encode(
+                    color=alt.Color(
+                        "Indicator:N",
+                        scale=alt.Scale(
+                            domain=required_inds,
+                            range=["#fbbf24", "#3b82f6", "#fbbf24", "#3b82f6"]
+                        ),
                         legend=alt.Legend(
                             orient="bottom",
                             direction="horizontal",
                             title=None,
-                            labelLimit=150,
-                            labelFontSize=11,
+                            labelLimit=200,
+                            labelFontSize=10,
                             symbolSize=80,
-                            columnPadding=4,
+                            symbolType="square",
+                            columnPadding=8,
                             padding=0,
                             offset=2
                         )
@@ -1538,7 +1573,7 @@ def group_chart(group_name):
                 )
             )
             
-            # 5️⃣ FINAL: title + properties
+            # 6️⃣ FINAL CHART
             final = (
                 alt.layer(combined, legend_chart)
                 .properties(
