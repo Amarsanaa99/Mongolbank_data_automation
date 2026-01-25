@@ -422,7 +422,7 @@ if series["time"].isna().all():
     st.stop()
         
 # ======================
-# MAIN CHART (PLOTLY VERSION - FULL ALTAIR LOGIC)
+# MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
 with right:
     with st.container(border=True):
@@ -449,7 +449,6 @@ with right:
             st.stop()
         
         import plotly.graph_objects as go
-        from plotly.subplots import make_subplots
         
         # ===== 3️⃣ TIME FORMATTING =====
         chart_df = chart_df.copy()
@@ -474,36 +473,34 @@ with right:
             st.error("❌ Failed to convert time → datetime")
             st.stop()
         
-        # ===== 4️⃣ X-AXIS CONFIGURATION =====
+        # ===== 4️⃣ X-AXIS CONFIGURATION
         start_year_int = int(start_year) if isinstance(start_year, str) else start_year
         end_year_int = int(end_year) if isinstance(end_year, str) else end_year
         year_count = end_year_int - start_year_int + 1
         
-        # Өнгөний палитр (Altair default colors-тай адил)
+        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
+        fig = go.Figure()
+        
+        # Өнгөний палитр (professional colors)
+        colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+        
+        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
+        fig = go.Figure()
+        
+        # Өнгөний палитр (Mongolbank colors)
         colors = [
-            '#3b82f6',  # Blue
-            '#D4AF37',  # Gold
+            '#3b82f6',  # Mongolbank primary blue
+            '#D4AF37',  # Accent gold
             '#06B6D4',  # Cyan
             '#10B981',  # Green
             '#EF4444',  # Red
             '#8B5CF6'   # Purple
         ]
         
-        # ===== 5️⃣ CREATE SUBPLOTS (Main + Mini) =====
-        fig = make_subplots(
-            rows=2, cols=1,
-            row_heights=[0.85, 0.15],  # Main 85%, Mini 15%
-            vertical_spacing=0.03,
-            shared_xaxes=False,
-            specs=[[{"secondary_y": False}],
-                   [{"secondary_y": False}]]
-        )
-        
-        # ===== 6️⃣ MAIN CHART - ҮНДСЭН ШУГАМУУД =====
+        # 🔥 LINE TRACES
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
-            # Шугам (зөвхөн харагдах)
             fig.add_trace(
                 go.Scatter(
                     x=chart_df["time_dt"],
@@ -511,14 +508,18 @@ with right:
                     mode="lines",
                     name=col,
                     line=dict(width=2.4, color=color),
-                    legendgroup=col,
-                    showlegend=True,
-                    hoverinfo='skip'
-                ),
-                row=1, col=1
+                    hovertemplate=(
+                        "<b>%{fullData.name}</b><br>" +
+                        "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
+                        "Value: %{y:.2f}<extra></extra>"
+                    )
+                )
             )
+        
+        # 🔥 MARKERS (HOVER-only)
+        for i, col in enumerate(valid_indicators):
+            color = colors[i % len(colors)]
             
-            # Цэгүүд (hover үед л харагдах)
             fig.add_trace(
                 go.Scatter(
                     x=chart_df["time_dt"],
@@ -530,114 +531,60 @@ with right:
                         color=color,
                         line=dict(width=2, color='white')
                     ),
-                    legendgroup=col,
                     showlegend=False,
-                    hovertemplate=(
-                        "<b>%{fullData.name}</b><br>" +
-                        "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
-                        "Value: %{y:.2f}<extra></extra>"
-                    )
-                ),
-                row=1, col=1
+                    hoverinfo='skip',
+                    visible='legendonly'
+                )
             )
         
-        # ===== 7️⃣ MINI CHART - OVERVIEW =====
-        for i, col in enumerate(valid_indicators):
-            color = colors[i % len(colors)]
-            
-            fig.add_trace(
-                go.Scatter(
-                    x=chart_df["time_dt"],
-                    y=chart_df[col],
-                    mode="lines",
-                    line=dict(width=1.2, color=color),
-                    legendgroup=col,
-                    showlegend=False,
-                    hoverinfo='skip'
-                ),
-                row=2, col=1
-            )
-        
-        # ===== 8️⃣ LAYOUT - MAIN CHART (ROW 1) =====
-        fig.update_xaxes(
-            title=None,
-            showgrid=False,
-            zeroline=False,
-            showline=True,
-            linewidth=1,
-            linecolor='rgba(255,255,255,0.2)',
-            tickfont=dict(size=11),
-            tickangle=0,
-            
-            # 🔥 ZOOM + PAN ИДЭВХЖҮҮЛЭХ
-            rangeslider=dict(visible=False),  # Mini chart-ыг ашиглах учраас
-            
-            # 🔥 BOSOO SHULUUN (SPIKE)
-            showspikes=True,
-            spikemode='across',
-            spikesnap='cursor',
-            spikecolor='rgba(170, 170, 170, 0.6)',
-            spikethickness=1.5,
-            spikedash='solid',
-            
-            row=1, col=1
-        )
-        
-        fig.update_yaxes(
-            title=None,
-            showgrid=True,
-            gridcolor='rgba(224, 224, 224, 0.25)',
-            gridwidth=1,
-            zeroline=False,
-            showline=True,
-            linewidth=1,
-            linecolor='rgba(255,255,255,0.2)',
-            tickfont=dict(size=11),
-            showspikes=False,  # Y-axis spike байхгүй
-            row=1, col=1
-        )
-        
-        # ===== 9️⃣ LAYOUT - MINI CHART (ROW 2) =====
-        fig.update_xaxes(
-            title=None,
-            showgrid=False,
-            zeroline=False,
-            showline=False,
-            showticklabels=True,
-            tickfont=dict(size=9),
-            tickangle=0,
-            
-            # 🔥 MINI CHART-ЫГ PAN ХИЙЖ БОЛНО
-            showspikes=False,
-            
-            row=2, col=1
-        )
-        
-        fig.update_yaxes(
-            title=None,
-            showgrid=False,
-            zeroline=False,
-            showline=False,
-            showticklabels=False,
-            row=2, col=1
-        )
-        
-        # ===== 🔟 GENERAL LAYOUT =====
+        # === Layout: FRED-style interaction ===
         fig.update_layout(
-            height=520,  # 400 (main) + 60 (mini) + spacing
-            margin=dict(l=40, r=140, t=20, b=40),
+            height=460,
+            margin=dict(l=40, r=140, t=40, b=60),
+            template="plotly_dark",
             
-            # 🎨 BACKGROUND
+            # ✅ DRAG MODE (BOX ZOOM)
+            dragmode='zoom',
+            
+            # 🔥 CROSSHAIR HOVER
+            hovermode='x unified',
+            
+            # 🎨 BACKGROUNDS
             paper_bgcolor="rgba(15, 41, 83, 0.3)",
             plot_bgcolor="rgba(11, 37, 84, 0.5)",
             
-            # 🔥 HOVER MODE (BOSOO SHULUUN-TAI TSUг)
-            hovermode='x unified',
+            xaxis=dict(
+                title=None,
+                type="date",
+                rangeslider=dict(
+                    visible=True,
+                    thickness=0.05
+                ),
+                showgrid=False,
+                
+                # 🔥 SPIKE LINES
+                showspikes=True,
+                spikemode='across',
+                spikesnap='cursor',
+                spikecolor='rgba(170, 170, 170, 0.6)',
+                spikethickness=1.5,
+                spikedash='solid',
+            ),
+            yaxis=dict(
+                title=None,
+                zeroline=False,
+                showgrid=True,
+                gridcolor="rgba(224,224,224,0.3)",
+                
+                # 🔥 Y-AXIS SPIKE LINES
+                showspikes=True,
+                spikemode='across',
+                spikesnap='cursor',
+                spikecolor='rgba(170, 170, 170, 0.6)',
+                spikethickness=1.5,
+                spikedash='solid'
+            ),
             
-            # 🔥 DRAG MODE (ZOOM + PAN)
-            dragmode='zoom',
-            
-            # 🎨 LEGEND (БАРУУН ТАЛД)
             legend=dict(
                 title=None,
                 x=1.02,
@@ -645,18 +592,12 @@ with right:
                 xanchor="left",
                 yanchor="top",
                 bgcolor="rgba(0,0,0,0)",
-                bordercolor="rgba(0,0,0,0)",
                 orientation="v",
-                font=dict(size=11),
-                itemsizing='constant',
-                tracegroupgap=5
-            ),
-            
-            # Template
-            template="plotly_dark"
+                font=dict(size=11)
+            )
         )
         
-        # ===== 1️⃣1️⃣ CONFIG (TOOLS + EXPORT) =====
+        # 🔥 MODEBAR CONFIGURATION
         config = {
             'displayModeBar': True,
             'displaylogo': False,
@@ -669,11 +610,10 @@ with right:
                 'scale': 2
             },
             'doubleClick': 'reset',
-            'scrollZoom': True  # Mouse wheel-ээр zoom
+            'scrollZoom': True
         }
         
         st.plotly_chart(fig, use_container_width=True, config=config)
-
 
     
     def compute_group_kpis(df, indicators):
