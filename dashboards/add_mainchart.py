@@ -427,8 +427,6 @@ if series["time"].isna().all():
 with right:
     with st.container(border=True):
         
-        st.subheader("📈 Main chart")
-        
         # ===== 1️⃣ DATA (NO AGGREGATION)
         chart_df = series[["time"] + selected].copy()
         
