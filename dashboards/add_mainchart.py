@@ -721,8 +721,7 @@ with right:
         )
 
         st.altair_chart(final_chart, use_container_width=True)
-
-
+    
     
     def compute_group_kpis(df, indicators):
         stats = []
@@ -761,6 +760,7 @@ with right:
         return pd.DataFrame(stats)
 
 
+    
     # ======================
     # 📊 KPI CALCULATION (INDICATOR LEVEL)
     # ======================
@@ -780,53 +780,95 @@ with right:
     kpi_main = kpi_df[kpi_df["Indicator"] == primary_indicator]
     kpi_rest = kpi_df[kpi_df["Indicator"] != primary_indicator]
     
+    # 🔥 FIXED STYLING (no purple gradient, compact)
     st.markdown("""
     <style>
+    /* ===== KPI CARDS ===== */
     .kpi-card {
         background: linear-gradient(
-            180deg,
-            rgba(15, 23, 42, 0.85),
-            rgba(15, 23, 42, 0.65)
+            135deg,
+            rgba(15, 23, 42, 0.95),
+            rgba(30, 41, 59, 0.85)
         );
-        border: 1px solid rgba(59,130,246,0.25);
-        border-radius: 16px;
-        padding: 10px 14px;
-        margin: 10px 0;
-    
-        /* ✅ ЭНЭ 1 МӨР */
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid rgba(59,130,246,0.3);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin: 8px 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     
     .kpi-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(59,130,246,0.25);
+        border-color: rgba(59,130,246,0.6);
     }
-
+    
     .kpi-label {
-        font-size: 11px;
-        color: #93c5fd;
-        letter-spacing: 0.06em;
+        font-size: 10px;
+        font-weight: 700;
+        color: #94a3b8;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        font-family: 'Monaco', 'Courier New', monospace;
     }
+    
     .kpi-value {
-        font-size: 24px;
-        font-weight: 600;
-        color: #3b82f6;
+        font-size: 28px;
+        font-weight: 700;
+        color: #60a5fa;
+        font-family: 'Monaco', 'Courier New', monospace;
+        letter-spacing: -0.02em;
+        text-shadow: 0 2px 8px rgba(96,165,250,0.3);
+        line-height: 1.2;
     }
+    
     .kpi-sub {
-    font-size: 11px;
-    opacity: 0.6;
-    margin-top: -2px;
+        font-size: 11px;
+        color: #cbd5e1;
+        opacity: 0.7;
+        margin-top: 6px;
+        font-weight: 500;
     }
-
+    
+    /* ===== HEADER STYLING ===== */
+    .kpi-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0 16px 0;
+        padding: 12px 16px;
+        background: linear-gradient(
+            90deg,
+            rgba(59,130,246,0.1),
+            rgba(139,92,246,0.05)
+        );
+        border-left: 4px solid #3b82f6;
+        border-radius: 8px;
+    }
+    
+    .kpi-header-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #e2e8f0;
+    }
+    
+    .kpi-header-indicator {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #60a5fa;
+        font-family: 'Monaco', 'Courier New', monospace;
+    }
     </style>
     """, unsafe_allow_html=True)
-
-    # ===== KPI CARD HELPER (OUTSIDE BLOCK)
+    
+    # ===== KPI CARD HELPER
     def kpi_card(label, value, sublabel=None):
         sub = ""
         if sublabel is not None:
             sub = f"<div class='kpi-sub'>{str(sublabel)}</div>"
-    
+        
         st.markdown(
             f"""
             <div class="kpi-card">
@@ -837,36 +879,26 @@ with right:
             """,
             unsafe_allow_html=True
         )
-        
-    # 🔥 HEADER ROW — INLINE
+    
+    # 🔥 HEADER
     st.markdown(
         f"""
-        <div style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 6px;
-            margin-bottom: 4px;
-        ">
-            <span style="font-size: 1.25rem; font-weight: 600;">
-                📌 Indicator-level KPIs
-            </span>
-            <span style="opacity: 0.6;">➜</span>
-            <span style="font-size: 1.25rem; font-weight: 600; color: #60a5fa;">
-                📊 {primary_indicator}
-            </span>
+        <div class="kpi-header">
+            <span class="kpi-header-title">📌 Indicator-level KPIs</span>
+            <span style="opacity: 0.4;">→</span>
+            <span class="kpi-header-indicator">{primary_indicator}</span>
         </div>
         """,
         unsafe_allow_html=True
     )
-
+    
     if kpi_main.empty:
         st.info("No KPI data available.")
         st.stop()
-        
-    row = kpi_main.iloc[0]   # ✅ row ЭНД Л ҮҮСНЭ
-
-    # 🔽 KPI CARDS (ӨМНӨХӨӨРӨӨ)
+    
+    row = kpi_main.iloc[0]
+    
+    # 🔽 KPI CARDS
     cols = st.columns(6)
     
     with cols[0]:
@@ -876,7 +908,7 @@ with right:
             f"{float(row['Last']):.2f}",
             last_date
         )
-        
+    
     with cols[1]:
         kpi_card("MEAN", f"{row['Mean']:.2f}")
     with cols[2]:
@@ -886,8 +918,8 @@ with right:
     with cols[4]:
         kpi_card("MAXIMUM VALUE", f"{row['Max']:.2f}")
     with cols[5]:
-        kpi_card("STD (VOTATILITY)", f"{row['Std']:.2f}")
-
+        kpi_card("STD (VOLATILITY)", f"{row['Std']:.2f}")
+    
     # ======================
     # 📋 OPTIONAL — Indicator-level KPI TABLE
     # ======================
@@ -899,8 +931,9 @@ with right:
                 .round(2),
                 use_container_width=True
             )
+    
     # ======================
-    # 📉 CHANGE SUMMARY — GROUP LEVEL (FIXED)
+    # 📉 CHANGE SUMMARY — ENHANCED PRO STYLE
     # ======================
     st.markdown("### 📉 Change summary")
     
@@ -908,224 +941,195 @@ with right:
     if selected:
         change_indicators = selected
     else:
-        # fallback: group-level (хэрвээ юу ч сонгоогүй бол)
         change_indicators = [
             col[1] for col in df_data.columns
             if col[0] == group and not pd.isna(col[1])
         ]
-
     
     if not group_indicators:
         st.caption("No indicators in this group.")
     else:
         cards_html = ""
-    
+        
         for ind in change_indicators:
             tmp = pd.DataFrame({
                 "x": series["time"],
                 ind: df_data[(group, ind)].values
             })
-    
+            
             if not tmp[ind].isna().all():
                 changes = compute_changes(tmp, ind, freq)
             else:
                 changes = None
-    
+            
             if changes:
-                # 🔹 Өнгө цэнхэр, 1 оронтой
-                def render_blue(label, value):
+                # 🔹 Өнгөний логик (up=green, down=red)
+                def render_metric(label, value):
                     if value is None or (isinstance(value, float) and pd.isna(value)):
-                        return f"<span class='change-item'>{label}: N/A</span>"
+                        return f"<span class='metric-item metric-neutral'><span class='metric-label'>{label}</span><span class='metric-value'>N/A</span></span>"
+                    
+                    cls = "metric-up" if value > 0 else "metric-down" if value < 0 else "metric-neutral"
+                    arrow = "▲" if value > 0 else "▼" if value < 0 else "─"
+                    
                     return (
-                        f"<span class='change-item' style='color:#3b82f6; font-weight:600;'>"
-                        f"{label}: {value:.1f}%"
+                        f"<span class='metric-item {cls}'>"
+                        f"<span class='metric-label'>{label}</span>"
+                        f"<span class='metric-value'>{arrow} {value:.1f}%</span>"
                         f"</span>"
                     )
                 
                 cards_html += f"""
-                <div class="change-card">
-                    <div class="change-title">{ind}</div>
-                    <div class="change-bar">
-                        {render_blue("YoY", changes.get("yoy"))}
-                        {render_blue("YTD", changes.get("ytd"))}
-                        {render_blue("Prev", changes.get("prev"))}
+                <div class="change-card-pro">
+                    <div class="change-title-pro">{ind}</div>
+                    <div class="change-metrics-pro">
+                        {render_metric("YoY", changes.get("yoy"))}
+                        {render_metric("YTD", changes.get("ytd"))}
+                        {render_metric("Prev", changes.get("prev"))}
                     </div>
                 </div>
                 """
-
-    
-        # ✅ LOOP ДУУССАНЫ ДАРАА ГАНЦ УДАА RENDER
+        
+        # ✅ ENHANCED STYLING
         if cards_html:
             components.html(
-            """
-            <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-            .change-bar {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-                margin-top: 6px;
-            }
-            .change-item {
-                display: block;
-                font-size: 13px;
-                line-height: 1.4;
-            }
-
-            .change-grid {
-                display: flex;
-                gap: 12px;
-                overflow-x: auto;
-                padding: 6px 2px;
-            }
-            
-            .change-card {
-                width: fit-content;
-                min-width: unset;
-                padding: 10px 14px;
-            
-                background: linear-gradient(
-                    180deg,
-                    rgba(15, 23, 42, 0.85),
-                    rgba(15, 23, 42, 0.65)
-                );
-                border: 1px solid rgba(148,163,184,0.25);
-                border-radius: 16px;
-            
-                white-space: nowrap;   /* 🔥 яг бичвэртээ таарна */
-                transition: all 0.2s ease;
-            }
-
-            .change-card:hover {
-                transform: translateY(-4px);
-                border-color: rgba(148,163,184,0.4);
-                box-shadow: 0 12px 24px rgba(0,0,0,0.2);
-            }
-            
-            .change-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 16px;
-                padding-bottom: 12px;
-                border-bottom: 1px solid rgba(148,163,184,0.1);
-            }
-            
-            .change-title {
-                font-size: 14px;
-                font-weight: 600;
-                color: #e2e8f0;
-                line-height: 1.4;
-                max-width: 60%;
-            }
-            
-            .change-latest {
-                font-size: 24px;
-                font-weight: 700;
-                color: #60a5fa;
-                text-shadow: 0 2px 8px rgba(96,165,250,0.3);
-            }
-            .change-up {
-                color: #22c55e;        /* green */
-                font-weight: 600;
-            }
-            
-            .change-down {
-                color: #ef4444;        /* red */
-                font-weight: normal;
-            }
-            
-            .change-arrow {
-                margin-right: 4px;
-            }
-
-            .change-metrics {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 12px;
-            }
-            
-            .metric-item {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                padding: 10px;
-                background: rgba(30,41,59,0.5);
-                border-radius: 8px;
-                transition: all 0.2s ease;
-                border: 1px solid transparent;
-            }
-            
-            .metric-item:hover {
-                background: rgba(30,41,59,0.8);
-                border-color: rgba(148,163,184,0.3);
-            }
-            
-            .metric-label {
-                font-size: 11px;
-                font-weight: 600;
-                color: #94a3b8;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            
-            .metric-value {
-                font-size: 16px;
-                font-weight: 700;
-                font-family: 'Monaco', 'Courier New', monospace;
-            }
-            
-            .metric-up .metric-value {
-                color: #22c55e;
-                text-shadow: 0 0 8px rgba(34,197,94,0.4);
-            }
-            
-            .metric-down .metric-value {
-                color: #ef4444;
-                text-shadow: 0 0 8px rgba(239,68,68,0.4);
-            }
-            
-            .metric-neutral .metric-value {
-                color: #94a3b8;
-            }
-            
-            /* Scrollbar styling */
-            ::-webkit-scrollbar {
-                height: 8px;
-                width: 8px;
-            }
-            
-            ::-webkit-scrollbar-track {
-                background: rgba(30,41,59,0.5);
-                border-radius: 4px;
-            }
-            
-            ::-webkit-scrollbar-thumb {
-                background: rgba(148,163,184,0.3);
-                border-radius: 4px;
-            }
-            
-            ::-webkit-scrollbar-thumb:hover {
-                background: rgba(148,163,184,0.5);
-            }
-            
-            /* Responsive */
-            @media (max-width: 768px) {
-                .change-grid {
-                    grid-template-columns: 1fr;
+                """
+                <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
                 }
-            }
-            </style>
-            
-            <div class="change-grid">
-            """+ cards_html+"""
-            </div>
-            """,
-            height=120
+                .change-container-pro {
+                    display: inline-flex;
+                    flex-wrap: wrap;  /* Олон мөр болгох */
+                    gap: 6px;
+                    padding: 8px 0;
+                    max-height: none;
+                    overflow: visible;
+                }
+                .change-grid-pro {
+                    display: inline-flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    padding: 8px 4px;
+                    overflow: visible;
+                }
+                .change-card-pro {
+                    width: fit-content;          
+                    min-width: unset;          
+                    max-width: unset;            
+                    flex: 0 0 auto;             
+                    padding: 16px 18px;
+                    background: linear-gradient(
+                        135deg,
+                        rgba(19, 47, 94, 0.85),
+                        rgba(15, 41, 83, 0.75)
+                    );
+                    border: 1px solid rgba(20, 52, 124, 0.35);
+                    border-radius: 10px;
+                    transition: all 0.25s ease;
+                }
+                
+                .change-card-pro:hover {
+                    transform: translateY(-3px);
+                    border-color: rgba(20, 52, 124, 0.6);
+                    box-shadow: 0 6px 20px rgba(20, 52, 124, 0.25);
+                }
+                
+                .change-title-pro {
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #e2e8f0;
+                    margin-bottom: 14px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid rgba(148,163,184,0.2);
+                }
+                
+                .change-metrics-pro {
+                    display: inline-flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+                
+                .metric-item {
+                    width: fit-content;
+                    max-width: 100%;
+                    display: inline-flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 4px 8px;
+                    background: rgba(30,41,59,0.6);
+                    border-radius: 8px;
+                    border-left: 3px solid transparent;
+                    transition: all 0.2s ease;
+                }
+                
+                .metric-item:hover {
+                    background: rgba(30,41,59,0.9);
+                }
+                
+                .metric-label {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.01em;
+                }
+                
+                .metric-value {
+                    font-size: 15px;
+                    font-weight: 700;
+                    font-family: 'Monaco', 'Courier New', sans-serif;
+                }
+                
+                .metric-up {
+                    border-left-color: #22c55e;
+                }
+                
+                .metric-up .metric-value {
+                    color: #22c55e;
+                    text-shadow: 0 0 8px rgba(34,197,94,0.4);
+                }
+                
+                .metric-down {
+                    border-left-color: #ef4444;
+                }
+                
+                .metric-down .metric-value {
+                    color: #ef4444;
+                    text-shadow: 0 0 8px rgba(239,68,68,0.4);
+                }
+                
+                .metric-neutral .metric-value {
+                    color: #94a3b8;
+                }
+                
+                /* Scrollbar */
+                ::-webkit-scrollbar {
+                    height: 8px;
+                }
+                
+                ::-webkit-scrollbar-track {
+                    background: rgba(30,41,59,0.5);
+                    border-radius: 4px;
+                }
+                
+                ::-webkit-scrollbar-thumb {
+                    background: rgba(148,163,184,0.4);
+                    border-radius: 4px;
+                }
+                
+                ::-webkit-scrollbar-thumb:hover {
+                    background: rgba(148,163,184,0.6);
+                }
+                </style>
+                
+                <div class="change-grid-pro">
+                """ + cards_html + """
+                </div>
+                """,
+                height=200
             )
         else:
             st.caption("No data yet")
