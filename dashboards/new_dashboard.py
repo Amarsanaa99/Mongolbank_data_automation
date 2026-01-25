@@ -1373,7 +1373,7 @@ def group_chart(group_name):
                 background="transparent"
             )
         )
-
+    
     # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
     lines = base.transform_fold(
         valid_inds,
@@ -1416,7 +1416,61 @@ def group_chart(group_name):
             alt.Tooltip("Value:Q", format=",.2f")
         ]
     )
-
+    
+    # ======================
+    # 🔥 CREDIT SUPPLY CHART (QUARTERLY ONLY)
+    # ======================
+    if group_name == "Credit supply indicator" and freq == "Quarterly":
+        # Survey indicators
+        survey_inds = [
+            "Issued loan to household",
+            "Issued loan to corporate", 
+            "Corporate loan supply",
+            "Household loan"
+        ]
+        
+        # Filter to valid survey indicators
+        valid_survey = [ind for ind in survey_inds if ind in valid_inds]
+        
+        if valid_survey:
+            # Survey chart (separate Y-axis)
+            survey_chart = (
+                alt.Chart(gdf)
+                .transform_fold(
+                    valid_survey,
+                    as_=["Indicator", "Value"]
+                )
+                .mark_line(strokeWidth=2, strokeDash=[5, 5])
+                .encode(
+                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
+                    y=alt.Y(
+                        "Value:Q",
+                        title="Survey Index",
+                        axis=alt.Axis(
+                            orient="right",
+                            grid=False,
+                            labelColor="#f59e0b",
+                            titleColor="#f59e0b",
+                            labelFontSize=10,
+                            titleFontSize=11
+                        )
+                    ),
+                    color=alt.Color(
+                        "Indicator:N",
+                        scale=alt.Scale(scheme="set2"),
+                        legend=None
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time:N"),
+                        alt.Tooltip("Indicator:N"),
+                        alt.Tooltip("Value:Q", format=",.2f")
+                    ]
+                )
+            )
+            
+            # Combine main + survey
+            return alt.layer(lines, survey_chart).resolve_scale(y='independent')
+    
     return lines
 
 
