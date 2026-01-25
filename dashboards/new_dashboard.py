@@ -1202,15 +1202,13 @@ def small_multiple_chart(df, indicator):
             background="transparent"
         )
     )
-
-
 # ======================
 # 📊 ALL INDICATOR GROUPS — SMALL MULTIPLES (FULL WIDTH)
 # ======================
 
 st.markdown("### 📊 All indicator groups")
 
-import plotly.graph_objects as go
+import altair as alt
 
 # бүх group-ууд
 all_groups = df_data.columns.get_level_values(0).unique()
@@ -1221,16 +1219,16 @@ rows = [
     for i in range(0, len(all_groups), NUM_COLS)
 ]
 
-def group_chart_plotly(group_name):
-    """Plotly график үүсгэх"""
-    
+def group_chart(group_name):
+    import altair as alt
+
     # 1️⃣ тухайн group-ийн бүх indicator
     inds = [
         col[1] for col in df_data.columns
         if col[0] == group_name and not pd.isna(col[1])
     ]
-    
-    # 2️⃣ суурь dataframe (TIME + INDICATORS)
+
+    # 2️⃣ суурь dataframe (YEAR + INDICATORS)
     gdf = pd.DataFrame({
         "time": series["time"].values
     })
@@ -1239,118 +1237,127 @@ def group_chart_plotly(group_name):
     for ind in inds:
         if (group_name, ind) in df_data.columns:
             gdf[ind] = df_data[(group_name, ind)].values
-    
     # ⛔ SMALL CHART — 2020 оноос хойш
     gdf = gdf[gdf["time"] >= "2020"]
-    
-    # ✅ өгөгдөлтэй indicator-ууд
+
+
+
+    # ✅ 5️⃣ өгөгдөлтэй indicator-ууд
     valid_inds = [
         c for c in inds
         if c in gdf.columns and not gdf[c].isna().all()
     ]
-    
-    # 6️⃣ TIME FORMATTING
-    if freq == "Monthly":
-        gdf["time_dt"] = pd.to_datetime(gdf["time"], format="%Y-%m", errors="coerce")
-    elif freq == "Quarterly":
-        gdf["time_dt"] = pd.PeriodIndex(gdf["time"], freq="Q").to_timestamp()
-    else:
-        gdf["time_dt"] = pd.to_datetime(gdf["time"], errors="coerce")
-    
-    # 7️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ
-    if not valid_inds:
-        fig = go.Figure()
-        fig.add_annotation(
-            text="No data yet",
-            xref="paper", yref="paper",
-            x=0.5, y=0.5,
-            showarrow=False,
-            font=dict(size=13, color="#94a3b8")
-        )
-        fig.update_layout(
-            height=320,
-            title=dict(text=group_name, x=0, xanchor='left', font=dict(size=14)),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            xaxis=dict(visible=False),
-            yaxis=dict(visible=False),
-            margin=dict(l=6, r=6, t=40, b=6)
-        )
-        return fig
-    
-    # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
-    fig = go.Figure()
-    
-    # Өнгөний палитр
-    colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
-    
-    for i, ind in enumerate(valid_inds):
-        color = colors[i % len(colors)]
-        
-        fig.add_trace(
-            go.Scatter(
-                x=gdf["time_dt"],
-                y=gdf[ind],
-                mode="lines",
-                name=ind,
-                line=dict(width=2, color=color),
-                hovertemplate=(
-                    "<b>%{fullData.name}</b><br>" +
-                    "Time: %{x|%Y-%m}<br>" +
-                    "Value: %{y:.2f}<extra></extra>"
-                )
+
+    # 6️⃣ BASE CHART (үргэлж харагдана)
+    base = alt.Chart(gdf).encode(
+        x=alt.X(
+            "time:N",
+            title=None,
+            sort="ascending",
+            axis=alt.Axis(
+                labelAngle=0,
+                grid=False,
+                labelFontSize=11,
+                labelExpr="substring(datum.value, 0, 4)"
             )
         )
-    
-    # 9️⃣ LAYOUT
-    fig.update_layout(
+    ).properties(
         height=320,
-        title=dict(
+        padding={"top": 6, "bottom": 0, "left": 6, "right": 6},
+        title=alt.TitleParams(
             text=group_name,
-            x=0,
-            xanchor='left',
-            font=dict(size=14)
+            anchor="start",
+            fontSize=14,
+            offset=6
         ),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(
-            title=None,
-            showgrid=False,
-            tickfont=dict(size=11),
-            tickformat="%Y"
-        ),
-        yaxis=dict(
-            title=None,
-            showgrid=True,
-            gridcolor="#334155",
-            gridwidth=1,
-            zeroline=False,
-            tickfont=dict(size=11, color="#cbd5e1")
-        ),
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.15,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=11),
-            bgcolor="rgba(0,0,0,0)"
-        ),
-        margin=dict(l=6, r=6, t=40, b=6),
-        hovermode='x unified'
+        background="transparent"
     )
-    
-    return fig
-# RENDER CHARTS (ЭНЭ ХЭСЭГ ДУТУУ БАЙСАН!)
+
+
+    # 7️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙХГҮЙ БОЛ
+    if not valid_inds:
+        return (
+            alt.Chart(
+                pd.DataFrame({"x": [0], "y": [0], "label": ["No data yet"]})
+            )
+            .mark_text(
+                align="center",
+                baseline="middle",
+                fontSize=13,
+                color="#94a3b8"
+            )
+            .encode(
+                x=alt.X("x:Q", axis=None),
+                y=alt.Y("y:Q", axis=None),
+                text="label:N"
+            )
+            .properties(
+                height=320,
+                title=alt.TitleParams(
+                    text=group_name,
+                    anchor="start",
+                    fontSize=14,
+                    offset=6
+                ),
+                background="transparent"
+            )
+        )
+
+    # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
+    lines = base.transform_fold(
+        valid_inds,
+        as_=["Indicator", "Value"]
+    ).mark_line(strokeWidth=2).encode(
+        y=alt.Y(
+            "Value:Q",
+            title=None,
+            axis=alt.Axis(
+                grid=True,
+                gridColor="#334155",   
+                gridOpacity=0.45,      
+                gridWidth=1,           
+                domain=False,
+                tickColor="#475569",   # (сонголт)
+                labelColor="#cbd5e1",  # (сонголт)
+                titleColor="#e5e7eb",
+                labelFontSize=11,
+                titleFontSize=12
+            )
+        ),
+        color=alt.Color(
+            "Indicator:N", 
+            legend=alt.Legend(
+                orient="bottom",
+                direction="horizontal",
+                title=None,
+                labelLimit=150,
+                labelFontSize=11,
+                symbolSize=80,
+                symbolStrokeWidth=2,
+                columnPadding=4,
+                padding=0,
+                offset=2
+            )
+        ),
+        tooltip=[
+            alt.Tooltip("time:N"),
+            alt.Tooltip("Indicator:N"),
+            alt.Tooltip("Value:Q", format=",.2f")
+        ]
+    )
+
+    return lines
+
+
 
 for row in rows:
     cols = st.columns(NUM_COLS, gap="small")
     for col, grp in zip(cols, row):
         with col:
             with st.container(border=True):
-                chart = group_chart_plotly(grp)
+                chart = group_chart(grp)
                 if chart is not None:
-                    st.plotly_chart(chart, use_container_width=True, config={'displayModeBar': False})
+                    st.altair_chart(chart, use_container_width=True)
 # ======================
 # 📄 RAW DATA — INDICATOR GROUP LEVEL
 # ======================
