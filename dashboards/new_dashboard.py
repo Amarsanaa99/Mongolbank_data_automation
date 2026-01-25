@@ -501,39 +501,38 @@ with right:
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
+            # 🔹 Main line
             fig.add_trace(
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines+markers",
+                    mode="lines",
                     name=col,
                     line=dict(width=2.4, color=color),
                     hovertemplate=(
                         "<b>%{fullData.name}</b><br>" +
-                        "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
+                        "Time: %{x|%Y-%m}<br>" +
                         "Value: %{y:.2f}<extra></extra>"
                     )
                 )
             )
-        
-        # 🔥 MARKERS (HOVER-only)
-        for i, col in enumerate(valid_indicators):
-            color = colors[i % len(colors)]
-
+            
+            # 🔹 Marker (hover only)
             fig.add_trace(
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines+markers",
+                    mode="markers",
                     marker=dict(
                         size=8,
                         color=color,
-                        line=dict(width=2, color="white"),
-                        opacity=0   # 🔥 default invisible
+                        line=dict(width=2, color="white")
                     ),
-                    hoveron="points+fills"
+                    showlegend=False,
+                    hoverinfo='skip'
                 )
             )
+
 
         fig.update_traces(
             marker_opacity=1,
