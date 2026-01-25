@@ -422,7 +422,7 @@ if series["time"].isna().all():
     st.stop()
         
 # ======================
-# MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
+# MAIN CHART (PLOTLY VERSION - FULL ALTAIR LOGIC)
 # ======================
 with right:
     with st.container(border=True):
@@ -430,146 +430,249 @@ with right:
         st.subheader("📈 Main chart")
         
         # ===== 1️⃣ DATA (NO AGGREGATION)
-        import plotly.graph_objects as go
-        from plotly.subplots import make_subplots
-        import pandas as pd
-        
-        # ===== 1️⃣ DATA (NO AGGREGATION) =====
         chart_df = series[["time"] + selected].copy()
-        chart_df = chart_df[(chart_df["time"] >= start_time) & (chart_df["time"] <= end_time)]
         
-        valid_indicators = [c for c in selected if c in chart_df.columns and not chart_df[c].isna().all()]
+        # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
+        chart_df = chart_df[
+            (chart_df["time"] >= start_time) &
+            (chart_df["time"] <= end_time)
+        ]
+        
+        # ===== 2️⃣ VALID INDICATORS ONLY
+        valid_indicators = [
+            c for c in selected
+            if c in chart_df.columns and not chart_df[c].isna().all()
+        ]
         
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
         
-        # ===== 2️⃣ TIME FORMATTING =====
+        import plotly.graph_objects as go
+        from plotly.subplots import make_subplots
+        
+        # ===== 3️⃣ TIME FORMATTING =====
+        chart_df = chart_df.copy()
+        
         if freq == "Monthly":
-            chart_df["time_dt"] = pd.to_datetime(chart_df["time"], format="%Y-%m", errors="coerce")
+            chart_df["time_dt"] = pd.to_datetime(
+                chart_df["time"],
+                format="%Y-%m",
+                errors="coerce"
+            )
         elif freq == "Quarterly":
-            chart_df["time_dt"] = pd.PeriodIndex(chart_df["time"], freq="Q").to_timestamp()
+            chart_df["time_dt"] = (
+                pd.PeriodIndex(chart_df["time"], freq="Q")
+                .to_timestamp()
+            )
         else:
             st.error("❌ Unknown frequency")
             st.stop()
         
+        # 🔒 HARD CHECK
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
         
-        # ===== 3️⃣ CREATE MAIN + MINI CHART WITH SUBPLOTS =====
-        fig = make_subplots(
-            rows=2,
-            cols=1,
-            shared_xaxes=True,
-            row_heights=[0.85, 0.15],
-            vertical_spacing=0.05,
-        )
-        
-        # ===== 4️⃣ MAIN CHART =====
-        for indicator in valid_indicators:
-            fig.add_trace(
-                go.Scatter(
-                    x=chart_df["time_dt"],
-                    y=chart_df[indicator],
-                    mode='lines+markers',
-                    name=indicator,
-                    marker=dict(size=8, line=dict(width=2, color='white')),
-                    line=dict(width=2.4),
-                    hovertemplate=
-                        '<b>Time:</b> %{x|%Y-%m}<br>' if freq=="Monthly" else '<b>Time:</b> %{x|%Y-Q%q}<br>' +
-                        f'<b>{indicator}:</b> %{y:,.2f}<extra></extra>',
-                ),
-                row=1,
-                col=1
-            )
-        
-        # ===== 5️⃣ MINI OVERVIEW CHART =====
-        for indicator in valid_indicators:
-            hovertemplate = (
-                '<b>Time:</b> %{x|%Y-%m}<br>' if freq=="Monthly" else '<b>Time:</b> %{x|%Y-Q%q}<br>'
-            ) + '<b>' + indicator + ':</b> %{y:,.2f}<extra></extra>'
-        
-            fig.add_trace(
-                go.Scatter(
-                    x=chart_df["time_dt"],
-                    y=chart_df[indicator],
-                    mode='lines+markers',
-                    name=indicator,
-                    marker=dict(size=8, line=dict(width=2, color='white')),
-                    line=dict(width=2.4),
-                    hovertemplate=hovertemplate,
-                ),
-                row=1,
-                col=1
-            )
-
-        
-        # ===== 6️⃣ UPDATE LAYOUT =====
-        fig.update_layout(
-            height=500,
-            width=900,
-            margin=dict(l=0, r=20, t=20, b=20),
-            legend=dict(
-                title=None,
-                orientation='v',
-                yanchor="top",
-                y=1,
-                xanchor="right",
-                x=1.02,
-                font=dict(size=11)
-            ),
-            hovermode='x unified'
-        )
-        
-        # ===== 7️⃣ X-AXIS CONFIGURATION (FRED STYLE) =====
+        # ===== 4️⃣ X-AXIS CONFIGURATION =====
         start_year_int = int(start_year) if isinstance(start_year, str) else start_year
         end_year_int = int(end_year) if isinstance(end_year, str) else end_year
         year_count = end_year_int - start_year_int + 1
         
-        tickvals = pd.date_range(
-            start=pd.Timestamp(f"{start_year_int}-01-01"),
-            end=pd.Timestamp(f"{end_year_int}-12-31"),
-            freq='2Y' if year_count > 12 else '1Y'
+        # Өнгөний палитр (Altair default colors-тай адил)
+        colors = [
+            '#3b82f6',  # Blue
+            '#D4AF37',  # Gold
+            '#06B6D4',  # Cyan
+            '#10B981',  # Green
+            '#EF4444',  # Red
+            '#8B5CF6'   # Purple
+        ]
+        
+        # ===== 5️⃣ CREATE SUBPLOTS (Main + Mini) =====
+        fig = make_subplots(
+            rows=2, cols=1,
+            row_heights=[0.85, 0.15],  # Main 85%, Mini 15%
+            vertical_spacing=0.03,
+            shared_xaxes=False,
+            specs=[[{"secondary_y": False}],
+                   [{"secondary_y": False}]]
         )
         
-        fig.update_xaxes(
-            row=1,
-            col=1,
-            tickangle=0,
-            tickvals=tickvals,
-            showgrid=False
-        )
+        # ===== 6️⃣ MAIN CHART - ҮНДСЭН ШУГАМУУД =====
+        for i, col in enumerate(valid_indicators):
+            color = colors[i % len(colors)]
+            
+            # Шугам (зөвхөн харагдах)
+            fig.add_trace(
+                go.Scatter(
+                    x=chart_df["time_dt"],
+                    y=chart_df[col],
+                    mode="lines",
+                    name=col,
+                    line=dict(width=2.4, color=color),
+                    legendgroup=col,
+                    showlegend=True,
+                    hoverinfo='skip'
+                ),
+                row=1, col=1
+            )
+            
+            # Цэгүүд (hover үед л харагдах)
+            fig.add_trace(
+                go.Scatter(
+                    x=chart_df["time_dt"],
+                    y=chart_df[col],
+                    mode="markers",
+                    name=col,
+                    marker=dict(
+                        size=8,
+                        color=color,
+                        line=dict(width=2, color='white')
+                    ),
+                    legendgroup=col,
+                    showlegend=False,
+                    hovertemplate=(
+                        "<b>%{fullData.name}</b><br>" +
+                        "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
+                        "Value: %{y:.2f}<extra></extra>"
+                    )
+                ),
+                row=1, col=1
+            )
         
+        # ===== 7️⃣ MINI CHART - OVERVIEW =====
+        for i, col in enumerate(valid_indicators):
+            color = colors[i % len(colors)]
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=chart_df["time_dt"],
+                    y=chart_df[col],
+                    mode="lines",
+                    line=dict(width=1.2, color=color),
+                    legendgroup=col,
+                    showlegend=False,
+                    hoverinfo='skip'
+                ),
+                row=2, col=1
+            )
+        
+        # ===== 8️⃣ LAYOUT - MAIN CHART (ROW 1) =====
         fig.update_xaxes(
-            row=2,
-            col=1,
+            title=None,
             showgrid=False,
-            showticklabels=False
+            zeroline=False,
+            showline=True,
+            linewidth=1,
+            linecolor='rgba(255,255,255,0.2)',
+            tickfont=dict(size=11),
+            tickangle=0,
+            
+            # 🔥 ZOOM + PAN ИДЭВХЖҮҮЛЭХ
+            rangeslider=dict(visible=False),  # Mini chart-ыг ашиглах учраас
+            
+            # 🔥 BOSOO SHULUUN (SPIKE)
+            showspikes=True,
+            spikemode='across',
+            spikesnap='cursor',
+            spikecolor='rgba(170, 170, 170, 0.6)',
+            spikethickness=1.5,
+            spikedash='solid',
+            
+            row=1, col=1
         )
         
-        # ===== 8️⃣ Y-AXIS CONFIGURATION =====
         fig.update_yaxes(
-            row=1,
-            col=1,
+            title=None,
             showgrid=True,
-            gridcolor="#e0e0e0",
-            gridwidth=0.5
+            gridcolor='rgba(224, 224, 224, 0.25)',
+            gridwidth=1,
+            zeroline=False,
+            showline=True,
+            linewidth=1,
+            linecolor='rgba(255,255,255,0.2)',
+            tickfont=dict(size=11),
+            showspikes=False,  # Y-axis spike байхгүй
+            row=1, col=1
+        )
+        
+        # ===== 9️⃣ LAYOUT - MINI CHART (ROW 2) =====
+        fig.update_xaxes(
+            title=None,
+            showgrid=False,
+            zeroline=False,
+            showline=False,
+            showticklabels=True,
+            tickfont=dict(size=9),
+            tickangle=0,
+            
+            # 🔥 MINI CHART-ЫГ PAN ХИЙЖ БОЛНО
+            showspikes=False,
+            
+            row=2, col=1
         )
         
         fig.update_yaxes(
-            row=2,
-            col=1,
-            showgrid=False
+            title=None,
+            showgrid=False,
+            zeroline=False,
+            showline=False,
+            showticklabels=False,
+            row=2, col=1
         )
         
-        # ===== 9️⃣ ZOOM + PAN ENABLED =====
+        # ===== 🔟 GENERAL LAYOUT =====
         fig.update_layout(
-            xaxis=dict(rangeslider=dict(visible=True), type="date"),
+            height=520,  # 400 (main) + 60 (mini) + spacing
+            margin=dict(l=40, r=140, t=20, b=40),
+            
+            # 🎨 BACKGROUND
+            paper_bgcolor="rgba(15, 41, 83, 0.3)",
+            plot_bgcolor="rgba(11, 37, 84, 0.5)",
+            
+            # 🔥 HOVER MODE (BOSOO SHULUUN-TAI TSUг)
+            hovermode='x unified',
+            
+            # 🔥 DRAG MODE (ZOOM + PAN)
+            dragmode='zoom',
+            
+            # 🎨 LEGEND (БАРУУН ТАЛД)
+            legend=dict(
+                title=None,
+                x=1.02,
+                y=1,
+                xanchor="left",
+                yanchor="top",
+                bgcolor="rgba(0,0,0,0)",
+                bordercolor="rgba(0,0,0,0)",
+                orientation="v",
+                font=dict(size=11),
+                itemsizing='constant',
+                tracegroupgap=5
+            ),
+            
+            # Template
+            template="plotly_dark"
         )
         
-        # ===== 10️⃣ SHOW IN STREAMLIT =====
-        st.plotly_chart(fig, use_container_width=True)
+        # ===== 1️⃣1️⃣ CONFIG (TOOLS + EXPORT) =====
+        config = {
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
+            'toImageButtonOptions': {
+                'format': 'png',
+                'filename': 'mongolbank_macro_chart',
+                'height': 800,
+                'width': 1400,
+                'scale': 2
+            },
+            'doubleClick': 'reset',
+            'scrollZoom': True  # Mouse wheel-ээр zoom
+        }
+        
+        st.plotly_chart(fig, use_container_width=True, config=config)
 
 
     
