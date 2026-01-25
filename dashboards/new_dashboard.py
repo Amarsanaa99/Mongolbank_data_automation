@@ -716,29 +716,26 @@ with right:
                 gridOpacity=0.3
             )
         )
+            # ===== HEADER ROW: Chart title + download button =====
+        header_col1, header_col2 = st.columns([6, 1])
+        
+        with header_col1:
+            st.subheader("📈 Main chart")
+        
+        with header_col2:
+            csv = chart_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                "📥 CSV",
+                data=csv,
+                file_name="main_chart_data.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        
+        # ===== MAIN CHART DISPLAY =====
+        st.altair_chart(final_chart, use_container_width=True)
 
-        # ==== 1️⃣ Баруун талд container үүсгэх ====
-    row = st.columns([20, 1])  # 20:1 харьцаатай
-    
-    with row[0]:
-        # ===== Altair chart =====
-        base = alt.Chart(chart_df).transform_fold(
-            valid_indicators, as_=["Indicator", "Value"]
-        ).encode(
-            x=alt.X("time:T", title=None),
-            y=alt.Y("Value:Q", title=None),
-            color=alt.Color("Indicator:N")
-        )
-    
-        line = base.mark_line()
-        st.altair_chart(line, use_container_width=True)
-    
-    with row[1]:
-        # ===== CSV download button =====
-        csv = chart_df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            "📥", data=csv, file_name="main_chart_data.csv", mime="text/csv"
-        )
+
 
 
 
