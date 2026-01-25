@@ -895,7 +895,7 @@ with right:
                 .change-container-pro {
                     display: flex;
                     flex-wrap: wrap;  /* Олон мөр болгох */
-                    gap: 14px;
+                    gap: 8px;
                     padding: 8px 0;
                     max-height: none;
                     overflow: visible;
