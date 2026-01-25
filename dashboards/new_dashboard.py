@@ -165,10 +165,10 @@ if isinstance(df.columns, pd.MultiIndex):
         if is_percentage_indicator(indicator):
             df_data[col] = df_data[col] * 100
     
-    else:
-        # Хэрэв MultiIndex биш бол (баталгаажуулалт)
-        st.error("❌ Unexpected data format - expected MultiIndex columns")
-        st.stop()
+else:
+    # Хэрэв MultiIndex биш бол (баталгаажуулалт)
+    st.error("❌ Unexpected data format - expected MultiIndex columns")
+    st.stop()
     
 
 with left:
