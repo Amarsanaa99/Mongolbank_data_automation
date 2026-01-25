@@ -646,7 +646,7 @@ with right:
                 line,
                 vline,
                 points,
-                last_points
+                last_point
             )
             .properties(
                 height=400,
