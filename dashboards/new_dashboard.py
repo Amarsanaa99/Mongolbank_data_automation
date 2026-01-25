@@ -1493,7 +1493,7 @@ def group_chart(group_name):
                 .mark_line(
                     strokeWidth=2.5,
                     color="#fbbf24",
-                    point=alt.OverlayMarkDef(size=60, filled=True, color="#fbbf24")
+                    #point=alt.OverlayMarkDef(size=60, filled=True, color="#fbbf24")
                 )
                 .encode(
                     x=alt.X("time:N", title=None, sort="ascending", axis=None),
@@ -1521,7 +1521,7 @@ def group_chart(group_name):
                     strokeWidth=2.5,
                     strokeDash=[5, 5],
                     color="#3b82f6",
-                    point=alt.OverlayMarkDef(size=60, filled=True, color="#3b82f6")
+                    #point=alt.OverlayMarkDef(size=60, filled=True, color="#3b82f6")
                 )
                 .encode(
                     x=alt.X("time:N", title=None, sort="ascending", axis=None),
