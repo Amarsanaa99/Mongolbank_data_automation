@@ -599,10 +599,13 @@ with right:
         
         # 🔥 MODEBAR CONFIGURATION
         config = {
+        config = {
             'displayModeBar': True,
             'displaylogo': False,
-            'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
-            'modeBarButtonsToAdd': ['downloadData'],
+            'modeBarButtons': [
+                ['pan2d', 'resetScale2d'],         # Zoom in/out хассан
+                ['downloadImage', 'downloadData']  # PNG болон CSV татах
+            ],
             'toImageButtonOptions': {
                 'format': 'png',
                 'filename': 'mongolbank_macro_chart',
@@ -613,7 +616,7 @@ with right:
             'doubleClick': 'reset',
             'scrollZoom': True
         }
-        
+
         st.plotly_chart(fig, use_container_width=True, config=config)
 
     
