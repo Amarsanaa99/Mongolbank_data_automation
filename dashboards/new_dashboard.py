@@ -940,7 +940,7 @@ with right:
                 .change-metrics-pro {
                     display: flex;
                     flex-direction: column;
-                    gap: 10px;
+                    gap: 4px;
                 }
                 
                 .metric-item {
