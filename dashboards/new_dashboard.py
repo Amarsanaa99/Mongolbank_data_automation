@@ -93,43 +93,9 @@ if isinstance(df.columns, pd.MultiIndex):
     df_data = df.drop(columns=time_cols)
     
     freq = "Monthly" if "Month" in df_time.columns else "Quarterly"
-
-    # ======================
-    # 🔥 ХУВИЙН INDICATOR-УУД
-    # ======================
-    PERCENTAGE_INDICATORS = [
-        'Hodrick-Prescott',
-        'Kalman',
-        'Production function',
-        'Average',
-        'GDP, Yoy',
-        'Dynamic Factor Model',
-        'Deviation',
-        'GDP',
-        'YoY',
-        'Household loan',
-        'Corporate loan',
-        'Household loan supply',
-        'Corporate loan supply'
-    ]
-    
-    def is_percentage_indicator(indicator_name):
-        """Indicator нэрээс нь хувь эсэхийг шалгах"""
-        if pd.isna(indicator_name):
-            return False
-        
-        name_str = str(indicator_name).strip()
-        
-        # Яг таарах эсэхийг шалгах
-        for pct_ind in PERCENTAGE_INDICATORS:
-            if pct_ind.lower() in name_str.lower():
-                return True
-        
-        return False
     
     with left:
         st.caption(f"Frequency: {freq}")
-    
         
     # TIME багануудыг хялбарчилна
     for i, col in enumerate(df_time.columns):
@@ -151,26 +117,11 @@ if isinstance(df.columns, pd.MultiIndex):
     
     df_data.columns = pd.MultiIndex.from_arrays([new_level0, level1])
     
-    # ======================
-    # 🔥 ХУВИЙН ӨГӨГДЛИЙГ 100-аар ҮРЖҮҮЛЭХ
-    # ======================
-    for col in df_data.columns:
-        category = col[0]
-        indicator = col[1]
-        
-        # Утгуудыг numeric болгох
-        df_data[col] = pd.to_numeric(df_data[col], errors='coerce')
-        
-        # Хэрэв нэрээс нь хувь гэж тодорхойлвол 100-аар үржүүлэх
-        if is_percentage_indicator(indicator):
-            df_data[col] = df_data[col] * 100
-    
 else:
     # Хэрэв MultiIndex биш бол (баталгаажуулалт)
     st.error("❌ Unexpected data format - expected MultiIndex columns")
     st.stop()
     
-
 with left:
     # ======================
     # 🧭 INDICATOR GROUP (ТУСДАА ХҮРЭЭ)
