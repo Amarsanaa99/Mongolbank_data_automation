@@ -1438,10 +1438,21 @@ def group_chart(group_name):
             # 1️⃣ BAR CHART (зүүн Y-axis)
             if valid_bars:
                 bars = (
-                    base
+                    alt.Chart(gdf)
                     .transform_fold(valid_bars, as_=["Indicator", "Value"])
                     .mark_bar(opacity=0.7, size=14)
                     .encode(
+                        x=alt.X(
+                            "time:N",
+                            title=None,
+                            sort="ascending",
+                            axis=alt.Axis(
+                                labelAngle=0,
+                                grid=False,
+                                labelFontSize=11,
+                                labelExpr="substring(datum.value, 0, 4)"
+                            )
+                        ),
                         y=alt.Y(
                             "Value:Q",
                             title=None,
@@ -1470,10 +1481,11 @@ def group_chart(group_name):
             # 2️⃣ LINE CHART (баруун Y-axis)
             if valid_lines:
                 lines_survey = (
-                    base
+                    alt.Chart(gdf)
                     .transform_fold(valid_lines, as_=["Indicator", "Value"])
                     .mark_line(strokeWidth=2.8, point=alt.OverlayMarkDef(size=60, filled=True))
                     .encode(
+                        x=alt.X("time:N", title=None, sort="ascending", axis=None),
                         y=alt.Y(
                             "Value:Q",
                             title=None,
@@ -1498,16 +1510,17 @@ def group_chart(group_name):
                 )
                 layers.append(lines_survey)
             
-            # 3️⃣ COMBINE & LEGEND
+            # 3️⃣ COMBINE with independent Y-scales
             combined = alt.layer(*layers).resolve_scale(y='independent')
             
-            # Legend доод талд
+            # 4️⃣ LEGEND (доод талд)
             all_inds = valid_bars + valid_lines
             legend_chart = (
-                base
+                alt.Chart(gdf)
                 .transform_fold(all_inds, as_=["Indicator", "Value"])
                 .mark_point(size=0, opacity=0)
                 .encode(
+                    x=alt.X("time:N", axis=None),
                     color=alt.Color(
                         "Indicator:N",
                         legend=alt.Legend(
@@ -1525,7 +1538,25 @@ def group_chart(group_name):
                 )
             )
             
-            return alt.layer(combined, legend_chart)
+            # 5️⃣ FINAL: title + properties
+            final = (
+                alt.layer(combined, legend_chart)
+                .properties(
+                    height=320,
+                    padding={"top": 6, "bottom": 0, "left": 6, "right": 6},
+                    title=alt.TitleParams(
+                        text=group_name,
+                        anchor="start",
+                        fontSize=14,
+                        offset=6
+                    ),
+                    background="transparent"
+                )
+            )
+            
+            return final
+    
+    return lines
     
     return lines
 
