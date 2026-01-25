@@ -45,6 +45,29 @@ EXCEL_PATH = BASE_DIR / "Dashboard_cleaned_data.xlsx"
 @st.cache_data(show_spinner=False)
 def read_sheet(sheet):
     return pd.read_excel(EXCEL_PATH, sheet_name=sheet, header=[0, 1])
+# ======================
+# 🔑 PERCENT INDICATOR KEYWORDS
+# ======================
+percentage_keywords = [
+    "inflation rate",
+    "unemployment rate",
+    "gdp growth",
+    "инфляцийн түвшин",
+    "hodrick-prescott",
+    "kalman",
+    "production function",
+    "averagegdp",
+    "yoy",
+    "deviation",
+    "household",
+    "corporate loan",
+    "loan supply"
+]
+
+def is_percentage_indicator(name: str) -> bool:
+    name_l = name.lower()
+    return any(k in name_l for k in percentage_keywords)
+
 
 # =====================
 # DATASET SELECT
@@ -543,32 +566,42 @@ with right:
             alt.Chart(chart_df)
             .transform_fold(
                 valid_indicators,
-                as_=["Indicator", "Value"]
+                as_=["Indicator", "RawValue"]
+            )
+            .transform_calculate(
+                DisplayValue="""
+                indexof(
+                    %s,
+                    lower(datum.Indicator)
+                ) >= 0
+                ? datum.RawValue * 100
+                : datum.RawValue
+                """ % (
+                    str([k.lower() for k in percentage_keywords])
+                )
             )
             .encode(
                 x=alt.X(
                     "time_dt:T",
                     title=None,
                     axis=x_axis,
-                    scale=alt.Scale(
-                        zero=False,
-                        domain=mini_brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
-                    )
+                    scale=alt.Scale(zero=False, domain=mini_brush)
                 ),
                 y=alt.Y(
-                    "Value:Q",
+                    "DisplayValue:Q",
                     title=None,
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
-                        domain=True,  # ✅ ЯГ ӨМНӨХ ШИГ
+                        domain=True,
                         labelFontSize=11,
-                        offset=5
+                        offset=5,
+                        format=",.2f"
                     )
                 ),
                 color=alt.Color(
                     "Indicator:N",
-                    legend=legend_config  # ✅ ЯГ ӨМНӨХ ШИГЭЭ LEGEND
+                    legend=legend_config
                 ),
                 tooltip=[
                     alt.Tooltip(
@@ -577,10 +610,11 @@ with right:
                         format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
                     ),
                     alt.Tooltip("Indicator:N"),
-                    alt.Tooltip("Value:Q", format=",.2f")
+                    alt.Tooltip("DisplayValue:Q", format=",.2f", title="Value")
                 ]
             )
         )
+
         
         # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
         hover = alt.selection_single(
@@ -613,7 +647,7 @@ with right:
             base
             # 🔑 1. NULL утгуудыг бүрэн хасна
             .transform_filter(
-                alt.datum.Value != None
+                alt.datum.RawValue != None
             )
             # 🔑 2. Indicator бүрийн хамгийн сүүлийн бодит огноог олно
             .transform_window(
@@ -764,11 +798,6 @@ with right:
         st.altair_chart(final_chart, use_container_width=True)
 
 
-
-
-
-
-
     
     def compute_group_kpis(df, indicators):
         stats = []
@@ -909,7 +938,16 @@ with right:
     }
     </style>
     """, unsafe_allow_html=True)
+
+    def format_kpi(indicator, value):
+        if value is None or pd.isna(value):
+            return "N/A"
     
+        if is_percentage_indicator(indicator):
+            return f"{value * 100:.2f}%"
+        else:
+            return f"{value:,.2f}"
+
     # ===== KPI CARD HELPER
     def kpi_card(label, value, sublabel=None):
         sub = ""
@@ -952,20 +990,25 @@ with right:
         last_date = str(row["Last date"]).split('\n')[0].split('Name:')[0].strip()
         kpi_card(
             "LAST VALUE",
-            f"{float(row['Last']):.2f}",
+            format_kpi(primary_indicator, row["Last"]),
             last_date
         )
     
     with cols[1]:
-        kpi_card("MEAN", f"{row['Mean']:.2f}")
+        kpi_card("MEAN", format_kpi(primary_indicator, row["Mean"]))
+    
     with cols[2]:
-        kpi_card("MEDIAN", f"{row['Median']:.2f}")
+        kpi_card("MEDIAN", format_kpi(primary_indicator, row["Median"]))
+    
     with cols[3]:
-        kpi_card("MINIMUM VALUE", f"{row['Min']:.2f}")
+        kpi_card("MINIMUM VALUE", format_kpi(primary_indicator, row["Min"]))
+    
     with cols[4]:
-        kpi_card("MAXIMUM VALUE", f"{row['Max']:.2f}")
+        kpi_card("MAXIMUM VALUE", format_kpi(primary_indicator, row["Max"]))
+    
     with cols[5]:
-        kpi_card("STD (VOLATILITY)", f"{row['Std']:.2f}")
+        kpi_card("STD (VOLATILITY)", format_kpi(primary_indicator, row["Std"]))
+
     
     # ======================
     # 📋 OPTIONAL — Indicator-level KPI TABLE
