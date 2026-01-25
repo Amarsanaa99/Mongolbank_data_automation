@@ -615,10 +615,13 @@ with right:
         }
         
         st.plotly_chart(fig, use_container_width=True, config=config)
-        cols = st.columns([8,1])  # 8:1 харьцаатай
-        with cols[1]:
+        row = st.columns([20,1])  # 20:1 харьцаатай
+        with row[0]:
+            st.plotly_chart(fig, use_container_width=True, config=config)
+        with row[1]:
             csv = chart_df.to_csv(index=False).encode('utf-8')
             st.download_button("📥", data=csv, file_name="main_chart_data.csv", mime="text/csv")
+
 
 
 
