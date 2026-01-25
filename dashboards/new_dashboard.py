@@ -893,7 +893,7 @@ with right:
                     box-sizing: border-box;
                 }
                 .change-container-pro {
-                    display: flex;
+                    display: inline-flex;
                     flex-wrap: wrap;  /* Олон мөр болгох */
                     gap: 8px;
                     padding: 8px 0;
