@@ -559,7 +559,7 @@ with right:
                 type="date",
                 rangeslider=dict(visible=True, thickness=0.05),
                 showgrid=False,
-                showspikes=True,
+                showspikes=False,
                 spikemode='across',
                 spikesnap='cursor',
                 spikecolor='rgba(170, 170, 170, 0.6)',
