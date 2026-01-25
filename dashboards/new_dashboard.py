@@ -1493,6 +1493,7 @@ def group_chart(group_name):
                 .mark_line(
                     strokeWidth=2.5,
                     color="#fbbf24",
+                    interpolate="monotone"
                     #point=alt.OverlayMarkDef(size=60, filled=True, color="#fbbf24")
                 )
                 .encode(
@@ -1521,6 +1522,7 @@ def group_chart(group_name):
                     strokeWidth=2.5,
                     strokeDash=[5, 5],
                     color="#3b82f6",
+                    interpolate="monotone"
                     #point=alt.OverlayMarkDef(size=60, filled=True, color="#3b82f6")
                 )
                 .encode(
