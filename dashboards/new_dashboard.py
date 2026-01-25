@@ -421,6 +421,7 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
         
+
 # ======================
 # MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
@@ -483,39 +484,26 @@ with right:
             tick_step = 2
         else:
             tick_step = 1
-
-        # ===== X-AXIS (FRED STYLE) =====
-        if year_count > 8:
-            # 🔥 DEFAULT VIEW → ЗӨВХӨН ОН
-            x_axis = alt.Axis(
-                title=None,
-                labelAngle=0,
-                labelFontSize=11,
-                grid=False,
-                domain=True,
-                orient='bottom',
-                format="%Y"
-            )
-        else:
-            # 🔥 ZOOMED VIEW → SAR / ULIRAL
-            x_axis = alt.Axis(
-                title=None,
-                labelAngle=0,
-                labelFontSize=11,
-                grid=False,
-                domain=True,
-                orient='bottom',
-                labelExpr="""
-                timeFormat(
-                  datum.value,
-                  (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
-                    ? '%Y-%m'
-                    : '%Y'
-                )
-                """
-            )
-
         
+        # X тэнхлэгийн тохируулга - ЯГ ӨМНӨХ ШИГ
+        x_axis = alt.Axis(
+            title=None,
+            labelAngle=0,
+            labelFontSize=11,
+            grid=False,
+            domain=True,
+            orient='bottom',
+        
+            labelExpr="""
+            timeFormat(
+              datum.value,
+              (timeOffset('month', datum.value, 1) - datum.value) < 1000*60*60*24*40
+                ? '%Y-%m'
+                : '%Y'
+            )
+            """
+        )
+
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
         legend_config = alt.Legend(
             title=None,
@@ -532,15 +520,25 @@ with right:
             cornerRadius=0,
             labelLimit=180
         )
-                # 🔑 FRED-STYLE BRUSH (PAN ONLY, NO ZOOM)
-        brush = alt.selection_interval(
-            encodings=["x"],
-            translate=True,   # ⬅️ зүүн баруун тийш гүйлгэнэ
-            zoom=False,
-            empty=False     # ⬅️ mini chart өөрөө zoom ХИЙХГҮЙ
+        # ===== 6️⃣ SHARED BRUSH/ZOOM SELECTION =====
+        # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
+        zoom_brush = alt.selection_interval(
+            encodings=['x'],
+            bind='scales',  # Mouse wheel zoom + drag pan
+            translate=True,  # Зүүн баруун тийш гүйлгэх
+            zoom=True,       # Zoom идэвхжүүлэх
+            empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
+        )
+        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
+        mini_brush = alt.selection_interval(
+            encodings=['x'],
+            translate=True,   # Зүүн баруун тийш гүйлгэх
+            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
+            empty=False
         )
         
-        # ===== 6️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
+        # ===== 7️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
         base = (
             alt.Chart(chart_df)
             .transform_fold(
@@ -554,7 +552,7 @@ with right:
                     axis=x_axis,
                     scale=alt.Scale(
                         zero=False,
-                        domain=brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
+                        domain=mini_brush   # 🔥 ЭНЭ БАЙХ ЁСТОЙ
                     )
                 ),
                 y=alt.Y(
@@ -584,7 +582,7 @@ with right:
             )
         )
         
-        # ===== 7️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
+        # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
         hover = alt.selection_single(
             fields=["time_dt"],
             nearest=True,
@@ -593,7 +591,7 @@ with right:
             clear="mouseout"
         )
         
-        # ===== 8️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
+        # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
         line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
         
         points = (
@@ -620,13 +618,10 @@ with right:
             )
             .transform_filter(hover)
         )
-        
-        # ===== 9️⃣ ҮНДСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
-        zoom = alt.selection_interval(
-            bind='scales',
-            encodings=['x']
-        )
 
+        
+        # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
+        # 🔍 FRED-STYLE ZOOM (MAIN CHART)
         main_chart = (
             alt.layer(
                 line,
@@ -635,62 +630,71 @@ with right:
             )
             .properties(
                 height=400,
-                width=800
+                width=850
             )
-            .add_params(zoom)   # 🔥 FRED STYLE ZOOM
+            .add_params(zoom_brush)   # 🔥 ШИНЭ: zoom_brush ашиглах
         )
-
         
-        # ===== 🔟 MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
+        mini_line = (
+            alt.Chart(chart_df)
+            .transform_fold(
+                valid_indicators,
+                as_=["Indicator", "Value"]
+            )
+            .mark_line(strokeWidth=1.2)
+            .encode(
+                x=alt.X("time_dt:T", 
+                        axis=None,
+                        # 🔥 MINI CHART НЬ ХЭЗЭЭ Ч ZOOM ХИЙХГҮЙ - БҮХ ӨГӨГДӨЛ ҮРГЭЛЖ ХАРАГДДАГ
+                        scale=alt.Scale(domain=[chart_df["time_dt"].min(), chart_df["time_dt"].max()])
+                ),
+                y=alt.Y(
+                    "Value:Q",
+                    axis=alt.Axis(
+                        labels=False,
+                        ticks=False,
+                        grid=False,
+                        domain=False
+                    ),
+                    scale=alt.Scale(zero=False)
+                ),
+                color=alt.Color("Indicator:N", legend=None)
+            )
+        )
+        
+        # MINI WINDOW - ЗӨВХӨН zoom_brush-ийн domain-ыг ХАРУУЛНА
+        # zoom_brush өөрчлөгдөх бүрт window шинэчлэгдэнэ
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fillOpacity=0,          # ❌ ӨНГӨ БАЙХГҮЙ
-                stroke="#777777",       # ✅ ХҮРЭЭ Л БАЙНА
+                fill="#888888",          # ✅ ӨНГӨТЭЙ (FRED шиг)
+                fillOpacity=0.15,
+                stroke="#777777",
                 strokeWidth=1.2
             )
             .encode(
-                x="time_dt:T"
+                x=alt.X('min(time_dt):T', title=None),
+                x2=alt.X2('max(time_dt):T')
             )
-            .transform_filter(brush)
+            .transform_filter(zoom_brush)  # 🔥 zoom_brush-ын domain-ыг ашиглана
         )
-
-
-
+        
         mini_chart = (
             alt.layer(
-                alt.Chart(chart_df)
-                .transform_fold(
-                    valid_indicators,
-                    as_=["Indicator", "Value"]
-                )
-                .mark_line(strokeWidth=1.2)
-                .encode(
-                    x=alt.X("time_dt:T", axis=None),
-                    y=alt.Y(
-                        "Value:Q",
-                        axis=alt.Axis(
-                            labels=False,
-                            ticks=False,
-                            grid=False,
-                            domain=False
-                        )
-                    ),
-                    color=alt.Color("Indicator:N", legend=None)
-                ),
-        
-                mini_window     # 🔥 SHADED WINDOW
+                mini_line,
+                mini_window
             )
             .properties(
                 height=60,
                 width=800
             )
-            .add_params(brush)
+            # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
+            .add_params(mini_brush)
         )
-
-
         
-        # ===== 1️⃣1️⃣ НЭГТГЭСЭН ГРАФИК - ЯГ ӨМНӨХ ШИГЭЭ ПАРАМЕТРҮҮД =====
+        
+        # ===== 1️⃣2️⃣ НЭГТГЭСЭН ГРАФИК =====
         final_chart = (
             alt.vconcat(
                 main_chart,
@@ -714,7 +718,8 @@ with right:
                 gridOpacity=0.3
             )
         )
-            # ===== HEADER ROW: Chart title + download button =====
+
+       # ===== HEADER ROW: Chart title + download button =====
         header_col1, header_col2 = st.columns([6, 1])
         
         with header_col1:
