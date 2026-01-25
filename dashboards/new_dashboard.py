@@ -611,21 +611,28 @@ with right:
         # ===== 🔴 LAST VALUE MARKER (MAIN CHART ONLY) =====
         last_point = (
             base
+            # 🔑 1. NULL утгуудыг бүрэн хасна
+            .transform_filter(
+                alt.datum.Value != None
+            )
+            # 🔑 2. Indicator бүрийн хамгийн сүүлийн бодит огноог олно
             .transform_window(
                 rank="rank(time_dt)",
                 sort=[alt.SortField("time_dt", order="descending")],
                 groupby=["Indicator"]
             )
+            # 🔑 3. Зөвхөн rank == 1
             .transform_filter(
                 alt.datum.rank == 1
             )
             .mark_circle(
-                size=140,              # 🔴 том marker
+                size=140,
                 filled=True,
                 stroke="white",
                 strokeWidth=2.5
             )
         )
+
 
         # Босоо шулуун 
         vline = (
