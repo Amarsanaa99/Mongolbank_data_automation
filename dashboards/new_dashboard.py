@@ -895,14 +895,14 @@ with right:
                 .change-container-pro {
                     display: inline-flex;
                     flex-wrap: wrap;  /* Олон мөр болгох */
-                    gap: 8px;
+                    gap: 6px;
                     padding: 8px 0;
                     max-height: none;
                     overflow: visible;
                 }
                 .change-grid-pro {
                     display: inline-flex;
-                    gap: 8px;
+                    gap: 6px;
                     overflow-x: auto;
                     padding: 8px 4px;
                 }
