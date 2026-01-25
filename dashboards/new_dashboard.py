@@ -1419,27 +1419,30 @@ def group_chart(group_name):
     
 
     # ======================
-    # 🔥 CREDIT SUPPLY CHART (QUARTERLY ONLY)
+    # 🔥 CREDIT SUPPLY CHART (QUARTERLY ONLY)  
     # ======================
     if group_name == "Credit supply" and freq == "Quarterly":
-        # Required indicators
-        required_inds = [
-            "Issued loan to household",
-            "Issued loan to corporate",
-            "Household loan supply",
-            "Corporate loan supply"
-        ]
+        # 🔍 DEBUG: Indicator нэрүүдийг хэвлэх
+        print(f"Available indicators: {valid_inds}")
         
-        # Check all exist
-        if all(ind in valid_inds for ind in required_inds):
-            # Prepare data for stacked bars
-            bar_data = gdf[["time", "Issued loan to household", "Issued loan to corporate"]].copy()
-            
-            # 1️⃣ STACKED BAR CHART (зүүн Y-axis)
+        # Бүх indicator-ийн нэрийг case-insensitive шалгах
+        household_bar = next((ind for ind in valid_inds if "issued" in ind.lower() and "household" in ind.lower()), None)
+        corporate_bar = next((ind for ind in valid_inds if "issued" in ind.lower() and "corporate" in ind.lower()), None)
+        household_line = next((ind for ind in valid_inds if "household" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
+        corporate_line = next((ind for ind in valid_inds if "corporate" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
+        
+        # 🔍 DEBUG: Олдсон нэрүүдийг хэвлэх
+        print(f"Household bar: {household_bar}")
+        print(f"Corporate bar: {corporate_bar}")
+        print(f"Household line: {household_line}")
+        print(f"Corporate line: {corporate_line}")
+        
+        if all([household_bar, corporate_bar, household_line, corporate_line]):
+            # 1️⃣ STACKED BAR CHART
             bars = (
                 alt.Chart(gdf)
                 .transform_fold(
-                    ["Issued loan to household", "Issued loan to corporate"],
+                    [household_bar, corporate_bar],
                     as_=["Indicator", "Value"]
                 )
                 .mark_bar()
@@ -1471,7 +1474,7 @@ def group_chart(group_name):
                     color=alt.Color(
                         "Indicator:N",
                         scale=alt.Scale(
-                            domain=["Issued loan to household", "Issued loan to corporate"],
+                            domain=[household_bar, corporate_bar],
                             range=["#fbbf24", "#3b82f6"]
                         ),
                         legend=None
@@ -1484,7 +1487,7 @@ def group_chart(group_name):
                 )
             )
             
-            # 2️⃣ HOUSEHOLD LINE (баруун Y-axis, шар)
+            # 2️⃣ HOUSEHOLD LINE (шар)
             line_household = (
                 alt.Chart(gdf)
                 .mark_line(
@@ -1495,7 +1498,7 @@ def group_chart(group_name):
                 .encode(
                     x=alt.X("time:N", title=None, sort="ascending", axis=None),
                     y=alt.Y(
-                        "Household loan supply:Q",
+                        f"{household_line}:Q",
                         title=None,
                         axis=alt.Axis(
                             orient="right",
@@ -1506,12 +1509,12 @@ def group_chart(group_name):
                     ),
                     tooltip=[
                         alt.Tooltip("time:N"),
-                        alt.Tooltip("Household loan supply:Q", format=",.2f")
+                        alt.Tooltip(f"{household_line}:Q", format=",.2f")
                     ]
                 )
             )
             
-            # 3️⃣ CORPORATE LINE (баруун Y-axis, цэнхэр тасархай)
+            # 3️⃣ CORPORATE LINE (цэнхэр тасархай)
             line_corporate = (
                 alt.Chart(gdf)
                 .mark_line(
@@ -1523,29 +1526,29 @@ def group_chart(group_name):
                 .encode(
                     x=alt.X("time:N", title=None, sort="ascending", axis=None),
                     y=alt.Y(
-                        "Corporate loan supply:Q",
+                        f"{corporate_line}:Q",
                         title=None,
                         axis=None
                     ),
                     tooltip=[
                         alt.Tooltip("time:N"),
-                        alt.Tooltip("Corporate loan supply:Q", format=",.2f")
+                        alt.Tooltip(f"{corporate_line}:Q", format=",.2f")
                     ]
                 )
             )
             
-            # 4️⃣ COMBINE with independent Y-scales
+            # 4️⃣ COMBINE
             combined = (
                 alt.layer(bars, line_household, line_corporate)
                 .resolve_scale(y='independent')
             )
             
             # 5️⃣ LEGEND
+            all_inds = [household_bar, corporate_bar, household_line, corporate_line]
             legend_chart = (
                 alt.Chart(
                     pd.DataFrame({
-                        "Indicator": required_inds,
-                        "Type": ["Bar", "Bar", "Line", "Line"],
+                        "Indicator": all_inds,
                         "Order": [1, 2, 3, 4]
                     })
                 )
@@ -1554,7 +1557,7 @@ def group_chart(group_name):
                     color=alt.Color(
                         "Indicator:N",
                         scale=alt.Scale(
-                            domain=required_inds,
+                            domain=all_inds,
                             range=["#fbbf24", "#3b82f6", "#fbbf24", "#3b82f6"]
                         ),
                         legend=alt.Legend(
@@ -1573,7 +1576,7 @@ def group_chart(group_name):
                 )
             )
             
-            # 6️⃣ FINAL CHART
+            # 6️⃣ FINAL
             final = (
                 alt.layer(combined, legend_chart)
                 .properties(
