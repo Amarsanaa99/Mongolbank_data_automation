@@ -607,25 +607,30 @@ with right:
             )
             .add_params(hover)
         )
-        #ХАМГИЙН СҮҮЛИЙН ЦЭГ (ҮРГЭЛЖ ХАРАГДАХ)
+
+        # ХАМГИЙН СҮҮЛИЙН ЦЭГ (ҮРГЭЛЖ ХАРАГДАХ)
         last_points = (
             base
+            .transform_joinaggregate(
+                max_row='max(row_number)',
+                groupby=['Indicator']
+            )
             .transform_window(
                 row_number='row_number()',
                 sort=[alt.SortField('time_dt', order='ascending')],
                 groupby=['Indicator']
             )
             .transform_filter(
-                alt.datum.row_number == alt.expr.max('row_number')
+                'datum.row_number == datum.max_row'
             )
             .mark_circle(
-                size=80,      # Жижиг том
+                size=80,
                 filled=True,
                 stroke="#ffffff",
                 strokeWidth=2.5
             )
             .encode(
-                opacity=alt.value(1)  # Үргэлж харагдана
+                opacity=alt.value(1)
             )
         )
         # Босоо шулуун 
@@ -689,7 +694,7 @@ with right:
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fill="#888888",          # ✅ ӨНГӨТЭЙ (FRED шиг)
+                fill="#888888",         
                 fillOpacity=0.15,
                 stroke="#777777",
                 strokeWidth=1.2
