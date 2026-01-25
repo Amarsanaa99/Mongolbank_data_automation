@@ -1445,7 +1445,11 @@ def group_chart(group_name):
                     [household_bar, corporate_bar],
                     as_=["Indicator", "Value"]
                 )
-                .mark_bar()
+                .mark_bar(
+                    filled=False,         
+                    stroke="#000000",       
+                    strokeWidth=2           
+                )
                 .encode(
                     x=alt.X(
                         "time:N",
@@ -1473,7 +1477,7 @@ def group_chart(group_name):
                             orient="left"
                         )
                     ),
-                    color=alt.Color(
+                    stroke=alt.Stroke(       # ✅ Өнгийг хүрээнд ашиглана
                         "Indicator:N",
                         scale=alt.Scale(
                             domain=[household_bar, corporate_bar],
