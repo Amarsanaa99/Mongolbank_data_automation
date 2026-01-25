@@ -608,17 +608,7 @@ with right:
             .add_params(hover)
         )
 
-        # 1️⃣ Indicator бүрийн хамгийн сүүлийн цэгийг олох
-        last_point_df = (
-            chart_df
-            .sort_values('time_dt')
-            .groupby(lambda x: True, group_keys=False)  # Dummy group
-            .apply(lambda df: df[valid_indicators].apply(
-                lambda col: df[df[col.name].notna()].iloc[-1] if df[col.name].notna().any() else None
-            ))
-        )
-        
-        # 2️⃣ Reshape for Altair
+        # ===== ХАМГИЙН СҮҮЛИЙН ЦЭГҮҮД (ҮРГЭЛЖ ХАРАГДАХ) =====
         last_data = []
         for ind in valid_indicators:
             subset = chart_df[chart_df[ind].notna()]
@@ -630,28 +620,32 @@ with right:
                     'Value': last_row[ind]
                 })
         
-        last_df = pd.DataFrame(last_data)
-        
-        # 3️⃣ Altair chart
-        last_points = (
-            alt.Chart(last_df)
-            .mark_circle(
-                size=80,
-                filled=True,
-                stroke="#ffffff",
-                strokeWidth=2.5
+        # Хэрэв өгөгдөл байвал цэг үүсгэх
+        if last_data:
+            last_df = pd.DataFrame(last_data)
+            
+            last_points = (
+                alt.Chart(last_df)
+                .mark_circle(
+                    size=80,
+                    filled=True,
+                    stroke="#ffffff",
+                    strokeWidth=2.5
+                )
+                .encode(
+                    x=alt.X('time_dt:T', title=None, scale=alt.Scale(zero=False, domain=mini_brush)),
+                    y=alt.Y('Value:Q', title=None),
+                    color=alt.Color('Indicator:N', legend=None),
+                    tooltip=[
+                        alt.Tooltip('time_dt:T', title="Time", format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"),
+                        alt.Tooltip('Indicator:N'),
+                        alt.Tooltip('Value:Q', format=",.2f")
+                    ]
+                )
             )
-            .encode(
-                x=alt.X('time_dt:T', title=None, axis=x_axis, scale=alt.Scale(zero=False, domain=mini_brush)),
-                y=alt.Y('Value:Q', title=None),
-                color=alt.Color('Indicator:N', legend=None),
-                tooltip=[
-                    alt.Tooltip('time_dt:T', title="Time", format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"),
-                    alt.Tooltip('Indicator:N'),
-                    alt.Tooltip('Value:Q', format=",.2f")
-                ]
-            )
-        )
+        else:
+            # Хэрэв өгөгдөл байхгүй бол хоосон layer
+            last_points = alt.Chart(pd.DataFrame()).mark_point()
         # Босоо шулуун 
         vline = (
             alt.Chart(chart_df)
