@@ -552,8 +552,7 @@ with right:
             # 🎨 BACKGROUNDS
             paper_bgcolor="rgba(15, 41, 83, 0.3)",
             plot_bgcolor="rgba(11, 37, 84, 0.5)",
-            
-            xaxis=dict(
+
             xaxis=dict(
                 title=None,
                 type="date",
@@ -564,8 +563,7 @@ with right:
                     borderwidth=1,                        
                     bordercolor="rgba(120,120,120,0.6)"   
                 ),
-                showgrid=False
-            ),
+                showgrid=False,
 
                 
                 # 🔥 SPIKE LINES
