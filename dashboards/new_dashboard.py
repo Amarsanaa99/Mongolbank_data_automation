@@ -497,7 +497,7 @@ with right:
             '#8B5CF6'   # Purple
         ]
         
-        # 🔥 LINE TRACES
+        # 🔥 LINE + HOVER MARKERS (дэмжиж дугуй цагираг дагах)
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
@@ -505,9 +505,14 @@ with right:
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines",
+                    mode="lines+markers",   # ← lines + дугуй цагираг
                     name=col,
                     line=dict(width=2.4, color=color),
+                    marker=dict(
+                        size=10,             # дугуй цагираг
+                        color=color,
+                        line=dict(width=2, color='white')
+                    ),
                     hovertemplate=(
                         "<b>%{fullData.name}</b><br>" +
                         "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
@@ -515,6 +520,7 @@ with right:
                     )
                 )
             )
+
         
         # 🔥 MARKERS (HOVER-only)
         for i, col in enumerate(valid_indicators):
@@ -539,30 +545,19 @@ with right:
         
         # === Layout: FRED-style interaction ===
         fig.update_layout(
-            height=460,
-            margin=dict(l=40, r=140, t=40, b=60),
-            template="plotly_dark",
-            
-            # ✅ DRAG MODE (BOX ZOOM)
             dragmode='pan',
             
-            # 🔥 CROSSHAIR HOVER
-            hovermode='x unified',
+            # ✅ Ганц босоо шулуун дагах hover
+            hovermode='x',    # ← 'x unified' биш
             
-            # 🎨 BACKGROUNDS
             paper_bgcolor="rgba(15, 41, 83, 0.3)",
             plot_bgcolor="rgba(11, 37, 84, 0.5)",
-            
+        
             xaxis=dict(
                 title=None,
                 type="date",
-                rangeslider=dict(
-                    visible=True,
-                    thickness=0.05
-                ),
+                rangeslider=dict(visible=True, thickness=0.05),
                 showgrid=False,
-                
-                # 🔥 SPIKE LINES
                 showspikes=True,
                 spikemode='across',
                 spikesnap='cursor',
@@ -575,8 +570,6 @@ with right:
                 zeroline=False,
                 showgrid=True,
                 gridcolor="rgba(224,224,224,0.3)",
-                
-                # 🔥 Y-AXIS SPIKE LINES
                 showspikes=True,
                 spikemode='across',
                 spikesnap='cursor',
@@ -584,7 +577,6 @@ with right:
                 spikethickness=1.5,
                 spikedash='solid'
             ),
-            
             legend=dict(
                 title=None,
                 x=1.02,
