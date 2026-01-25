@@ -505,7 +505,7 @@ with right:
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines",
+                    mode="lines+markers",
                     name=col,
                     line=dict(width=2.4, color=color),
                     hovertemplate=(
@@ -519,7 +519,7 @@ with right:
         # 🔥 MARKERS (HOVER-only)
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
-            
+
             fig.add_trace(
                 go.Scatter(
                     x=chart_df["time_dt"],
@@ -531,8 +531,10 @@ with right:
                         line=dict(width=2, color="white"),
                         opacity=0   # 🔥 default invisible
                     ),
-                    hoveron="points+fills",
+                    hoveron="points+fills"
                 )
+            )
+
         fig.update_traces(
             marker_opacity=1,
             selector=dict(mode="lines+markers")
