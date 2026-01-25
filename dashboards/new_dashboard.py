@@ -501,14 +501,19 @@ with right:
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
-            # 🔹 Main line
+            # 🔹 Main line + markers (hover дээр гарна)
             fig.add_trace(
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines",
+                    mode="lines+markers",       # lines + markers
                     name=col,
                     line=dict(width=2.4, color=color),
+                    marker=dict(
+                        size=8,
+                        color=color,
+                        line=dict(width=2, color="white")
+                    ),
                     hovertemplate=(
                         "<b>%{fullData.name}</b><br>" +
                         "Time: %{x|%Y-%m}<br>" +
@@ -516,6 +521,7 @@ with right:
                     )
                 )
             )
+
             
             # 🔹 Marker (hover only)
             fig.add_trace(
@@ -543,53 +549,36 @@ with right:
             height=460,
             margin=dict(l=40, r=140, t=40, b=60),
             template="plotly_dark",
-            
-            # ✅ DRAG MODE (BOX ZOOM)
-            dragmode='pan',
-            
-            # 🔥 CROSSHAIR HOVER
-            hovermode='x',
-            
-            # 🎨 BACKGROUNDS
+            dragmode='pan',        # translate=True
+            hovermode='x',          # crosshair
             paper_bgcolor="rgba(15, 41, 83, 0.3)",
             plot_bgcolor="rgba(11, 37, 84, 0.5)",
-
+        
             xaxis=dict(
                 title=None,
                 type="date",
                 rangeslider=dict(
-                    visible=True,
-                    thickness=0.08,                       
-                    bgcolor="rgba(0,0,0,0)",              
-                    borderwidth=1,                        
-                    bordercolor="rgba(120,120,120,0.6)"   
+                    visible=True,          # Altair brush
+                    thickness=0.08,
+                    bgcolor="rgba(0,0,0,0)",
+                    borderwidth=1,
+                    bordercolor="rgba(120,120,120,0.6)"
                 ),
                 showgrid=False,
-
-                
-                # 🔥 SPIKE LINES
                 showspikes=True,
-                spikemode='across',
-                spikesnap='cursor',
-                spikecolor='rgba(170, 170, 170, 0.6)',
-                spikethickness=1.5,
-                spikedash='solid',
-            ),
-            yaxis=dict(
-                title=None,
-                zeroline=False,
-                showgrid=True,
-                gridcolor="rgba(224,224,224,0.3)",
-                
-                # 🔥 Y-AXIS SPIKE LINES
-                showspikes=False,
                 spikemode='across',
                 spikesnap='cursor',
                 spikecolor='rgba(170, 170, 170, 0.6)',
                 spikethickness=1.5,
                 spikedash='solid'
             ),
-            
+            yaxis=dict(
+                title=None,
+                zeroline=False,
+                showgrid=True,
+                gridcolor="rgba(224,224,224,0.3)",
+                showspikes=False
+            ),
             legend=dict(
                 title=None,
                 x=1.02,
@@ -602,7 +591,7 @@ with right:
             )
         )
         
-        # 🔥 MODEBAR CONFIGURATION
+        # 🔹 Modebar config
         config = {
             'displayModeBar': True,
             'displaylogo': False,
@@ -615,8 +604,9 @@ with right:
                 'scale': 2
             },
             'doubleClick': 'reset',
-            'scrollZoom': True
+            'scrollZoom': True  # mouse wheel zoom
         }
+
         
         st.plotly_chart(fig, use_container_width=True, config=config)
 
