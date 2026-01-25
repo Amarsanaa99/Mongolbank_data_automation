@@ -901,8 +901,8 @@ with right:
                     overflow: visible;
                 }
                 .change-grid-pro {
-                    display: flex;
-                    gap: 14px;
+                    display: inline-flex;
+                    gap: 8px;
                     overflow-x: auto;
                     padding: 8px 4px;
                 }
@@ -966,7 +966,7 @@ with right:
                     font-weight: 600;
                     color: #94a3b8;
                     text-transform: uppercase;
-                    letter-spacing: 0.05em;
+                    letter-spacing: 0.01em;
                 }
                 
                 .metric-value {
