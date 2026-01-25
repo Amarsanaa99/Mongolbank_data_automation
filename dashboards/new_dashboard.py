@@ -607,11 +607,31 @@ with right:
             )
             .add_params(hover)
         )
-
-        # Босоо шулуун - ЯГ ӨМНӨХ ШИГ
+        #ХАМГИЙН СҮҮЛИЙН ЦЭГ (ҮРГЭЛЖ ХАРАГДАХ)
+        last_points = (
+            base
+            .transform_window(
+                row_number='row_number()',
+                sort=[alt.SortField('time_dt', order='ascending')],
+                groupby=['Indicator']
+            )
+            .transform_filter(
+                alt.datum.row_number == alt.expr.max('row_number')
+            )
+            .mark_circle(
+                size=80,      # Жижиг том
+                filled=True,
+                stroke="#ffffff",
+                strokeWidth=2.5
+            )
+            .encode(
+                opacity=alt.value(1)  # Үргэлж харагдана
+            )
+        )
+        # Босоо шулуун 
         vline = (
             alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  # ✅ ЯГ ӨМНӨХ ШИГ
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  
             .encode(
                 x='time_dt:T',
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
@@ -626,13 +646,14 @@ with right:
             alt.layer(
                 line,
                 vline,
-                points
+                points,
+                last_points
             )
             .properties(
                 height=400,
                 width=850
             )
-            .add_params(zoom_brush)   # 🔥 ШИНЭ: zoom_brush ашиглах
+            .add_params(zoom_brush)   
         )
         
         # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
