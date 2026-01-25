@@ -901,16 +901,17 @@ with right:
                     overflow: visible;
                 }
                 .change-grid-pro {
-                    display: flex;
+                    display: inline-flex;
                     flex-wrap: wrap;
                     gap: 6px;
                     padding: 8px 4px;
                     overflow: visible;
                 }
                 .change-card-pro {
-                    min-width: 200px;
-                    max-width: 400px;
-                    flex: 1 1 200px;
+                    width: fit-content;          
+                    min-width: unset;          
+                    max-width: unset;            
+                    flex: 0 0 auto;             
                     padding: 16px 18px;
                     background: linear-gradient(
                         135deg,
@@ -972,7 +973,7 @@ with right:
                 .metric-value {
                     font-size: 15px;
                     font-weight: 700;
-                    font-family: 'Monaco', 'Courier New', monospace;
+                    font-family: 'Monaco', 'Courier New', sans-serif;
                 }
                 
                 .metric-up {
