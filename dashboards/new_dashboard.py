@@ -602,6 +602,7 @@ with right:
             'displayModeBar': True,
             'displaylogo': False,
             'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
+            'modeBarButtonsToAdd': ['downloadData'],
             'toImageButtonOptions': {
                 'format': 'png',
                 'filename': 'mongolbank_macro_chart',
