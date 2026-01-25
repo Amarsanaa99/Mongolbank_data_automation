@@ -430,190 +430,141 @@ with right:
         st.subheader("📈 Main chart")
         
         # ===== 1️⃣ DATA (NO AGGREGATION)
+        import plotly.graph_objects as go
+        from plotly.subplots import make_subplots
+        import pandas as pd
+        
+        # ===== 1️⃣ DATA (NO AGGREGATION) =====
         chart_df = series[["time"] + selected].copy()
+        chart_df = chart_df[(chart_df["time"] >= start_time) & (chart_df["time"] <= end_time)]
         
-        # ⏳ APPLY TIME RANGE (SAFE STRING FILTER)
-        chart_df = chart_df[
-            (chart_df["time"] >= start_time) &
-            (chart_df["time"] <= end_time)
-        ]
-        
-        # ===== 2️⃣ VALID INDICATORS ONLY
-        valid_indicators = [
-            c for c in selected
-            if c in chart_df.columns and not chart_df[c].isna().all()
-        ]
+        valid_indicators = [c for c in selected if c in chart_df.columns and not chart_df[c].isna().all()]
         
         if not valid_indicators:
             st.warning("⚠️ No data available for selected indicator(s)")
             st.stop()
         
-        import plotly.graph_objects as go
-        
-        # ===== 3️⃣ TIME FORMATTING =====
-        chart_df = chart_df.copy()
-        
+        # ===== 2️⃣ TIME FORMATTING =====
         if freq == "Monthly":
-            chart_df["time_dt"] = pd.to_datetime(
-                chart_df["time"],
-                format="%Y-%m",
-                errors="coerce"
-            )
+            chart_df["time_dt"] = pd.to_datetime(chart_df["time"], format="%Y-%m", errors="coerce")
         elif freq == "Quarterly":
-            chart_df["time_dt"] = (
-                pd.PeriodIndex(chart_df["time"], freq="Q")
-                .to_timestamp()
-            )
+            chart_df["time_dt"] = pd.PeriodIndex(chart_df["time"], freq="Q").to_timestamp()
         else:
             st.error("❌ Unknown frequency")
             st.stop()
         
-        # 🔒 HARD CHECK
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
         
-        # ===== 4️⃣ X-AXIS CONFIGURATION
+        # ===== 3️⃣ CREATE MAIN + MINI CHART WITH SUBPLOTS =====
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            shared_xaxes=True,
+            row_heights=[0.85, 0.15],
+            vertical_spacing=0.05,
+        )
+        
+        # ===== 4️⃣ MAIN CHART =====
+        for indicator in valid_indicators:
+            fig.add_trace(
+                go.Scatter(
+                    x=chart_df["time_dt"],
+                    y=chart_df[indicator],
+                    mode='lines+markers',
+                    name=indicator,
+                    marker=dict(size=8, line=dict(width=2, color='white')),
+                    line=dict(width=2.4),
+                    hovertemplate=
+                        '<b>Time:</b> %{x|%Y-%m}<br>' if freq=="Monthly" else '<b>Time:</b> %{x|%Y-Q%q}<br>' +
+                        f'<b>{indicator}:</b> %{y:,.2f}<extra></extra>',
+                ),
+                row=1,
+                col=1
+            )
+        
+        # ===== 5️⃣ MINI OVERVIEW CHART =====
+        for indicator in valid_indicators:
+            fig.add_trace(
+                go.Scatter(
+                    x=chart_df["time_dt"],
+                    y=chart_df[indicator],
+                    mode='lines',
+                    name=indicator,
+                    line=dict(width=1.2),
+                    showlegend=False
+                ),
+                row=2,
+                col=1
+            )
+        
+        # ===== 6️⃣ UPDATE LAYOUT =====
+        fig.update_layout(
+            height=500,
+            width=900,
+            margin=dict(l=0, r=20, t=20, b=20),
+            legend=dict(
+                title=None,
+                orientation='v',
+                yanchor="top",
+                y=1,
+                xanchor="right",
+                x=1.02,
+                font=dict(size=11)
+            ),
+            hovermode='x unified'
+        )
+        
+        # ===== 7️⃣ X-AXIS CONFIGURATION (FRED STYLE) =====
         start_year_int = int(start_year) if isinstance(start_year, str) else start_year
         end_year_int = int(end_year) if isinstance(end_year, str) else end_year
         year_count = end_year_int - start_year_int + 1
         
-        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
-        fig = go.Figure()
-        
-        # Өнгөний палитр (professional colors)
-        colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
-        
-        # ===== 5️⃣ PLOTLY FIGURE (MAIN + RANGE SLIDER) =====
-        fig = go.Figure()
-        
-        # Өнгөний палитр (Mongolbank colors)
-        colors = [
-            '#3b82f6',  # Mongolbank primary blue
-            '#D4AF37',  # Accent gold
-            '#06B6D4',  # Cyan
-            '#10B981',  # Green
-            '#EF4444',  # Red
-            '#8B5CF6'   # Purple
-        ]
-        
-        # 🔥 LINE TRACES
-        for i, col in enumerate(valid_indicators):
-            color = colors[i % len(colors)]
-            
-            fig.add_trace(
-                go.Scatter(
-                    x=chart_df["time_dt"],
-                    y=chart_df[col],
-                    mode="lines",
-                    name=col,
-                    line=dict(width=2.4, color=color),
-                    hovertemplate=(
-                        "<b>%{fullData.name}</b><br>" +
-                        "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
-                        "Value: %{y:.2f}<extra></extra>"
-                    )
-                )
-            )
-        
-        # 🔥 MARKERS (HOVER-only)
-        for i, col in enumerate(valid_indicators):
-            color = colors[i % len(colors)]
-            
-            fig.add_trace(
-                go.Scatter(
-                    x=chart_df["time_dt"],
-                    y=chart_df[col],
-                    mode="markers",
-                    name=col,
-                    marker=dict(
-                        size=8,
-                        color=color,
-                        line=dict(width=2, color='white')
-                    ),
-                    showlegend=False,
-                    hoverinfo='skip',
-                    visible='legendonly'
-                )
-            )
-        
-        # === Layout: FRED-style interaction ===
-        fig.update_layout(
-            height=460,
-            margin=dict(l=40, r=140, t=40, b=60),
-            template="plotly_dark",
-            
-            # ✅ DRAG MODE (BOX ZOOM)
-            dragmode='zoom',
-            
-            # 🔥 CROSSHAIR HOVER
-            hovermode='x unified',
-            
-            # 🎨 BACKGROUNDS
-            paper_bgcolor="rgba(15, 41, 83, 0.3)",
-            plot_bgcolor="rgba(11, 37, 84, 0.5)",
-            
-            xaxis=dict(
-                title=None,
-                type="date",
-                rangeslider=dict(
-                    visible=True,
-                    thickness=0.05
-                ),
-                showgrid=False,
-                
-                # 🔥 SPIKE LINES
-                showspikes=True,
-                spikemode='across',
-                spikesnap='cursor',
-                spikecolor='rgba(170, 170, 170, 0.6)',
-                spikethickness=1.5,
-                spikedash='solid',
-            ),
-            yaxis=dict(
-                title=None,
-                zeroline=False,
-                showgrid=True,
-                gridcolor="rgba(224,224,224,0.3)",
-                
-                # 🔥 Y-AXIS SPIKE LINES
-                showspikes=True,
-                spikemode='across',
-                spikesnap='cursor',
-                spikecolor='rgba(170, 170, 170, 0.6)',
-                spikethickness=1.5,
-                spikedash='solid'
-            ),
-            
-            legend=dict(
-                title=None,
-                x=1.02,
-                y=1,
-                xanchor="left",
-                yanchor="top",
-                bgcolor="rgba(0,0,0,0)",
-                orientation="v",
-                font=dict(size=11)
-            )
+        tickvals = pd.date_range(
+            start=pd.Timestamp(f"{start_year_int}-01-01"),
+            end=pd.Timestamp(f"{end_year_int}-12-31"),
+            freq='2Y' if year_count > 12 else '1Y'
         )
         
-        # 🔥 MODEBAR CONFIGURATION
-        config = {
-            'displayModeBar': True,
-            'displaylogo': False,
-            'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
-            'toImageButtonOptions': {
-                'format': 'png',
-                'filename': 'mongolbank_macro_chart',
-                'height': 800,
-                'width': 1400,
-                'scale': 2
-            },
-            'doubleClick': 'reset',
-            'scrollZoom': True
-        }
+        fig.update_xaxes(
+            row=1,
+            col=1,
+            tickangle=0,
+            tickvals=tickvals,
+            showgrid=False
+        )
         
-        st.plotly_chart(fig, use_container_width=True, config=config)
+        fig.update_xaxes(
+            row=2,
+            col=1,
+            showgrid=False,
+            showticklabels=False
+        )
+        
+        # ===== 8️⃣ Y-AXIS CONFIGURATION =====
+        fig.update_yaxes(
+            row=1,
+            col=1,
+            showgrid=True,
+            gridcolor="#e0e0e0",
+            gridwidth=0.5
+        )
+        
+        fig.update_yaxes(
+            row=2,
+            col=1,
+            showgrid=False
+        )
+        
+        # ===== 9️⃣ ZOOM + PAN ENABLED =====
+        fig.update_layout(
+            xaxis=dict(rangeslider=dict(visible=True), type="date"),
+        )
+        
+        # ===== 10️⃣ SHOW IN STREAMLIT =====
+        st.plotly_chart(fig, use_container_width=True)
+
 
     
     def compute_group_kpis(df, indicators):
