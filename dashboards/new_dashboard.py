@@ -601,10 +601,9 @@ with right:
         config = {
             'displayModeBar': True,
             'displaylogo': False,
-            'modeBarButtons': [
-                ['pan2d', 'resetScale2d'],         # Zoom in/out хассан
-                ['downloadImage', 'downloadData']  # PNG болон CSV татах
-            ],
+            # ✅ Хэрэггүй товчлууруудыг устгах
+            'modeBarButtonsToRemove': ['zoomIn2d', 'zoomOut2d', 'lasso2d', 'select2d'],
+            # ✅ PNG болон CSV татах товч нэмэх
             'toImageButtonOptions': {
                 'format': 'png',
                 'filename': 'mongolbank_macro_chart',
@@ -615,8 +614,9 @@ with right:
             'doubleClick': 'reset',
             'scrollZoom': True
         }
-
+        
         st.plotly_chart(fig, use_container_width=True, config=config)
+
 
     
     def compute_group_kpis(df, indicators):
