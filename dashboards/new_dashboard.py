@@ -487,7 +487,8 @@ with right:
             '#8B5CF6'   # Purple
         ]
         
-        # 🔥 LINE + MARKER TRACES (НЭГДСЭН)
+
+        # 🔥 1️⃣ ҮНДСЭН ШУГАМ (ЗӨВХӨН LINES)
         for i, col in enumerate(valid_indicators):
             color = colors[i % len(colors)]
             
@@ -495,14 +496,30 @@ with right:
                 go.Scatter(
                     x=chart_df["time_dt"],
                     y=chart_df[col],
-                    mode="lines+markers",  # ← lines+markers
+                    mode="lines",
                     name=col,
                     line=dict(width=2.4, color=color),
+                    hoverinfo='skip',  # ← Энэ trace-д tooltip үзүүлэхгүй
+                    showlegend=True
+                )
+            )
+        
+        # 🔥 2️⃣ HOVER ЦЭГҮҮД (MARKERS ONLY, HOVER ҮЕД Л ХАРАГДАХ)
+        for i, col in enumerate(valid_indicators):
+            color = colors[i % len(colors)]
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=chart_df["time_dt"],
+                    y=chart_df[col],
+                    mode="markers",
+                    name=col,
                     marker=dict(
-                        size=6,
+                        size=8,
                         color=color,
                         line=dict(width=2, color='white')
                     ),
+                    showlegend=False,  # ← Legend-д давхардуулахгүй
                     hovertemplate=(
                         "<b>%{fullData.name}</b><br>" +
                         "Time: %{x|" + ("%Y-%m" if freq == "Monthly" else "%Y-Q%q") + "}<br>" +
@@ -511,19 +528,17 @@ with right:
                 )
             )
         
-        # === Layout: FRED-style interaction ===
+        # === Layout ===
         fig.update_layout(
             height=460,
             margin=dict(l=40, r=140, t=40, b=60),
             template="plotly_dark",
+            dragmode='pan',
             
-            # ✅ DRAG MODE (PAN эсвэл ZOOM)
-            dragmode='pan',  # ← zoom --> pan соль (эсвэл zoom үлдээ)
-            
-            # 🔥 ЗӨВХӨН БОСОО ШУГАМ
+            # 🔥 БОСОО ШУЛУУН + TOOLTIP
             hovermode='x unified',
+            hoverdistance=10,
             
-            # 🎨 BACKGROUNDS
             paper_bgcolor="rgba(15, 41, 83, 0.3)",
             plot_bgcolor="rgba(11, 37, 84, 0.5)",
             
@@ -532,11 +547,9 @@ with right:
                 type="date",
                 rangeslider=dict(
                     visible=True,
-                    thickness=0.05  # ← Mini chart адил
+                    thickness=0.05
                 ),
                 showgrid=False,
-                
-                # 🔥 X-AXIS SPIKE (БОСОО ШУГАМ)
                 showspikes=True,
                 spikemode='across',
                 spikesnap='cursor',
@@ -549,9 +562,7 @@ with right:
                 zeroline=False,
                 showgrid=True,
                 gridcolor="rgba(224,224,224,0.3)",
-                
-                # 🔥 Y-AXIS SPIKE УСТГАХ
-                showspikes=False  # ← True --> False
+                showspikes=False  # ← ХЭВТЭЭ ШУЛУУН БАЙХГҮЙ
             ),
             
             legend=dict(
