@@ -1592,8 +1592,7 @@ def group_chart(group_name):
             return final
     
     return lines
-    
-    return lines
+
 
 
 
