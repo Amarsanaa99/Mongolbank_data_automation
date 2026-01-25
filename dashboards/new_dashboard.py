@@ -947,7 +947,7 @@ with right:
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    padding: 8px 12px;
+                    padding: 4px 8px;
                     background: rgba(30,41,59,0.6);
                     border-radius: 8px;
                     border-left: 3px solid transparent;
