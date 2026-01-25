@@ -608,44 +608,25 @@ with right:
             .add_params(hover)
         )
 
-        # ===== ХАМГИЙН СҮҮЛИЙН ЦЭГҮҮД (ҮРГЭЛЖ ХАРАГДАХ) =====
-        last_data = []
-        for ind in valid_indicators:
-            subset = chart_df[chart_df[ind].notna()]
-            if len(subset) > 0:
-                last_row = subset.sort_values('time_dt').iloc[-1]
-                last_data.append({
-                    'time_dt': last_row['time_dt'],
-                    'Indicator': ind,
-                    'Value': last_row[ind]
-                })
-        
-        # Хэрэв өгөгдөл байвал цэг үүсгэх
-        if last_data:
-            last_df = pd.DataFrame(last_data)
-            
-            last_points = (
-                alt.Chart(last_df)
-                .mark_circle(
-                    size=80,
-                    filled=True,
-                    stroke="#ffffff",
-                    strokeWidth=2.5
-                )
-                .encode(
-                    x=alt.X('time_dt:T', title=None, scale=alt.Scale(zero=False, domain=mini_brush)),
-                    y=alt.Y('Value:Q', title=None),
-                    color=alt.Color('Indicator:N', legend=None),
-                    tooltip=[
-                        alt.Tooltip('time_dt:T', title="Time", format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"),
-                        alt.Tooltip('Indicator:N'),
-                        alt.Tooltip('Value:Q', format=",.2f")
-                    ]
-                )
+        # ===== 🔴 LAST VALUE MARKER (MAIN CHART ONLY) =====
+        last_point = (
+            base
+            .transform_window(
+                rank="rank(time_dt)",
+                sort=[alt.SortField("time_dt", order="descending")],
+                groupby=["Indicator"]
             )
-        else:
-            # Хэрэв өгөгдөл байхгүй бол хоосон layer
-            last_points = alt.Chart(pd.DataFrame()).mark_point()
+            .transform_filter(
+                alt.datum.rank == 1
+            )
+            .mark_circle(
+                size=140,              # 🔴 том marker
+                filled=True,
+                stroke="white",
+                strokeWidth=2.5
+            )
+        )
+
         # Босоо шулуун 
         vline = (
             alt.Chart(chart_df)
