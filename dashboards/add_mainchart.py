@@ -588,16 +588,19 @@ with right:
             )
             .transform_calculate(
                 DisplayValue="""
-                indexof(
-                    %s,
-                    lower(datum.Indicator)
-                ) >= 0
-                ? datum.RawValue * 100
-                : datum.RawValue
-                """ % (
-                    str([k.lower() for k in percentage_keywords])
-                )
+                datum.RawValue == null || isNaN(datum.RawValue)
+                ? null
+                : (
+                    indexof(
+                        %s,
+                        lower(datum.Indicator)
+                    ) >= 0
+                    ? datum.RawValue * 100
+                    : datum.RawValue
+                  )
+                """ % str([k.lower() for k in percentage_keywords])
             )
+
             .encode(
                 x=alt.X(
                     "time_dt:T",
