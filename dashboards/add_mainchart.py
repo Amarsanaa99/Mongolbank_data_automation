@@ -505,14 +505,17 @@ with right:
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
-        # 🔥 FIX: START MAIN CHART FROM FIRST REAL DATA POINT
-        first_valid_time = chart_df.loc[
-            chart_df[valid_indicators].notna().any(axis=1),
-            "time_dt"
-        ].min()
-
-        chart_df = chart_df[chart_df["time_dt"] >= first_valid_time]
-
+        
+        # 🔥 FIX: NULL-гүй эхний бодит өгөгдлөөс эхлүүлэх
+        first_valid_mask = chart_df[valid_indicators].notna().any(axis=1)
+        
+        if first_valid_mask.any():
+            first_valid_idx = first_valid_mask.idxmax()
+            chart_df = chart_df.loc[first_valid_idx:].reset_index(drop=True)
+        else:
+            st.warning("⚠️ No valid data points found")
+            st.stop()
+        
         # ===== 4️⃣ X-AXIS CONFIGURATION =====
         # Жилийн тооцоо
         start_year_int = int(start_year) if isinstance(start_year, str) else start_year
