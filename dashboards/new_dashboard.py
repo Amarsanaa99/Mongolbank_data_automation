@@ -3,9 +3,9 @@ import pandas as pd
 import streamlit.components.v1 as components
 from pathlib import Path
 
-# ====================
+# ======================
 # PAGE
-# ====================
+# =====================
 st.set_page_config("Dashboard", layout="wide")
 st.title("🏦 Dashboard")
 st.caption("Macro Indicators")
@@ -45,31 +45,8 @@ EXCEL_PATH = BASE_DIR / "Dashboard_cleaned_data.xlsx"
 @st.cache_data(show_spinner=False)
 def read_sheet(sheet):
     return pd.read_excel(EXCEL_PATH, sheet_name=sheet, header=[0, 1])
+
 # ======================
-# 🔑 PERCENT INDICATOR KEYWORDS
-# ======================
-percentage_keywords = [
-    "inflation rate",
-    "unemployment rate",
-    "gdp growth",
-    "инфляцийн түвшин",
-    "hodrick-prescott",
-    "kalman",
-    "production function",
-    "averagegdp",
-    "yoy",
-    "deviation",
-    "household",
-    "corporate loan",
-    "loan supply"
-]
-
-def is_percentage_indicator(name: str) -> bool:
-    name_l = name.lower()
-    return any(k in name_l for k in percentage_keywords)
-
-
-# =====================
 # DATASET SELECT
 # ======================
 sheets = [s for s in pd.ExcelFile(EXCEL_PATH).sheet_names
@@ -444,7 +421,6 @@ if series["time"].isna().all():
     st.error("❌ 'time' column exists but contains only NaN")
     st.stop()
         
-
 # ======================
 # MAIN CHART (PRO-LEVEL: ZOOM + PAN + SCROLL)
 # ======================
@@ -566,42 +542,33 @@ with right:
             alt.Chart(chart_df)
             .transform_fold(
                 valid_indicators,
-                as_=["Indicator", "RawValue"]
-            )
-            .transform_calculate(
-                DisplayValue="""
-                indexof(
-                    %s,
-                    lower(datum.Indicator)
-                ) >= 0
-                ? datum.RawValue * 100
-                : datum.RawValue
-                """ % (
-                    str([k.lower() for k in percentage_keywords])
-                )
+                as_=["Indicator", "Value"]
             )
             .encode(
                 x=alt.X(
                     "time_dt:T",
                     title=None,
                     axis=x_axis,
-                    scale=alt.Scale(zero=False, domain=mini_brush)
+                    scale=alt.Scale(
+                        zero=False,
+                        domain=[chart_df["time_dt"].min(), chart_df["time_dt"].max()],  # 🔥 ӨГӨГДЛИЙН БОДИТ ХҮРЭЭ
+                        domainMin=mini_brush  # 🔥 mini_brush-ийг domainMin болгох
+                    )
                 ),
                 y=alt.Y(
-                    "DisplayValue:Q",
+                    "Value:Q",
                     title=None,
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
-                        domain=True,
+                        domain=True,  # ✅ ЯГ ӨМНӨХ ШИГ
                         labelFontSize=11,
-                        offset=5,
-                        format=",.2f"
+                        offset=5
                     )
                 ),
                 color=alt.Color(
                     "Indicator:N",
-                    legend=legend_config
+                    legend=legend_config  # ✅ ЯГ ӨМНӨХ ШИГЭЭ LEGEND
                 ),
                 tooltip=[
                     alt.Tooltip(
@@ -610,11 +577,10 @@ with right:
                         format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
                     ),
                     alt.Tooltip("Indicator:N"),
-                    alt.Tooltip("DisplayValue:Q", format=",.2f", title="Value")
+                    alt.Tooltip("Value:Q", format=",.2f")
                 ]
             )
         )
-
         
         # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
         hover = alt.selection_single(
@@ -642,34 +608,10 @@ with right:
             .add_params(hover)
         )
 
-        # ===== 🔴 LAST VALUE MARKER (MAIN CHART ONLY) =====
-        last_point = (
-            base
-            # 🔑 1. NULL утгуудыг бүрэн хасна
-            .transform_filter(
-                alt.datum.RawValue != None
-            )
-            # 🔑 2. Indicator бүрийн хамгийн сүүлийн бодит огноог олно
-            .transform_window(
-                rank="rank(time_dt)",
-                sort=[alt.SortField("time_dt", order="descending")],
-                groupby=["Indicator"]
-            )
-            # 🔑 3. Зөвхөн rank == 1
-            .transform_filter(
-                alt.datum.rank == 1
-            )
-            .mark_circle(
-                size=140,
-                filled=True
-            )
-        )
-
-
-        # Босоо шулуун 
+        # Босоо шулуун - ЯГ ӨМНӨХ ШИГ
         vline = (
             alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  # ✅ ЯГ ӨМНӨХ ШИГ
             .encode(
                 x='time_dt:T',
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
@@ -684,14 +626,13 @@ with right:
             alt.layer(
                 line,
                 vline,
-                points,
-                last_point
+                points
             )
             .properties(
                 height=400,
                 width=850
             )
-            .add_params(zoom_brush)   
+            .add_params(zoom_brush)   # 🔥 ШИНЭ: zoom_brush ашиглах
         )
         
         # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
@@ -727,7 +668,7 @@ with right:
         mini_window = (
             alt.Chart(chart_df)
             .mark_rect(
-                fill="#888888",         
+                fill="#888888",          # ✅ ӨНГӨТЭЙ (FRED шиг)
                 fillOpacity=0.15,
                 stroke="#777777",
                 strokeWidth=1.2
@@ -796,7 +737,6 @@ with right:
         
         # ===== MAIN CHART DISPLAY =====
         st.altair_chart(final_chart, use_container_width=True)
-
 
     
     def compute_group_kpis(df, indicators):
@@ -938,16 +878,7 @@ with right:
     }
     </style>
     """, unsafe_allow_html=True)
-
-    def format_kpi(indicator, value):
-        if value is None or pd.isna(value):
-            return "N/A"
     
-        if is_percentage_indicator(indicator):
-            return f"{value * 100:.2f}%"
-        else:
-            return f"{value:,.2f}"
-
     # ===== KPI CARD HELPER
     def kpi_card(label, value, sublabel=None):
         sub = ""
@@ -990,25 +921,20 @@ with right:
         last_date = str(row["Last date"]).split('\n')[0].split('Name:')[0].strip()
         kpi_card(
             "LAST VALUE",
-            format_kpi(primary_indicator, row["Last"]),
+            f"{float(row['Last']):.2f}",
             last_date
         )
     
     with cols[1]:
-        kpi_card("MEAN", format_kpi(primary_indicator, row["Mean"]))
-    
+        kpi_card("MEAN", f"{row['Mean']:.2f}")
     with cols[2]:
-        kpi_card("MEDIAN", format_kpi(primary_indicator, row["Median"]))
-    
+        kpi_card("MEDIAN", f"{row['Median']:.2f}")
     with cols[3]:
-        kpi_card("MINIMUM VALUE", format_kpi(primary_indicator, row["Min"]))
-    
+        kpi_card("MINIMUM VALUE", f"{row['Min']:.2f}")
     with cols[4]:
-        kpi_card("MAXIMUM VALUE", format_kpi(primary_indicator, row["Max"]))
-    
+        kpi_card("MAXIMUM VALUE", f"{row['Max']:.2f}")
     with cols[5]:
-        kpi_card("STD (VOLATILITY)", format_kpi(primary_indicator, row["Std"]))
-
+        kpi_card("STD (VOLATILITY)", f"{row['Std']:.2f}")
     
     # ======================
     # 📋 OPTIONAL — Indicator-level KPI TABLE
@@ -1373,7 +1299,7 @@ def group_chart(group_name):
                 background="transparent"
             )
         )
-    
+
     # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
     lines = base.transform_fold(
         valid_inds,
@@ -1416,196 +1342,8 @@ def group_chart(group_name):
             alt.Tooltip("Value:Q", format=",.2f")
         ]
     )
-    
 
-    # ======================
-    # 🔥 CREDIT SUPPLY CHART (QUARTERLY ONLY)  
-    # ======================
-    if group_name == "Credit supply" and freq == "Quarterly":
-        # 🔍 DEBUG: Indicator нэрүүдийг хэвлэх
-        print(f"Available indicators: {valid_inds}")
-        
-        # Бүх indicator-ийн нэрийг case-insensitive шалгах
-        household_bar = next((ind for ind in valid_inds if "issued" in ind.lower() and "household" in ind.lower()), None)
-        corporate_bar = next((ind for ind in valid_inds if "issued" in ind.lower() and "corporate" in ind.lower()), None)
-        household_line = next((ind for ind in valid_inds if "household" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
-        corporate_line = next((ind for ind in valid_inds if "corporate" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
-        
-        # 🔍 DEBUG: Олдсон нэрүүдийг хэвлэх
-        print(f"Household bar: {household_bar}")
-        print(f"Corporate bar: {corporate_bar}")
-        print(f"Household line: {household_line}")
-        print(f"Corporate line: {corporate_line}")
-        
-        if all([household_bar, corporate_bar, household_line, corporate_line]):
-            # 1️⃣ STACKED BAR CHART
-            bars = (
-                alt.Chart(gdf)
-                .transform_fold(
-                    [household_bar, corporate_bar],
-                    as_=["Indicator", "Value"]
-                )
-                .mark_bar(
-                    filled=False,         
-                    stroke="#000000",       
-                    strokeWidth=2           
-                )
-                .encode(
-                    x=alt.X(
-                        "time:N",
-                        title=None,
-                        sort="ascending",
-                        axis=alt.Axis(
-                            labelAngle=0,
-                            grid=False,
-                            labelFontSize=10,
-                            labelExpr="split(datum.value, '-')[1] + '\\n' + split(datum.value, '-')[0]",
-                            labelPadding=8,
-                            domain=True
-                        )
-                    ),
-                    y=alt.Y(
-                        "Value:Q",
-                        title=None,
-                        stack="zero",
-                        axis=alt.Axis(
-                            grid=True,
-                            gridColor="#334155",
-                            gridOpacity=0.45,
-                            labelColor="#cbd5e1",
-                            labelFontSize=11,
-                            orient="left"
-                        )
-                    ),
-                    stroke=alt.Stroke(       # ✅ Өнгийг хүрээнд ашиглана
-                        "Indicator:N",
-                        scale=alt.Scale(
-                            domain=[household_bar, corporate_bar],
-                            range=["#fbbf24", "#3b82f6"]
-                        ),
-                        legend=None
-                    ),
-                    tooltip=[
-                        alt.Tooltip("time:N"),
-                        alt.Tooltip("Indicator:N"),
-                        alt.Tooltip("Value:Q", format=",.2f")
-                    ]
-                )
-            )
-            
-            # 2️⃣ HOUSEHOLD LINE (шар)
-            line_household = (
-                alt.Chart(gdf)
-                .mark_line(
-                    strokeWidth=2.5,
-                    color="#fbbf24",
-                    interpolate="monotone"
-                    #point=alt.OverlayMarkDef(size=60, filled=True, color="#fbbf24")
-                )
-                .encode(
-                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
-                    y=alt.Y(
-                        f"{household_line}:Q",
-                        title=None,
-                        axis=alt.Axis(
-                            orient="right",
-                            grid=False,
-                            labelColor="#fbbf24",
-                            labelFontSize=11
-                        )
-                    ),
-                    tooltip=[
-                        alt.Tooltip("time:N"),
-                        alt.Tooltip(f"{household_line}:Q", format=",.2f")
-                    ]
-                )
-            )
-            
-            # 3️⃣ CORPORATE LINE (цэнхэр тасархай)
-            line_corporate = (
-                alt.Chart(gdf)
-                .mark_line(
-                    strokeWidth=2.5,
-                    strokeDash=[5, 5],
-                    color="#3b82f6",
-                    interpolate="monotone"
-                    #point=alt.OverlayMarkDef(size=60, filled=True, color="#3b82f6")
-                )
-                .encode(
-                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
-                    y=alt.Y(
-                        f"{corporate_line}:Q",
-                        title=None,
-                        axis=None
-                    ),
-                    tooltip=[
-                        alt.Tooltip("time:N"),
-                        alt.Tooltip(f"{corporate_line}:Q", format=",.2f")
-                    ]
-                )
-            )
-            
-            # 4️⃣ COMBINE
-            combined = (
-                alt.layer(bars, line_household, line_corporate)
-                .resolve_scale(y='independent')
-            )
-            
-            # 5️⃣ LEGEND
-            all_inds = [household_bar, corporate_bar, household_line, corporate_line]
-            legend_chart = (
-                alt.Chart(
-                    pd.DataFrame({
-                        "Indicator": all_inds,
-                        "Order": [1, 2, 3, 4]
-                    })
-                )
-                .mark_point(size=0, opacity=0)
-                .encode(
-                    color=alt.Color(
-                        "Indicator:N",
-                        scale=alt.Scale(
-                            domain=all_inds,
-                            range=["#fbbf24", "#3b82f6", "#fbbf24", "#3b82f6"]
-                        ),
-                        legend=alt.Legend(
-                            orient="bottom",
-                            direction="horizontal",
-                            title=None,
-                            labelLimit=200,
-                            labelFontSize=10,
-                            symbolSize=80,
-                            symbolType="square",
-                            columnPadding=8,
-                            padding=0,
-                            offset=2
-                        )
-                    )
-                )
-            )
-            
-            # 6️⃣ FINAL
-            final = (
-                alt.layer(combined, legend_chart)
-                .properties(
-                    height=320,
-                    width=800,
-                    padding={"top": 6, "bottom": 0, "left": 6, "right": 6},
-                    title=alt.TitleParams(
-                        text=group_name,
-                        anchor="start",
-                        fontSize=14,
-                        offset=6
-                    ),
-                    background="transparent"
-                )
-            )
-            
-            return final
-    
     return lines
-
-
 
 
 
@@ -1617,6 +1355,8 @@ for row in rows:
                 chart = group_chart(grp)
                 if chart is not None:
                     st.altair_chart(chart, use_container_width=True)
+
+
 # ======================
 # 📄 RAW DATA — INDICATOR GROUP LEVEL
 # ======================
