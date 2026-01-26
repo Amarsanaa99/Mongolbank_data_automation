@@ -60,7 +60,18 @@ percentage_keywords = [
     "deviation",
     "household",
     "corporate loan",
-    "loan supply"
+    "loan supply",
+    "ECPI",
+    "UB inflation",
+    "Beveridge Nelson",
+    "Hodrick-Prescott",
+    "Neutral rate",
+    "Policy rate",
+    "Taylor",
+    "Band-Pass",
+    "Forecast 2",
+    "Inflation",
+    "Forecast 1"
 ]
 
 def is_percentage_indicator(name: str) -> bool:
