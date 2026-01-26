@@ -645,8 +645,39 @@ with right:
         )
         
         # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
-        line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
+        # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - OUTPUT GAP = BAR, БУСАД = LINE =====
+        # 1️⃣ Output gap indicator-ийг олох
+        output_gap_indicators = [ind for ind in valid_indicators if "output gap" in ind.lower()]
         
+        # 2️⃣ LINE CHART (бүх indicator-ийн ердийн хувилбар)
+        line = base.mark_line(strokeWidth=2.4)
+        
+        # 3️⃣ BAR CHART (зөвхөн output gap-ын хувьд)
+        if output_gap_indicators:
+            bar = (
+                base
+                .transform_filter(
+                    alt.FieldOneOfPredicate(field="Indicator", oneOf=output_gap_indicators)
+                )
+                .mark_bar(
+                    opacity=0.7,
+                    cornerRadiusTopLeft=3,
+                    cornerRadiusTopRight=3
+                )
+            )
+            
+            # LINE-ээс output gap-ийг ХАСАХ
+            line = (
+                base
+                .transform_filter(
+                    alt.FieldOneOfPredicate(field="Indicator", oneOf=[
+                        ind for ind in valid_indicators if ind not in output_gap_indicators
+                    ])
+                )
+                .mark_line(strokeWidth=2.4)
+            )
+        else:
+            bar = None
         points = (
             base
             .mark_circle(
@@ -695,7 +726,10 @@ with right:
             )
             .transform_filter(hover)
         )
-
+        # BAR + LINE холих
+        layers = [line, vline, points, last_point]
+        if bar is not None:
+            layers.insert(0, bar) 
         
         # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
         # 🔍 FRED-STYLE ZOOM (MAIN CHART)
