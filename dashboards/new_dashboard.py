@@ -494,6 +494,13 @@ with right:
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
             st.stop()
+        # 🔥 FIX: START MAIN CHART FROM FIRST REAL DATA POINT
+        first_valid_time = chart_df.loc[
+            chart_df[valid_indicators].notna().any(axis=1),
+            "time_dt"
+        ].min()
+
+        chart_df = chart_df[chart_df["time_dt"] >= first_valid_time]
 
         # ===== 4️⃣ X-AXIS CONFIGURATION =====
         # Жилийн тооцоо
