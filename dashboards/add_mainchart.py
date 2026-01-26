@@ -617,7 +617,7 @@ with right:
                         domain=True,
                         labelFontSize=11,
                         offset=5,
-                        format=".2f%" if all_percent else ",.2f",
+                        format=".2f%",
                         formatType="number"
                     )
                 ),
