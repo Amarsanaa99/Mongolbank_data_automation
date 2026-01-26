@@ -1418,16 +1418,211 @@ def group_chart(group_name):
     
     # BAR болгох indicator-ууд (Nowcast group-д зориулсан)
     bar_inds = [
-        ind for ind in valid_inds 
+    # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ - BAR vs LINE
+    
+    # BAR болгох indicator-ууд (Nowcast group-д зориулсан)
+    bar_inds = [
+        ind for ind in valid_inds
         if "dynamic factor model" in ind.lower() or "gdp, yoy" in ind.lower()
     ]
     
     # LINE болгох indicator-ууд (бусад бүх)
     line_inds = [ind for ind in valid_inds if ind not in bar_inds]
     
-    # LINE CHART
+    # ======================
+    # 🔥 CREDIT SUPPLY CHART (QUARTERLY ONLY) - ЭХЛЭЭД ШАЛГАХ
+    # ======================
+    if group_name == "Credit supply" and freq == "Quarterly":
+        # 🔍 DEBUG: Indicator нэрүүдийг хэвлэх
+        print(f"Available indicators: {valid_inds}")
+    
+        # Бүх indicator-ийн нэрийг case-insensitive шалгах
+        household_bar = next((ind for ind in valid_inds if "issued" in ind.lower() and "household" in ind.lower()), None)
+        corporate_bar = next((ind for ind in valid_inds if "issued" in ind.lower() and "corporate" in ind.lower()), None)
+        household_line = next((ind for ind in valid_inds if "household" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
+        corporate_line = next((ind for ind in valid_inds if "corporate" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
+    
+        # 🔍 DEBUG: Олдсон нэрүүдийг хэвлэх
+        print(f"Household bar: {household_bar}")
+        print(f"Corporate bar: {corporate_bar}")
+        print(f"Household line: {household_line}")
+        print(f"Corporate line: {corporate_line}")
+    
+        if all([household_bar, corporate_bar, household_line, corporate_line]):
+            # 1️⃣ STACKED BAR CHART
+            bars_credit = (
+                alt.Chart(gdf)
+                .transform_fold(
+                    [household_bar, corporate_bar],
+                    as_=["Indicator", "Value"]
+                )
+                .mark_bar(
+                    filled=False,
+                    stroke="#000000",
+                    strokeWidth=2
+                )
+                .encode(
+                    x=alt.X(
+                        "time:N",
+                        title=None,
+                        sort="ascending",
+                        axis=alt.Axis(
+                            labelAngle=0,
+                            grid=False,
+                            labelFontSize=10,
+                            labelExpr="split(datum.value, '-')[1] + '\\n' + split(datum.value, '-')[0]",
+                            labelPadding=8,
+                            domain=True
+                        )
+                    ),
+                    y=alt.Y(
+                        "Value:Q",
+                        title=None,
+                        stack="zero",
+                        axis=alt.Axis(
+                            grid=True,
+                            gridColor="#334155",
+                            gridOpacity=0.45,
+                            labelColor="#cbd5e1",
+                            labelFontSize=11,
+                            orient="left"
+                        )
+                    ),
+                    stroke=alt.Stroke(
+                        "Indicator:N",
+                        scale=alt.Scale(
+                            domain=[household_bar, corporate_bar],
+                            range=["#fbbf24", "#3b82f6"]
+                        ),
+                        legend=None
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time:N"),
+                        alt.Tooltip("Indicator:N"),
+                        alt.Tooltip("Value:Q", format=",.2f")
+                    ]
+                )
+            )
+    
+            # 2️⃣ HOUSEHOLD LINE (шар)
+            line_household = (
+                alt.Chart(gdf)
+                .mark_line(
+                    strokeWidth=2.5,
+                    color="#fbbf24",
+                    interpolate="monotone"
+                )
+                .encode(
+                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
+                    y=alt.Y(
+                        f"{household_line}:Q",
+                        title=None,
+                        axis=alt.Axis(
+                            orient="right",
+                            grid=False,
+                            labelColor="#fbbf24",
+                            labelFontSize=11
+                        )
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time:N"),
+                        alt.Tooltip(f"{household_line}:Q", format=",.2f")
+                    ]
+                )
+            )
+    
+            # 3️⃣ CORPORATE LINE (цэнхэр тасархай)
+            line_corporate = (
+                alt.Chart(gdf)
+                .mark_line(
+                    strokeWidth=2.5,
+                    strokeDash=[5, 5],
+                    color="#3b82f6",
+                    interpolate="monotone"
+                )
+                .encode(
+                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
+                    y=alt.Y(
+                        f"{corporate_line}:Q",
+                        title=None,
+                        axis=None
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time:N"),
+                        alt.Tooltip(f"{corporate_line}:Q", format=",.2f")
+                    ]
+                )
+            )
+    
+            # 4️⃣ COMBINE
+            combined = (
+                alt.layer(bars_credit, line_household, line_corporate)
+                .resolve_scale(y='independent')
+            )
+    
+            # 5️⃣ LEGEND
+            all_inds = [household_bar, corporate_bar, household_line, corporate_line]
+            legend_chart = (
+                alt.Chart(
+                    pd.DataFrame({
+                        "Indicator": all_inds,
+                        "Order": [1, 2, 3, 4]
+                    })
+                )
+                .mark_point(size=0, opacity=0)
+                .encode(
+                    color=alt.Color(
+                        "Indicator:N",
+                        scale=alt.Scale(
+                            domain=all_inds,
+                            range=["#fbbf24", "#3b82f6", "#fbbf24", "#3b82f6"]
+                        ),
+                        legend=alt.Legend(
+                            orient="bottom",
+                            direction="horizontal",
+                            title=None,
+                            labelLimit=200,
+                            labelFontSize=10,
+                            symbolSize=80,
+                            symbolType="square",
+                            columnPadding=8,
+                            padding=0,
+                            offset=2
+                        )
+                    )
+                )
+            )
+    
+            # 6️⃣ FINAL - Credit Supply специал график буцаах
+            final = (
+                alt.layer(combined, legend_chart)
+                .properties(
+                    height=320,
+                    width=800,
+                    padding={"top": 6, "bottom": 0, "left": 6, "right": 6},
+                    title=alt.TitleParams(
+                        text=group_name,
+                        anchor="start",
+                        fontSize=14,
+                        offset=6
+                    ),
+                    background="transparent"
+                )
+            )
+    
+            return final
+    
+    # ======================
+    # 🔹 ЭНГИЙН LINE + BAR LOGIC (Credit Supply биш бол)
+    # ======================
+    
+    # Эхлээд бүх chart-уудыг None гэж тодорхойлно
+    line_chart = None
+    bar_chart = None
+    
+    # LINE CHART үүсгэх
     if line_inds:
-        lines = base.transform_fold(
+        line_chart = base.transform_fold(
             line_inds,
             as_=["Indicator", "Value"]
         ).mark_line(strokeWidth=2).encode(
@@ -1465,12 +1660,10 @@ def group_chart(group_name):
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-    else:
-        lines = None
     
-    # BAR CHART
+    # BAR CHART үүсгэх
     if bar_inds:
-        bars = base.transform_fold(
+        bar_chart = base.transform_fold(
             bar_inds,
             as_=["Indicator", "Value"]
         ).mark_bar(
@@ -1511,200 +1704,20 @@ def group_chart(group_name):
                 alt.Tooltip("Value:Q", format=",.2f")
             ]
         )
-        
-        # BAR болон LINE-ийг хослуулах
-        if lines is not None:
-            lines = alt.layer(bars, lines)
-        else:
-            lines = bars
     
-
-    # ======================
-    # 🔥 CREDIT SUPPLY CHART (QUARTERLY ONLY)  
-    # ======================
-    if group_name == "Credit supply" and freq == "Quarterly":
-        # 🔍 DEBUG: Indicator нэрүүдийг хэвлэх
-        print(f"Available indicators: {valid_inds}")
-        
-        # Бүх indicator-ийн нэрийг case-insensitive шалгах
-        household_bar = next((ind for ind in valid_inds if "issued" in ind.lower() and "household" in ind.lower()), None)
-        corporate_bar = next((ind for ind in valid_inds if "issued" in ind.lower() and "corporate" in ind.lower()), None)
-        household_line = next((ind for ind in valid_inds if "household" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
-        corporate_line = next((ind for ind in valid_inds if "corporate" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
-        
-        # 🔍 DEBUG: Олдсон нэрүүдийг хэвлэх
-        print(f"Household bar: {household_bar}")
-        print(f"Corporate bar: {corporate_bar}")
-        print(f"Household line: {household_line}")
-        print(f"Corporate line: {corporate_line}")
-        
-        if all([household_bar, corporate_bar, household_line, corporate_line]):
-            # 1️⃣ STACKED BAR CHART
-            bars = (
-                alt.Chart(gdf)
-                .transform_fold(
-                    [household_bar, corporate_bar],
-                    as_=["Indicator", "Value"]
-                )
-                .mark_bar(
-                    filled=False,         
-                    stroke="#000000",       
-                    strokeWidth=2           
-                )
-                .encode(
-                    x=alt.X(
-                        "time:N",
-                        title=None,
-                        sort="ascending",
-                        axis=alt.Axis(
-                            labelAngle=0,
-                            grid=False,
-                            labelFontSize=10,
-                            labelExpr="split(datum.value, '-')[1] + '\\n' + split(datum.value, '-')[0]",
-                            labelPadding=8,
-                            domain=True
-                        )
-                    ),
-                    y=alt.Y(
-                        "Value:Q",
-                        title=None,
-                        stack="zero",
-                        axis=alt.Axis(
-                            grid=True,
-                            gridColor="#334155",
-                            gridOpacity=0.45,
-                            labelColor="#cbd5e1",
-                            labelFontSize=11,
-                            orient="left"
-                        )
-                    ),
-                    stroke=alt.Stroke(       # ✅ Өнгийг хүрээнд ашиглана
-                        "Indicator:N",
-                        scale=alt.Scale(
-                            domain=[household_bar, corporate_bar],
-                            range=["#fbbf24", "#3b82f6"]
-                        ),
-                        legend=None
-                    ),
-                    tooltip=[
-                        alt.Tooltip("time:N"),
-                        alt.Tooltip("Indicator:N"),
-                        alt.Tooltip("Value:Q", format=",.2f")
-                    ]
-                )
-            )
-            
-            # 2️⃣ HOUSEHOLD LINE (шар)
-            line_household = (
-                alt.Chart(gdf)
-                .mark_line(
-                    strokeWidth=2.5,
-                    color="#fbbf24",
-                    interpolate="monotone"
-                    #point=alt.OverlayMarkDef(size=60, filled=True, color="#fbbf24")
-                )
-                .encode(
-                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
-                    y=alt.Y(
-                        f"{household_line}:Q",
-                        title=None,
-                        axis=alt.Axis(
-                            orient="right",
-                            grid=False,
-                            labelColor="#fbbf24",
-                            labelFontSize=11
-                        )
-                    ),
-                    tooltip=[
-                        alt.Tooltip("time:N"),
-                        alt.Tooltip(f"{household_line}:Q", format=",.2f")
-                    ]
-                )
-            )
-            
-            # 3️⃣ CORPORATE LINE (цэнхэр тасархай)
-            line_corporate = (
-                alt.Chart(gdf)
-                .mark_line(
-                    strokeWidth=2.5,
-                    strokeDash=[5, 5],
-                    color="#3b82f6",
-                    interpolate="monotone"
-                    #point=alt.OverlayMarkDef(size=60, filled=True, color="#3b82f6")
-                )
-                .encode(
-                    x=alt.X("time:N", title=None, sort="ascending", axis=None),
-                    y=alt.Y(
-                        f"{corporate_line}:Q",
-                        title=None,
-                        axis=None
-                    ),
-                    tooltip=[
-                        alt.Tooltip("time:N"),
-                        alt.Tooltip(f"{corporate_line}:Q", format=",.2f")
-                    ]
-                )
-            )
-            
-            # 4️⃣ COMBINE
-            combined = (
-                alt.layer(bars, line_household, line_corporate)
-                .resolve_scale(y='independent')
-            )
-            
-            # 5️⃣ LEGEND
-            all_inds = [household_bar, corporate_bar, household_line, corporate_line]
-            legend_chart = (
-                alt.Chart(
-                    pd.DataFrame({
-                        "Indicator": all_inds,
-                        "Order": [1, 2, 3, 4]
-                    })
-                )
-                .mark_point(size=0, opacity=0)
-                .encode(
-                    color=alt.Color(
-                        "Indicator:N",
-                        scale=alt.Scale(
-                            domain=all_inds,
-                            range=["#fbbf24", "#3b82f6", "#fbbf24", "#3b82f6"]
-                        ),
-                        legend=alt.Legend(
-                            orient="bottom",
-                            direction="horizontal",
-                            title=None,
-                            labelLimit=200,
-                            labelFontSize=10,
-                            symbolSize=80,
-                            symbolType="square",
-                            columnPadding=8,
-                            padding=0,
-                            offset=2
-                        )
-                    )
-                )
-            )
-            
-            # 6️⃣ FINAL
-            final = (
-                alt.layer(combined, legend_chart)
-                .properties(
-                    height=320,
-                    width=800,
-                    padding={"top": 6, "bottom": 0, "left": 6, "right": 6},
-                    title=alt.TitleParams(
-                        text=group_name,
-                        anchor="start",
-                        fontSize=14,
-                        offset=6
-                    ),
-                    background="transparent"
-                )
-            )
-            
-            return final
-    
-    return lines
+    # Хоёуланг нь хослуулах
+    if bar_chart and line_chart:
+        return alt.layer(bar_chart, line_chart)
+    elif bar_chart:
+        return bar_chart
+    elif line_chart:
+        return line_chart
+    else:
+        # Өгөгдөл байхгүй бол хоосон график
+        return base.mark_line(strokeWidth=2).encode(
+            y=alt.Y("Value:Q", title=None),
+            color=alt.Color("Indicator:N", legend=None)
+        )
 
 
 
