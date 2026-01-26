@@ -644,8 +644,27 @@ with right:
         )
         
         # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
-        line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
-        
+        line = base.mark_line(
+            strokeWidth=2.4
+        ).encode(
+            y=alt.Y(
+                "DisplayValue:Q",
+                title=None,
+                scale=alt.Scale(zero=False),
+                axis=alt.Axis(
+                    grid=True,
+                    gridOpacity=0.25,
+                    domain=True,
+                    labelFontSize=11,
+                    offset=5,
+                    format=",.2f"
+                )
+            ),
+            # 🔥 ЭНЭ Л ГОЛ ЗАСВАР
+            defined=alt.expr.datum.DisplayValue != None
+        )
+
+
         points = (
             base
             .mark_circle(
