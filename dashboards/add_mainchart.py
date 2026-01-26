@@ -617,8 +617,7 @@ with right:
                         domain=True,
                         labelFontSize=11,
                         offset=5,
-                        format=".2f%",
-                        formatType="number"
+                        format=",.2"
                     )
                 ),
                 color=alt.Color(
