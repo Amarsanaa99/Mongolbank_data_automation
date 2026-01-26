@@ -53,7 +53,6 @@ percentage_keywords = [
     "unemployment rate",
     "gdp growth",
     "инфляцийн түвшин",
-    "hodrick-prescott",
     "kalman",
     "production function",
     "averagegdp",
