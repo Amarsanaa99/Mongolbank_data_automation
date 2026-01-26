@@ -5,7 +5,7 @@ from pathlib import Path
 
 # ===================
 # PAGE
-# ====================
+# ===================
 st.set_page_config("Dashboard", layout="wide")
 st.title("🏦 Dashboard")
 st.caption("Macro Indicators")
