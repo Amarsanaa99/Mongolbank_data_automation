@@ -70,7 +70,10 @@ percentage_keywords = [
     "Forecast 1",
     "Deviation",
     "Dynamic Factor Model",
-    "GDP, Yoy"
+    "GDP, Yoy",
+    "Hodrick-Prescott"
+    "Kalman",
+    "Average"
 ]
 
 def is_percentage_indicator(name: str) -> bool:
