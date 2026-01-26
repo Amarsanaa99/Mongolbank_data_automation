@@ -1414,10 +1414,7 @@ def group_chart(group_name):
             )
         )
 
-    # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ - BAR vs LINE
-    
-    # BAR болгох indicator-ууд (Nowcast group-д зориулсан)
-    bar_inds = [
+
     # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ - BAR vs LINE
     
     # BAR болгох indicator-ууд (Nowcast group-д зориулсан)
