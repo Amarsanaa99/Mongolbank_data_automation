@@ -551,8 +551,7 @@ with right:
                     axis=x_axis,
                     scale=alt.Scale(
                         zero=False,
-                        domain=[chart_df["time_dt"].min(), chart_df["time_dt"].max()],  # 🔥 ӨГӨГДЛИЙН БОДИТ ХҮРЭЭ
-                        domainMin=mini_brush  # 🔥 mini_brush-ийг domainMin болгох
+                        domain=[chart_df["time_dt"].min(), chart_df["time_dt"].max()]  # 🔥 ӨГӨГДЛИЙН БОДИТ ХҮРЭЭ
                     )
                 ),
                 y=alt.Y(
