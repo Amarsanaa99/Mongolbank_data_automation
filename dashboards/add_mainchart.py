@@ -663,8 +663,7 @@ with right:
                     format=",.2f"
                 )
             ),
-            # 🔥 ЭНЭ Л ГОЛ ЗАСВАР
-            defined=alt.expr.datum.DisplayValue != None
+            defined=alt.datum.DisplayValue != None
         )
 
 
