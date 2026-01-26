@@ -643,73 +643,95 @@ with right:
             clear="mouseout"
         )
         
-        # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
-        line = base.mark_line(strokeWidth=2.4)  # ✅ ЯГ ӨМНӨХ ШИГ
+        
+        # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - BAR vs LINE =====
+        
+        # 1️⃣ BAR болгох indicator-уудыг тодорхойлох
+        bar_indicators = [
+            ind for ind in valid_indicators 
+            if "dynamic factor model" in ind.lower() or "gdp, yoy" in ind.lower()
+        ]
+        
+        # 2️⃣ BAR CHART (Dynamic Factor Model болон GDP, Yoy)
+        if bar_indicators:
+            bar = (
+                base
+                .transform_filter(
+                    alt.FieldOneOfPredicate(field="Indicator", oneOf=bar_indicators)
+                )
+                .mark_bar(
+                    opacity=0.75,
+                    cornerRadiusTopLeft=3,
+                    cornerRadiusTopRight=3
+                )
+            )
+            
+            # LINE BASE - bar indicator-уудыг ХАСАХ
+            line_base = (
+                base
+                .transform_filter(
+                    alt.FieldOneOfPredicate(field="Indicator", oneOf=[
+                        ind for ind in valid_indicators if ind not in bar_indicators
+                    ])
+                )
+            )
+        else:
+            bar = None
+            line_base = base
+        
+        # 3️⃣ LINE элементүүд (бусад indicator-ууд)
+        line = line_base.mark_line(strokeWidth=2.4)
         
         points = (
-            base
+            line_base
             .mark_circle(
-                size=65,  # ✅ ЯГ ӨМНӨХ ШИГ (65)
+                size=65,
                 filled=True,
                 stroke="#ffffff",
-                strokeWidth=2  # ✅ ЯГ ӨМНӨХ ШИГ
+                strokeWidth=2
             )
             .encode(
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
             )
             .add_params(hover)
         )
-
-        # ===== 🔴 LAST VALUE MARKER (MAIN CHART ONLY) =====
+        
         last_point = (
-            base
-            # 🔑 1. NULL утгуудыг бүрэн хасна
-            .transform_filter(
-                alt.datum.RawValue != None
-            )
-            # 🔑 2. Indicator бүрийн хамгийн сүүлийн бодит огноог олно
+            line_base
+            .transform_filter(alt.datum.RawValue != None)
             .transform_window(
                 rank="rank(time_dt)",
                 sort=[alt.SortField("time_dt", order="descending")],
                 groupby=["Indicator"]
             )
-            # 🔑 3. Зөвхөн rank == 1
-            .transform_filter(
-                alt.datum.rank == 1
-            )
-            .mark_circle(
-                size=140,
-                filled=True
-            )
+            .transform_filter(alt.datum.rank == 1)
+            .mark_circle(size=140, filled=True)
         )
-
-
-        # Босоо шулуун 
+        
+        # Босоо шулуун
         vline = (
             alt.Chart(chart_df)
-            .mark_rule(color="#aaaaaa", strokeWidth=1.2)  
+            .mark_rule(color="#aaaaaa", strokeWidth=1.2)
             .encode(
                 x='time_dt:T',
                 opacity=alt.condition(hover, alt.value(1), alt.value(0))
             )
             .transform_filter(hover)
         )
-
         
-        # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
-        # 🔍 FRED-STYLE ZOOM (MAIN CHART)
+        # 4️⃣ LAYERS холих
+        layers = [line, vline, points, last_point]
+        if bar is not None:
+            layers.insert(0, bar)  # BAR-ийг хамгийн доод давхаргад
+        
+        # ===== 🔟 ҮНДСЭН ГРАФИК =====
         main_chart = (
-            alt.layer(
-                line,
-                vline,
-                points,
-                last_point
-            )
+            alt.layer(*layers)  # ✅ ЭНЭ ЧУХАЛ
             .properties(
                 height=400,
                 width=850
             )
-            .add_params(zoom_brush)   
+            .add_params(zoom_brush)
         )
         
         # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
@@ -1391,49 +1413,110 @@ def group_chart(group_name):
                 background="transparent"
             )
         )
+
+    # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ - BAR vs LINE
     
-    # 8️⃣ ХЭРВЭЭ ӨГӨГДӨЛ БАЙВАЛ LINE
-    lines = base.transform_fold(
-        valid_inds,
-        as_=["Indicator", "Value"]
-    ).mark_line(strokeWidth=2).encode(
-        y=alt.Y(
-            "Value:Q",
-            title=None,
-            axis=alt.Axis(
-                grid=True,
-                gridColor="#334155",   
-                gridOpacity=0.45,      
-                gridWidth=1,           
-                domain=False,
-                tickColor="#475569",   # (сонголт)
-                labelColor="#cbd5e1",  # (сонголт)
-                titleColor="#e5e7eb",
-                labelFontSize=11,
-                titleFontSize=12
-            )
-        ),
-        color=alt.Color(
-            "Indicator:N", 
-            legend=alt.Legend(
-                orient="bottom",
-                direction="horizontal",
+    # BAR болгох indicator-ууд (Nowcast group-д зориулсан)
+    bar_inds = [
+        ind for ind in valid_inds 
+        if "dynamic factor model" in ind.lower() or "gdp, yoy" in ind.lower()
+    ]
+    
+    # LINE болгох indicator-ууд (бусад бүх)
+    line_inds = [ind for ind in valid_inds if ind not in bar_inds]
+    
+    # LINE CHART
+    if line_inds:
+        lines = base.transform_fold(
+            line_inds,
+            as_=["Indicator", "Value"]
+        ).mark_line(strokeWidth=2).encode(
+            y=alt.Y(
+                "Value:Q",
                 title=None,
-                labelLimit=150,
-                labelFontSize=11,
-                symbolSize=80,
-                symbolStrokeWidth=2,
-                columnPadding=4,
-                padding=0,
-                offset=2
-            )
-        ),
-        tooltip=[
-            alt.Tooltip("time:N"),
-            alt.Tooltip("Indicator:N"),
-            alt.Tooltip("Value:Q", format=",.2f")
-        ]
-    )
+                axis=alt.Axis(
+                    grid=True,
+                    gridColor="#334155",
+                    gridOpacity=0.45,
+                    gridWidth=1,
+                    domain=False,
+                    labelColor="#cbd5e1",
+                    labelFontSize=11
+                )
+            ),
+            color=alt.Color(
+                "Indicator:N",
+                legend=alt.Legend(
+                    orient="bottom",
+                    direction="horizontal",
+                    title=None,
+                    labelLimit=150,
+                    labelFontSize=11,
+                    symbolSize=80,
+                    symbolStrokeWidth=2,
+                    columnPadding=4,
+                    padding=0,
+                    offset=2
+                )
+            ),
+            tooltip=[
+                alt.Tooltip("time:N"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
+        )
+    else:
+        lines = None
+    
+    # BAR CHART
+    if bar_inds:
+        bars = base.transform_fold(
+            bar_inds,
+            as_=["Indicator", "Value"]
+        ).mark_bar(
+            opacity=0.75,
+            cornerRadiusTopLeft=3,
+            cornerRadiusTopRight=3
+        ).encode(
+            y=alt.Y(
+                "Value:Q",
+                title=None,
+                axis=alt.Axis(
+                    grid=True,
+                    gridColor="#334155",
+                    gridOpacity=0.45,
+                    gridWidth=1,
+                    domain=False,
+                    labelColor="#cbd5e1",
+                    labelFontSize=11
+                )
+            ),
+            color=alt.Color(
+                "Indicator:N",
+                legend=alt.Legend(
+                    orient="bottom",
+                    direction="horizontal",
+                    title=None,
+                    labelLimit=150,
+                    labelFontSize=11,
+                    symbolSize=80,
+                    columnPadding=4,
+                    padding=0,
+                    offset=2
+                )
+            ),
+            tooltip=[
+                alt.Tooltip("time:N"),
+                alt.Tooltip("Indicator:N"),
+                alt.Tooltip("Value:Q", format=",.2f")
+            ]
+        )
+        
+        # BAR болон LINE-ийг хослуулах
+        if lines is not None:
+            lines = alt.layer(bars, lines)
+        else:
+            lines = bars
     
 
     # ======================
