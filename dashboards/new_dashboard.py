@@ -69,7 +69,6 @@ percentage_keywords = [
     "Inflation",
     "Forecast 1",
     "Deviation",
-    "Dynamic Factor Model",
     "GDP, Yoy",
     "Hodrick-Prescott"
     "Kalman",
