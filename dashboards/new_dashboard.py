@@ -466,6 +466,15 @@ with right:
             st.error("❌ Unknown frequency")
             st.stop()
         
+        # ===== 🔥 ХООСОН МӨРҮҮДИЙГ УСТГАХ (ӨГӨГДӨЛ ЭХЛЭХ ЦЭГЭЭС) =====
+        # Зөвхөн indicator-уудын хувьд бүх утга NaN байвал тэр мөрийг устгана
+        chart_df = chart_df.dropna(subset=valid_indicators, how='all').copy()
+        
+        # 🔒 HARD CHECK
+        if chart_df.empty:
+            st.warning("⚠️ No data available in selected time range")
+            st.stop()
+        
         # 🔒 HARD CHECK
         if chart_df["time_dt"].isna().all():
             st.error("❌ Failed to convert time → datetime")
