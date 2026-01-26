@@ -50,12 +50,8 @@ def read_sheet(sheet):
 # ======================
 percentage_keywords = [
     "inflation rate",
-    "unemployment rate",
-    "gdp growth",
-    "инфляцийн түвшин",
     "kalman",
     "production function",
-    "averagegdp",
     "yoy",
     "deviation",
     "household",
@@ -71,7 +67,10 @@ percentage_keywords = [
     "Band-Pass",
     "Forecast 2",
     "Inflation",
-    "Forecast 1"
+    "Forecast 1",
+    "Deviation",
+    "Dynamic Factor Model",
+    "GDP, Yoy"
 ]
 
 def is_percentage_indicator(name: str) -> bool:
