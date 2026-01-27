@@ -72,6 +72,7 @@ percentage_keywords = [
     "GDP, Yoy",
     "Hodrick-Prescott"
     "Kalman",
+    "Dynamic Factor Model",
     "Average"
 ]
 
