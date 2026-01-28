@@ -873,7 +873,6 @@ with right:
         return pd.DataFrame(stats)
 
 
-    
     # ======================
     # 📊 KPI CALCULATION (INDICATOR LEVEL)
     # ======================
@@ -883,8 +882,14 @@ with right:
         if col[0] == group
     ]
     
+    # 🔥 KPI ТООЦООЛОЛ: PERCENTAGE INDICATORS-Г 100-ААР ҮРЖҮҮЛСЭН DF
+    kpi_chart_df = chart_df.copy()
+    for ind in group_indicators:
+        if ind in kpi_chart_df.columns and is_percentage_indicator(ind):
+            kpi_chart_df[ind] = kpi_chart_df[ind] * 100
+    
     # 🔹 БҮХ indicator-уудын KPI-г НЭГ УДАА бодно
-    kpi_df = compute_group_kpis(chart_df, group_indicators)
+    kpi_df = compute_group_kpis(kpi_chart_df, group_indicators)
     
     # 🔹 KPI-д харуулах PRIMARY indicator
     primary_indicator = selected[0]
@@ -981,14 +986,10 @@ with right:
             return "N/A"
         
         if is_percentage_indicator(indicator):
-            # Хэрэв утга 1-ээс бага бол (0.052 гэх мэт), 100-аар үржүүлнэ
-            if abs(value) < 1:
-                return f"{value * 100:.2f}%"
-            # Хэрэв утга 1-ээс их бол (5.2 гэх мэт), шууд харуулна
-            else:
-                return f"{value:.2f}%"
+            return f"{value:.2f}%"  # ✅ АЛЬ ХЭДИЙН 100-ААР ҮРЖИГДСЭН
         else:
             return f"{value:,.2f}"
+
 
     # ===== KPI CARD HELPER
     def kpi_card(label, value, sublabel=None):
