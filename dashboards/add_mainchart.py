@@ -1082,7 +1082,7 @@ with right:
                 .round(2),
                 use_container_width=True
             )
-    
+
     # ======================
     # 📉 CHANGE SUMMARY — ENHANCED PRO STYLE
     # ======================
@@ -1101,36 +1101,36 @@ with right:
         st.caption("No indicators in this group.")
     else:
         cards_html = ""
-        
+    
         for ind in change_indicators:
             tmp = pd.DataFrame({
                 "x": series["time"],
                 ind: df_data[(group, ind)].values
             })
-            
+    
             if not tmp[ind].isna().all():
                 changes = compute_changes(tmp, ind, freq)
             else:
                 changes = None
-            
+    
             if changes:
                 # 🔹 Өнгөний логик (up=green, down=red)
                 def render_metric(label, value, indicator):
                     if value is None or (isinstance(value, float) and pd.isna(value)):
                         return f"<span class='metric-item metric-neutral'><span class='metric-label'>{label}</span><span class='metric-value'>N/A</span></span>"
-                
+    
                     is_pct = is_percentage_indicator(indicator)
                     cls = "metric-up" if value > 0 else "metric-down" if value < 0 else "metric-neutral"
                     arrow = "▲" if value > 0 else "▼" if value < 0 else "─"
                     unit = " pp" if is_pct else "%"
-                
+    
                     return (
                         f"<span class='metric-item {cls}'>"
                         f"<span class='metric-label'>{label}</span>"
                         f"<span class='metric-value'>{arrow} {value:.1f}{unit}</span>"
                         f"</span>"
                     )
-                
+    
                 cards_html += f"""
                 <div class="change-card-pro">
                     <div class="change-title-pro">{ind}</div>
@@ -1139,10 +1139,10 @@ with right:
                         {render_metric("Prev", changes.get("prev"), ind)}
                         {render_metric("YoY",  changes.get("yoy"),  ind)}
                         {render_metric("YTD",  changes.get("ytd"),  ind)}
-
                     </div>
                 </div>
                 """
+
         
         # ✅ ENHANCED STYLING
         if cards_html:
@@ -1669,10 +1669,6 @@ def group_chart(group_name):
             return final
     
     return lines
-
-
-
-
 
 for row in rows:
     cols = st.columns(NUM_COLS, gap="small")
