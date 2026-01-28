@@ -75,7 +75,7 @@ percentage_keywords = [
 
 def is_percentage_indicator(name: str) -> bool:
     name_l = name.lower()
-    return any(k.lower() in name_l for k in percentage_keywords)
+    return any(k in name_l for k in percentage_keywords)
 
 
 # =====================
@@ -210,49 +210,39 @@ def compute_changes(df, indicator, freq):
     # 🔒 VALUE SCALAR
     latest_val = float(s.iloc[-1][indicator])
     prev_val   = float(s.iloc[-2][indicator])
-    
+
     # ======================
-    # 🔹 CHANGE LOGIC (LEVEL vs PERCENTAGE)
+    # 🔹 PREV (QoQ / MoM)
     # ======================
-    is_pct = is_percentage_indicator(indicator)
-    
-    # ---- PREV (QoQ / MoM)
-    prev = None
-    if prev_val is not None:
-        if is_pct:
-            prev = latest_val - prev_val
-        else:
-            prev = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
-    
-    # ---- YoY
+    prev = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
+
+    # ======================
+    # 🔹 YoY (INDEX-BASED)
+    # ======================
     yoy = None
     if freq == "Quarterly" and len(s) >= 5:
         base_val = float(s.iloc[-5][indicator])
+        if base_val != 0:
+            yoy = (latest_val / base_val - 1) * 100
+
     elif freq == "Monthly" and len(s) >= 13:
         base_val = float(s.iloc[-13][indicator])
-    else:
-        base_val = None
-    
-    if base_val is not None:
-        if is_pct:
-            yoy = latest_val - base_val
-        else:
-            yoy = (latest_val / base_val - 1) * 100 if base_val != 0 else None
-    
-    # ---- YTD
+        if base_val != 0:
+            yoy = (latest_val / base_val - 1) * 100
+
+    # ======================
+    # 🔹 YTD
+    # ======================
     ytd = None
     try:
         current_year = s.iloc[-1]["x"][:4]
         year_data = s[s["x"].str.startswith(current_year)]
         if len(year_data) >= 1:
             year_start = float(year_data.iloc[0][indicator])
-            if is_pct:
-                ytd = latest_val - year_start
-            else:
-                ytd = (latest_val / year_start - 1) * 100 if year_start != 0 else None
+            if year_start != 0:
+                ytd = (latest_val / year_start - 1) * 100
     except:
         ytd = None
-
 
     return {
         "latest": latest_val,
@@ -556,7 +546,7 @@ with right:
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
         legend_config = alt.Legend(
             title=None,
-            orient='right',  
+            orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
             offset=0,
             padding=0,
             labelFontSize=11,
@@ -573,10 +563,10 @@ with right:
         # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
         zoom_brush = alt.selection_interval(
             encodings=['x'],
-            bind='scales',  
-            translate=True,  
-            zoom=True,       
-            empty=False      
+            bind='scales',  # Mouse wheel zoom + drag pan
+            translate=True,  # Зүүн баруун тийш гүйлгэх
+            zoom=True,       # Zoom идэвхжүүлэх
+            empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
         )
         # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
         # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
@@ -608,20 +598,7 @@ with right:
                   )
                 """ % str([k.lower() for k in percentage_keywords])
             )
-            .transform_calculate(
-                FormattedValue="""
-                datum.DisplayValue == null
-                ? 'N/A'
-                : (
-                    indexof(
-                        %s,
-                        lower(datum.Indicator)
-                    ) >= 0
-                    ? format(datum.DisplayValue, ',.2f') + '%%'
-                    : format(datum.DisplayValue, ',.2f')
-                )
-                """ % str([k.lower() for k in percentage_keywords])
-            )
+
             .encode(
                 x=alt.X(
                     "time_dt:T",
@@ -652,7 +629,7 @@ with right:
                         format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
                     ),
                     alt.Tooltip("Indicator:N"),
-                    alt.Tooltip("FormattedValue:N", title="Value")
+                    alt.Tooltip("DisplayValue:Q", format=",.2f", title="Value")
                 ]
             )
         )
@@ -1005,7 +982,7 @@ with right:
             return "N/A"
     
         if is_percentage_indicator(indicator):
-            return f"{value:.2%}"
+            return f"{value * 100:.2f}%"
         else:
             return f"{value:,.2f}"
 
@@ -1082,7 +1059,7 @@ with right:
                 .round(2),
                 use_container_width=True
             )
-
+    
     # ======================
     # 📉 CHANGE SUMMARY — ENHANCED PRO STYLE
     # ======================
@@ -1101,49 +1078,44 @@ with right:
         st.caption("No indicators in this group.")
     else:
         cards_html = ""
-    
+        
         for ind in change_indicators:
             tmp = pd.DataFrame({
                 "x": series["time"],
                 ind: df_data[(group, ind)].values
             })
-    
+            
             if not tmp[ind].isna().all():
                 changes = compute_changes(tmp, ind, freq)
             else:
                 changes = None
-    
+            
             if changes:
                 # 🔹 Өнгөний логик (up=green, down=red)
-                def render_metric(label, value, indicator):
+                def render_metric(label, value):
                     if value is None or (isinstance(value, float) and pd.isna(value)):
                         return f"<span class='metric-item metric-neutral'><span class='metric-label'>{label}</span><span class='metric-value'>N/A</span></span>"
-                
-                    is_pct = is_percentage_indicator(indicator)
+                    
                     cls = "metric-up" if value > 0 else "metric-down" if value < 0 else "metric-neutral"
                     arrow = "▲" if value > 0 else "▼" if value < 0 else "─"
-                    unit = " pp" if is_pct else "%"
-                
+                    
                     return (
                         f"<span class='metric-item {cls}'>"
                         f"<span class='metric-label'>{label}</span>"
-                        f"<span class='metric-value'>{arrow} {value:.1f}{unit}</span>"
+                        f"<span class='metric-value'>{arrow} {value:.1f}%</span>"
                         f"</span>"
                     )
-
-    
+                
                 cards_html += f"""
                 <div class="change-card-pro">
                     <div class="change-title-pro">{ind}</div>
                     <div class="change-metrics-pro">
                         {render_metric("YoY", changes.get("yoy"))}
-                        {render_metric("Prev", changes.get("prev"), ind)}
-                        {render_metric("YoY",  changes.get("yoy"),  ind)}
-                        {render_metric("YTD",  changes.get("ytd"),  ind)}
+                        {render_metric("YTD", changes.get("ytd"))}
+                        {render_metric("Prev", changes.get("prev"))}
                     </div>
                 </div>
                 """
-
         
         # ✅ ENHANCED STYLING
         if cards_html:
@@ -1670,6 +1642,10 @@ def group_chart(group_name):
             return final
     
     return lines
+
+
+
+
 
 for row in rows:
     cols = st.columns(NUM_COLS, gap="small")
