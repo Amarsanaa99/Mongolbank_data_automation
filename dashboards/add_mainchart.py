@@ -608,7 +608,20 @@ with right:
                   )
                 """ % str([k.lower() for k in percentage_keywords])
             )
-
+            .transform_calculate(
+                FormattedValue="""
+                datum.DisplayValue == null
+                ? 'N/A'
+                : (
+                    indexof(
+                        %s,
+                        lower(datum.Indicator)
+                    ) >= 0
+                    ? format(datum.DisplayValue, ',.2f') + '%%'
+                    : format(datum.DisplayValue, ',.2f')
+                )
+                """ % str([k.lower() for k in percentage_keywords])
+            )
             .encode(
                 x=alt.X(
                     "time_dt:T",
@@ -639,10 +652,8 @@ with right:
                         format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
                     ),
                     alt.Tooltip("Indicator:N"),
-                    alt.Tooltip("DisplayValue:Q", format=",.2f", title="Value")
+                    alt.Tooltip("FormattedValue:N", title="Value")  # ✅ STRING төрөл ашиглах
                 ]
-            )
-        )
 
         
         # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
