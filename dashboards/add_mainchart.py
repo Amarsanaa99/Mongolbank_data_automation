@@ -210,28 +210,46 @@ def compute_changes(df, indicator, freq):
     # 🔒 VALUE SCALAR
     latest_val = float(s.iloc[-1][indicator])
     prev_val   = float(s.iloc[-2][indicator])
+    
+    # 🔍 Percentage индикатор мөн эсэхийг шалгах
+    is_percentage = is_percentage_indicator(indicator)
 
     # ======================
-    # 🔹 PREV (QoQ / MoM)
+    # 🔹 PREV (QoQ / MoM) - PERCENTAGE-ийн хувьд ялгаатай тооцоо
     # ======================
-    prev = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
+    if is_percentage:
+        # Percentage утгын хувьд: хамгийн сүүлийн утга - өмнөх утга
+        prev = (latest_val - prev_val) if prev_val is not None else None
+    else:
+        # Бусад утгын хувьд: хувиар тооцоолно
+        prev = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
 
     # ======================
-    # 🔹 YoY (INDEX-BASED)
+    # 🔹 YoY (INDEX-BASED) - PERCENTAGE-ийн хувьд ялгаатай тооцоо
     # ======================
     yoy = None
     if freq == "Quarterly" and len(s) >= 5:
         base_val = float(s.iloc[-5][indicator])
-        if base_val != 0:
-            yoy = (latest_val / base_val - 1) * 100
+        if base_val is not None:
+            if is_percentage:
+                # Percentage утгын хувьд: хамгийн сүүлийн утга - жилийн өмнөх утга
+                yoy = (latest_val - base_val)
+            else:
+                # Бусад утгын хувьд: хувиар тооцоолно
+                yoy = (latest_val / base_val - 1) * 100 if base_val != 0 else None
 
     elif freq == "Monthly" and len(s) >= 13:
         base_val = float(s.iloc[-13][indicator])
-        if base_val != 0:
-            yoy = (latest_val / base_val - 1) * 100
+        if base_val is not None:
+            if is_percentage:
+                # Percentage утгын хувьд: хамгийн сүүлийн утга - жилийн өмнөх утга
+                yoy = (latest_val - base_val)
+            else:
+                # Бусад утгын хувьд: хувиар тооцоолно
+                yoy = (latest_val / base_val - 1) * 100 if base_val != 0 else None
 
     # ======================
-    # 🔹 YTD
+    # 🔹 YTD - PERCENTAGE-ийн хувьд ялгаатай тооцоо
     # ======================
     ytd = None
     try:
@@ -239,8 +257,13 @@ def compute_changes(df, indicator, freq):
         year_data = s[s["x"].str.startswith(current_year)]
         if len(year_data) >= 1:
             year_start = float(year_data.iloc[0][indicator])
-            if year_start != 0:
-                ytd = (latest_val / year_start - 1) * 100
+            if year_start is not None:
+                if is_percentage:
+                    # Percentage утгын хувьд: хамгийн сүүлийн утга - жилийн эхний утга
+                    ytd = (latest_val - year_start)
+                else:
+                    # Бусад утгын хувьд: хувиар тооцоолно
+                    ytd = (latest_val / year_start - 1) * 100 if year_start != 0 else None
     except:
         ytd = None
 
@@ -1647,9 +1670,6 @@ def group_chart(group_name):
             return final
     
     return lines
-
-
-
 
 
 for row in rows:
