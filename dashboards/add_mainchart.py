@@ -5,7 +5,7 @@ from pathlib import Path
 
 # ===================
 # PAGE
-# ==================
+# ===================
 st.set_page_config("Dashboard", layout="wide")
 st.title("🏦 Dashboard")
 st.caption("Macro Indicators")
@@ -72,6 +72,7 @@ percentage_keywords = [
     "GDP, Yoy",
     "Hodrick-Prescott"
     "Kalman",
+    "Dynamic Factor Model",
     "Average"
 ]
 
@@ -617,7 +618,7 @@ with right:
                         domain=True,
                         labelFontSize=11,
                         offset=5,
-                        format=",.2"
+                        format=",.2f"
                     )
                 ),
                 color=alt.Color(
