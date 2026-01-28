@@ -982,7 +982,7 @@ with right:
             return "N/A"
     
         if is_percentage_indicator(indicator):
-            return f"{value:.2f}%"
+            return f"{value*100:.2f}%"
         else:
             return f"{value:,.2f}"
 
