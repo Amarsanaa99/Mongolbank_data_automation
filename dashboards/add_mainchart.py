@@ -5,7 +5,7 @@ from pathlib import Path
 
 # ==================
 # PAGE
-# ===================
+# ==================
 st.set_page_config("Dashboard", layout="wide")
 st.title("🏦 Dashboard")
 st.caption("Macro Indicators")
@@ -250,7 +250,6 @@ def compute_changes(df, indicator, freq):
         "yoy": yoy,
         "ytd": ytd
     }
-
 
 def render_change(label, value):
     if value is None or (isinstance(value, float) and pd.isna(value)):
@@ -980,9 +979,14 @@ with right:
     def format_kpi(indicator, value):
         if value is None or pd.isna(value):
             return "N/A"
-    
+        
         if is_percentage_indicator(indicator):
-            return f"{value * 100:.2f}%"
+            # Хэрэв утга 1-ээс бага бол (0.052 гэх мэт), 100-аар үржүүлнэ
+            if abs(value) < 1:
+                return f"{value * 100:.2f}%"
+            # Хэрэв утга 1-ээс их бол (5.2 гэх мэт), шууд харуулна
+            else:
+                return f"{value:.2f}%"
         else:
             return f"{value:,.2f}"
 
