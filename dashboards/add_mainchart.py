@@ -629,6 +629,7 @@ with right:
                     axis=x_axis,
                     scale=alt.Scale(zero=False, domain=mini_brush)
                 ),
+            )
                 y=alt.Y(
                     "DisplayValue:Q",
                     title=None,
