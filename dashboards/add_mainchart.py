@@ -54,7 +54,7 @@ percentage_keywords = [
     "production function",
     "yoy",
     "deviation",
-    "household",
+    "household loan",
     "corporate loan",
     "loan supply",
     "ECPI",
