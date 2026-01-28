@@ -75,7 +75,7 @@ percentage_keywords = [
 
 def is_percentage_indicator(name: str) -> bool:
     name_l = name.lower()
-    return any(k in name_l for k in percentage_keywords)
+    return any(k.lower() in name_l for k in percentage_keywords)
 
 
 # =====================
@@ -1102,17 +1102,19 @@ with right:
             
             if changes:
                 # 🔹 Өнгөний логик (up=green, down=red)
-                def render_metric(label, value):
+                def render_metric(label, value, indicator):
                     if value is None or (isinstance(value, float) and pd.isna(value)):
                         return f"<span class='metric-item metric-neutral'><span class='metric-label'>{label}</span><span class='metric-value'>N/A</span></span>"
-                    
+                
+                    is_pct = is_percentage_indicator(indicator)
                     cls = "metric-up" if value > 0 else "metric-down" if value < 0 else "metric-neutral"
                     arrow = "▲" if value > 0 else "▼" if value < 0 else "─"
-                    
+                    unit = " pp" if is_pct else "%"
+                
                     return (
                         f"<span class='metric-item {cls}'>"
                         f"<span class='metric-label'>{label}</span>"
-                        f"<span class='metric-value'>{arrow} {value:.1f}%</span>"
+                        f"<span class='metric-value'>{arrow} {value:.1f}{unit}</span>"
                         f"</span>"
                     )
                 
@@ -1121,8 +1123,10 @@ with right:
                     <div class="change-title-pro">{ind}</div>
                     <div class="change-metrics-pro">
                         {render_metric("YoY", changes.get("yoy"))}
-                        {render_metric("YTD", changes.get("ytd"))}
-                        {render_metric("Prev", changes.get("prev"))}
+                        {render_metric("Prev", changes.get("prev"), ind)}
+                        {render_metric("YoY",  changes.get("yoy"),  ind)}
+                        {render_metric("YTD",  changes.get("ytd"),  ind)}
+
                     </div>
                 </div>
                 """
