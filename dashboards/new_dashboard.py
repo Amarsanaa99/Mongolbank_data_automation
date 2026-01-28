@@ -63,7 +63,7 @@ percentage_keywords = [
     "Hodrick-Prescott",
     "Kalman",
     "Production function",
-    "Average"
+    "Average",
     "GDP, Yoy",
     "Dynamic Factor Model",
     "Deviation",
