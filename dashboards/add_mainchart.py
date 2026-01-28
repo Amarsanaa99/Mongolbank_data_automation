@@ -666,6 +666,19 @@ with right:
             clear="mouseout"
         )
         
+        # 🔥 CREDIT SUPPLY DETECTION
+        is_credit_supply = (group == "Credit supply" and freq == "Quarterly")
+        
+        household_bar = None
+        corporate_bar = None
+        household_line = None
+        corporate_line = None
+        
+        if is_credit_supply:
+            household_bar = next((ind for ind in valid_indicators if "issued" in ind.lower() and "household" in ind.lower()), None)
+            corporate_bar = next((ind for ind in valid_indicators if "issued" in ind.lower() and "corporate" in ind.lower()), None)
+            household_line = next((ind for ind in valid_indicators if "household" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
+            corporate_line = next((ind for ind in valid_indicators if "corporate" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
         # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
         line = (
             base
@@ -738,22 +751,134 @@ with right:
         )
 
         
-        # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
-        # 🔍 FRED-STYLE ZOOM (MAIN CHART)
-        main_chart = (
-            alt.layer(
-                line,
-                vline,
-                points,
-                last_point
+        # ===== 🔟 ҮНДСЭН ГРАФИК =====
+        if is_credit_supply and all([household_bar, corporate_bar, household_line, corporate_line]):
+            # 🔥 CREDIT SUPPLY SPECIALIZED CHART
+            
+            # 1️⃣ STACKED BAR CHART
+            bars = (
+                alt.Chart(chart_df)
+                .transform_fold(
+                    [household_bar, corporate_bar],
+                    as_=["Indicator", "Value"]
+                )
+                .mark_bar(
+                    filled=False,
+                    stroke="#000000",
+                    strokeWidth=2
+                )
+                .encode(
+                    x=alt.X(
+                        "time_dt:T",
+                        title=None,
+                        axis=x_axis,
+                        scale=alt.Scale(zero=False, domain=mini_brush)
+                    ),
+                    y=alt.Y(
+                        "Value:Q",
+                        title=None,
+                        stack="zero",
+                        axis=alt.Axis(
+                            grid=True,
+                            gridOpacity=0.25,
+                            domain=True,
+                            labelFontSize=11,
+                            offset=5,
+                            orient="left"
+                        )
+                    ),
+                    stroke=alt.Stroke(
+                        "Indicator:N",
+                        scale=alt.Scale(
+                            domain=[household_bar, corporate_bar],
+                            range=["#fbbf24", "#3b82f6"]
+                        ),
+                        legend=None
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time_dt:T", title="Time", format="%Y-Q%q"),
+                        alt.Tooltip("Indicator:N"),
+                        alt.Tooltip("Value:Q", format=",.2f", title="Value")
+                    ]
+                )
             )
-            .properties(
-                height=400,
-                width=850
+            
+            # 2️⃣ HOUSEHOLD LINE (yellow)
+            line_household = (
+                alt.Chart(chart_df)
+                .mark_line(
+                    strokeWidth=2.5,
+                    color="#fbbf24",
+                    interpolate="monotone"
+                )
+                .encode(
+                    x=alt.X("time_dt:T", title=None, axis=None),
+                    y=alt.Y(
+                        f"{household_line}:Q",
+                        title=None,
+                        axis=alt.Axis(
+                            orient="right",
+                            grid=False,
+                            labelColor="#fbbf24",
+                            labelFontSize=11
+                        )
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time_dt:T", title="Time", format="%Y-Q%q"),
+                        alt.Tooltip(f"{household_line}:Q", format=",.2f")
+                    ]
+                )
             )
-            .add_params(zoom_brush)   
-        )
-        
+            
+            # 3️⃣ CORPORATE LINE (blue dashed)
+            line_corporate = (
+                alt.Chart(chart_df)
+                .mark_line(
+                    strokeWidth=2.5,
+                    strokeDash=[5, 5],
+                    color="#3b82f6",
+                    interpolate="monotone"
+                )
+                .encode(
+                    x=alt.X("time_dt:T", title=None, axis=None),
+                    y=alt.Y(
+                        f"{corporate_line}:Q",
+                        title=None,
+                        axis=None
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time_dt:T", title="Time", format="%Y-Q%q"),
+                        alt.Tooltip(f"{corporate_line}:Q", format=",.2f")
+                    ]
+                )
+            )
+            
+            # 4️⃣ COMBINE ALL LAYERS
+            main_chart = (
+                alt.layer(bars, line_household, line_corporate)
+                .resolve_scale(y='independent')
+                .properties(
+                    height=400,
+                    width=850
+                )
+                .add_params(zoom_brush)
+            )
+            
+        else:
+            # 🔍 STANDARD LINE CHART (for all other groups)
+            main_chart = (
+                alt.layer(
+                    line,
+                    vline,
+                    points,
+                    last_point
+                )
+                .properties(
+                    height=400,
+                    width=850
+                )
+                .add_params(zoom_brush)
+            )
         # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
         mini_line = (
             alt.Chart(chart_df)
@@ -811,8 +936,42 @@ with right:
             # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
             .add_params(mini_brush)
         )
-        
-        
+
+        if is_credit_supply and all([household_bar, corporate_bar, household_line, corporate_line]):
+            # Custom legend for Credit Supply
+            all_inds = [household_bar, corporate_bar, household_line, corporate_line]
+            legend_chart = (
+                alt.Chart(
+                    pd.DataFrame({
+                        "Indicator": all_inds,
+                        "Order": [1, 2, 3, 4]
+                    })
+                )
+                .mark_point(size=0, opacity=0)
+                .encode(
+                    color=alt.Color(
+                        "Indicator:N",
+                        scale=alt.Scale(
+                            domain=all_inds,
+                            range=["#fbbf24", "#3b82f6", "#fbbf24", "#3b82f6"]
+                        ),
+                        legend=alt.Legend(
+                            orient="bottom",
+                            direction="horizontal",
+                            title=None,
+                            labelLimit=200,
+                            labelFontSize=10,
+                            symbolSize=80,
+                            symbolType="square",
+                            columnPadding=8,
+                            padding=0,
+                            offset=2
+                        )
+                    )
+                )
+            )
+            
+            main_chart = alt.layer(main_chart, legend_chart)
         # ===== 1️⃣2️⃣ НЭГТГЭСЭН ГРАФИК =====
         final_chart = (
             alt.vconcat(
