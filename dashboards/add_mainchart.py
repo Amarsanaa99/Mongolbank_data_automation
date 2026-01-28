@@ -210,39 +210,49 @@ def compute_changes(df, indicator, freq):
     # 🔒 VALUE SCALAR
     latest_val = float(s.iloc[-1][indicator])
     prev_val   = float(s.iloc[-2][indicator])
-
+    
     # ======================
-    # 🔹 PREV (QoQ / MoM)
+    # 🔹 CHANGE LOGIC (LEVEL vs PERCENTAGE)
     # ======================
-    prev = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
-
-    # ======================
-    # 🔹 YoY (INDEX-BASED)
-    # ======================
+    is_pct = is_percentage_indicator(indicator)
+    
+    # ---- PREV (QoQ / MoM)
+    prev = None
+    if prev_val is not None:
+        if is_pct:
+            prev = latest_val - prev_val
+        else:
+            prev = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
+    
+    # ---- YoY
     yoy = None
     if freq == "Quarterly" and len(s) >= 5:
         base_val = float(s.iloc[-5][indicator])
-        if base_val != 0:
-            yoy = (latest_val / base_val - 1) * 100
-
     elif freq == "Monthly" and len(s) >= 13:
         base_val = float(s.iloc[-13][indicator])
-        if base_val != 0:
-            yoy = (latest_val / base_val - 1) * 100
-
-    # ======================
-    # 🔹 YTD
-    # ======================
+    else:
+        base_val = None
+    
+    if base_val is not None:
+        if is_pct:
+            yoy = latest_val - base_val
+        else:
+            yoy = (latest_val / base_val - 1) * 100 if base_val != 0 else None
+    
+    # ---- YTD
     ytd = None
     try:
         current_year = s.iloc[-1]["x"][:4]
         year_data = s[s["x"].str.startswith(current_year)]
         if len(year_data) >= 1:
             year_start = float(year_data.iloc[0][indicator])
-            if year_start != 0:
-                ytd = (latest_val / year_start - 1) * 100
+            if is_pct:
+                ytd = latest_val - year_start
+            else:
+                ytd = (latest_val / year_start - 1) * 100 if year_start != 0 else None
     except:
         ytd = None
+
 
     return {
         "latest": latest_val,
@@ -546,7 +556,7 @@ with right:
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
         legend_config = alt.Legend(
             title=None,
-            orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
+            orient='right',  
             offset=0,
             padding=0,
             labelFontSize=11,
@@ -563,10 +573,10 @@ with right:
         # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
         zoom_brush = alt.selection_interval(
             encodings=['x'],
-            bind='scales',  # Mouse wheel zoom + drag pan
-            translate=True,  # Зүүн баруун тийш гүйлгэх
-            zoom=True,       # Zoom идэвхжүүлэх
-            empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
+            bind='scales',  
+            translate=True,  
+            zoom=True,       
+            empty=False      
         )
         # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
         # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
