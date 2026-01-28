@@ -1118,18 +1118,19 @@ with right:
                 def render_metric(label, value, indicator):
                     if value is None or (isinstance(value, float) and pd.isna(value)):
                         return f"<span class='metric-item metric-neutral'><span class='metric-label'>{label}</span><span class='metric-value'>N/A</span></span>"
-    
+                
                     is_pct = is_percentage_indicator(indicator)
                     cls = "metric-up" if value > 0 else "metric-down" if value < 0 else "metric-neutral"
                     arrow = "▲" if value > 0 else "▼" if value < 0 else "─"
                     unit = " pp" if is_pct else "%"
-    
+                
                     return (
                         f"<span class='metric-item {cls}'>"
                         f"<span class='metric-label'>{label}</span>"
                         f"<span class='metric-value'>{arrow} {value:.1f}{unit}</span>"
                         f"</span>"
                     )
+
     
                 cards_html += f"""
                 <div class="change-card-pro">
