@@ -628,7 +628,6 @@ with right:
                     title=None,
                     axis=x_axis,
                     scale=alt.Scale(zero=False, domain=mini_brush)
-                    )
                 ),
                 y=alt.Y(
                     "DisplayValue:Q",
@@ -653,8 +652,10 @@ with right:
                         format="%Y-%m" if freq == "Monthly" else "%Y-Q%q"
                     ),
                     alt.Tooltip("Indicator:N"),
-                    alt.Tooltip("FormattedValue:N", title="Value")  # ✅ STRING төрөл ашиглах
+                    alt.Tooltip("FormattedValue:N", title="Value")
                 ]
+            )
+        )
 
         
         # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
