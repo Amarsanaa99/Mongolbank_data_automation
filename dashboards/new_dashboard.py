@@ -3,9 +3,9 @@ import pandas as pd
 import streamlit.components.v1 as components
 from pathlib import Path
 
-# ===================
+# ==================
 # PAGE
-# ===================
+# ==================
 st.set_page_config("Dashboard", layout="wide")
 st.title("🏦 Dashboard")
 st.caption("Macro Indicators")
@@ -210,28 +210,46 @@ def compute_changes(df, indicator, freq):
     # 🔒 VALUE SCALAR
     latest_val = float(s.iloc[-1][indicator])
     prev_val   = float(s.iloc[-2][indicator])
+    
+    # 🔍 Percentage индикатор мөн эсэхийг шалгах
+    is_percentage = is_percentage_indicator(indicator)
 
     # ======================
-    # 🔹 PREV (QoQ / MoM)
+    # 🔹 PREV (QoQ / MoM) - PERCENTAGE-ийн хувьд ялгаатай тооцоо
     # ======================
-    prev = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
+    if is_percentage:
+        # Percentage утгын хувьд: хамгийн сүүлийн утга - өмнөх утга
+        prev = (latest_val - prev_val) if prev_val is not None else None
+    else:
+        # Бусад утгын хувьд: хувиар тооцоолно
+        prev = (latest_val / prev_val - 1) * 100 if prev_val != 0 else None
 
     # ======================
-    # 🔹 YoY (INDEX-BASED)
+    # 🔹 YoY (INDEX-BASED) - PERCENTAGE-ийн хувьд ялгаатай тооцоо
     # ======================
     yoy = None
     if freq == "Quarterly" and len(s) >= 5:
         base_val = float(s.iloc[-5][indicator])
-        if base_val != 0:
-            yoy = (latest_val / base_val - 1) * 100
+        if base_val is not None:
+            if is_percentage:
+                # Percentage утгын хувьд: хамгийн сүүлийн утга - жилийн өмнөх утга
+                yoy = (latest_val - base_val)
+            else:
+                # Бусад утгын хувьд: хувиар тооцоолно
+                yoy = (latest_val / base_val - 1) * 100 if base_val != 0 else None
 
     elif freq == "Monthly" and len(s) >= 13:
         base_val = float(s.iloc[-13][indicator])
-        if base_val != 0:
-            yoy = (latest_val / base_val - 1) * 100
+        if base_val is not None:
+            if is_percentage:
+                # Percentage утгын хувьд: хамгийн сүүлийн утга - жилийн өмнөх утга
+                yoy = (latest_val - base_val)
+            else:
+                # Бусад утгын хувьд: хувиар тооцоолно
+                yoy = (latest_val / base_val - 1) * 100 if base_val != 0 else None
 
     # ======================
-    # 🔹 YTD
+    # 🔹 YTD - PERCENTAGE-ийн хувьд ялгаатай тооцоо
     # ======================
     ytd = None
     try:
@@ -239,8 +257,13 @@ def compute_changes(df, indicator, freq):
         year_data = s[s["x"].str.startswith(current_year)]
         if len(year_data) >= 1:
             year_start = float(year_data.iloc[0][indicator])
-            if year_start != 0:
-                ytd = (latest_val / year_start - 1) * 100
+            if year_start is not None:
+                if is_percentage:
+                    # Percentage утгын хувьд: хамгийн сүүлийн утга - жилийн эхний утга
+                    ytd = (latest_val - year_start)
+                else:
+                    # Бусад утгын хувьд: хувиар тооцоолно
+                    ytd = (latest_val / year_start - 1) * 100 if year_start != 0 else None
     except:
         ytd = None
 
@@ -250,7 +273,6 @@ def compute_changes(df, indicator, freq):
         "yoy": yoy,
         "ytd": ytd
     }
-
 
 def render_change(label, value):
     if value is None or (isinstance(value, float) and pd.isna(value)):
@@ -644,6 +666,19 @@ with right:
             clear="mouseout"
         )
         
+        # 🔥 CREDIT SUPPLY DETECTION
+        is_credit_supply = (group == "Credit supply" and freq == "Quarterly")
+        
+        household_bar = None
+        corporate_bar = None
+        household_line = None
+        corporate_line = None
+        
+        if is_credit_supply:
+            household_bar = next((ind for ind in valid_indicators if "issued" in ind.lower() and "household" in ind.lower()), None)
+            corporate_bar = next((ind for ind in valid_indicators if "issued" in ind.lower() and "corporate" in ind.lower()), None)
+            household_line = next((ind for ind in valid_indicators if "household" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
+            corporate_line = next((ind for ind in valid_indicators if "corporate" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
         # ===== 9️⃣ ГРАФИК ЭЛЕМЕНТҮҮД - ЯГ ӨМНӨХ ШИГ =====
         line = (
             base
@@ -716,22 +751,134 @@ with right:
         )
 
         
-        # ===== 🔟 ҮНДСЭН ГРАФИК - zoom_brush ашиглах =====
-        # 🔍 FRED-STYLE ZOOM (MAIN CHART)
-        main_chart = (
-            alt.layer(
-                line,
-                vline,
-                points,
-                last_point
+        # ===== 🔟 ҮНДСЭН ГРАФИК =====
+        if is_credit_supply and all([household_bar, corporate_bar, household_line, corporate_line]):
+            # 🔥 CREDIT SUPPLY SPECIALIZED CHART
+            
+            # 1️⃣ STACKED BAR CHART
+            bars = (
+                alt.Chart(chart_df)
+                .transform_fold(
+                    [household_bar, corporate_bar],
+                    as_=["Indicator", "Value"]
+                )
+                .mark_bar(
+                    filled=False,
+                    stroke="#000000",
+                    strokeWidth=2
+                )
+                .encode(
+                    x=alt.X(
+                        "time_dt:T",
+                        title=None,
+                        axis=x_axis,
+                        scale=alt.Scale(zero=False, domain=mini_brush)
+                    ),
+                    y=alt.Y(
+                        "Value:Q",
+                        title=None,
+                        stack="zero",
+                        axis=alt.Axis(
+                            grid=True,
+                            gridOpacity=0.25,
+                            domain=True,
+                            labelFontSize=11,
+                            offset=5,
+                            orient="left"
+                        )
+                    ),
+                    stroke=alt.Stroke(
+                        "Indicator:N",
+                        scale=alt.Scale(
+                            domain=[household_bar, corporate_bar],
+                            range=["#fbbf24", "#3b82f6"]
+                        ),
+                        legend=None
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time_dt:T", title="Time", format="%Y-Q%q"),
+                        alt.Tooltip("Indicator:N"),
+                        alt.Tooltip("Value:Q", format=",.2f", title="Value")
+                    ]
+                )
             )
-            .properties(
-                height=400,
-                width=850
+            
+            # 2️⃣ HOUSEHOLD LINE (yellow)
+            line_household = (
+                alt.Chart(chart_df)
+                .mark_line(
+                    strokeWidth=2.5,
+                    color="#fbbf24",
+                    interpolate="monotone"
+                )
+                .encode(
+                    x=alt.X("time_dt:T", title=None, axis=None),
+                    y=alt.Y(
+                        f"{household_line}:Q",
+                        title=None,
+                        axis=alt.Axis(
+                            orient="right",
+                            grid=False,
+                            labelColor="#fbbf24",
+                            labelFontSize=11
+                        )
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time_dt:T", title="Time", format="%Y-Q%q"),
+                        alt.Tooltip(f"{household_line}:Q", format=",.2f")
+                    ]
+                )
             )
-            .add_params(zoom_brush)   
-        )
-        
+            
+            # 3️⃣ CORPORATE LINE (blue dashed)
+            line_corporate = (
+                alt.Chart(chart_df)
+                .mark_line(
+                    strokeWidth=2.5,
+                    strokeDash=[5, 5],
+                    color="#3b82f6",
+                    interpolate="monotone"
+                )
+                .encode(
+                    x=alt.X("time_dt:T", title=None, axis=None),
+                    y=alt.Y(
+                        f"{corporate_line}:Q",
+                        title=None,
+                        axis=None
+                    ),
+                    tooltip=[
+                        alt.Tooltip("time_dt:T", title="Time", format="%Y-Q%q"),
+                        alt.Tooltip(f"{corporate_line}:Q", format=",.2f")
+                    ]
+                )
+            )
+            
+            # 4️⃣ COMBINE ALL LAYERS
+            main_chart = (
+                alt.layer(bars, line_household, line_corporate)
+                .resolve_scale(y='independent')
+                .properties(
+                    height=400,
+                    width=850
+                )
+                .add_params(zoom_brush)
+            )
+            
+        else:
+            # 🔍 STANDARD LINE CHART (for all other groups)
+            main_chart = (
+                alt.layer(
+                    line,
+                    vline,
+                    points,
+                    last_point
+                )
+                .properties(
+                    height=400,
+                    width=850
+                )
+                .add_params(zoom_brush)
+            )
         # MINI CHART ИЙН ШУГАМ - ЯМАР Ч ZOOM, PAN ХИЙХГҮЙ
         mini_line = (
             alt.Chart(chart_df)
@@ -789,8 +936,42 @@ with right:
             # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
             .add_params(mini_brush)
         )
-        
-        
+
+        if is_credit_supply and all([household_bar, corporate_bar, household_line, corporate_line]):
+            # Custom legend for Credit Supply
+            all_inds = [household_bar, corporate_bar, household_line, corporate_line]
+            legend_chart = (
+                alt.Chart(
+                    pd.DataFrame({
+                        "Indicator": all_inds,
+                        "Order": [1, 2, 3, 4]
+                    })
+                )
+                .mark_point(size=0, opacity=0)
+                .encode(
+                    color=alt.Color(
+                        "Indicator:N",
+                        scale=alt.Scale(
+                            domain=all_inds,
+                            range=["#fbbf24", "#3b82f6", "#fbbf24", "#3b82f6"]
+                        ),
+                        legend=alt.Legend(
+                            orient="bottom",
+                            direction="horizontal",
+                            title=None,
+                            labelLimit=200,
+                            labelFontSize=10,
+                            symbolSize=80,
+                            symbolType="square",
+                            columnPadding=8,
+                            padding=0,
+                            offset=2
+                        )
+                    )
+                )
+            )
+            
+            main_chart = alt.layer(main_chart, legend_chart)
         # ===== 1️⃣2️⃣ НЭГТГЭСЭН ГРАФИК =====
         final_chart = (
             alt.vconcat(
@@ -874,7 +1055,6 @@ with right:
         return pd.DataFrame(stats)
 
 
-    
     # ======================
     # 📊 KPI CALCULATION (INDICATOR LEVEL)
     # ======================
@@ -884,8 +1064,14 @@ with right:
         if col[0] == group
     ]
     
+    # 🔥 KPI ТООЦООЛОЛ: PERCENTAGE INDICATORS-Г 100-ААР ҮРЖҮҮЛСЭН DF
+    kpi_chart_df = chart_df.copy()
+    for ind in group_indicators:
+        if ind in kpi_chart_df.columns and is_percentage_indicator(ind):
+            kpi_chart_df[ind] = kpi_chart_df[ind] * 100
+    
     # 🔹 БҮХ indicator-уудын KPI-г НЭГ УДАА бодно
-    kpi_df = compute_group_kpis(chart_df, group_indicators)
+    kpi_df = compute_group_kpis(kpi_chart_df, group_indicators)
     
     # 🔹 KPI-д харуулах PRIMARY indicator
     primary_indicator = selected[0]
@@ -980,11 +1166,12 @@ with right:
     def format_kpi(indicator, value):
         if value is None or pd.isna(value):
             return "N/A"
-    
+        
         if is_percentage_indicator(indicator):
-            return f"{value * 100:.2f}%"
+            return f"{value:.2f}%"  # ✅ АЛЬ ХЭДИЙН 100-ААР ҮРЖИГДСЭН
         else:
             return f"{value:,.2f}"
+
 
     # ===== KPI CARD HELPER
     def kpi_card(label, value, sublabel=None):
@@ -1642,9 +1829,6 @@ def group_chart(group_name):
             return final
     
     return lines
-
-
-
 
 
 for row in rows:
