@@ -568,7 +568,7 @@ with right:
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
         legend_config = alt.Legend(
             title=None,
-            orient='bottom',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
+            orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
             offset=0,
             padding=0,
             labelFontSize=11,
