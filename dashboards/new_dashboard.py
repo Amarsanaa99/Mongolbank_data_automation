@@ -858,8 +858,7 @@ with right:
                 alt.layer(bars, line_household, line_corporate)
                 .resolve_scale(y='independent')
                 .properties(
-                    height=400,
-                    width=750
+                    height=400
                 )
                 .add_params(zoom_brush)
             )
@@ -874,8 +873,7 @@ with right:
                     last_point
                 )
                 .properties(
-                    height=400,
-                    width=850
+                    height=400
                 )
                 .add_params(zoom_brush)
             )
@@ -930,8 +928,7 @@ with right:
                 mini_window
             )
             .properties(
-                height=60,
-                width=750
+                height=60
             )
             # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
             .add_params(mini_brush)
