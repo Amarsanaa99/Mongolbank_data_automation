@@ -569,17 +569,17 @@ with right:
         legend_config = alt.Legend(
             title=None,
             orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
-            offset=0,
-            padding=0,
+            offset=5,
+            padding=8,
             labelFontSize=11,
             symbolType="stroke",
             symbolSize=80,
-            direction='horizontal',
+            direction='vertical',
             # ✅ ЯГ ӨМНӨХ ШИГЭЭ ДЭВСГЭРГҮЙ, ЦЭВЭР
             fillColor=None,
             strokeColor=None,
             cornerRadius=0,
-            labelLimit=200
+            labelLimit=160
         )
         # ===== 6️⃣ SHARED BRUSH/ZOOM SELECTION =====
         # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
@@ -631,13 +631,16 @@ with right:
                 y=alt.Y(
                     "DisplayValue:Q",
                     title=None,
+                    scale=alt.Scale(zero=False),
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
                         domain=True,
                         labelFontSize=11,
                         offset=5,
-                        format=",.2f"
+                        format=",.2f",
+                        labels=True,
+                        ticks=True
                     )
                 ),
                 color=alt.Color(
@@ -986,7 +989,7 @@ with right:
             )
             .properties(
                 # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
-                padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
+                padding={"left": 0, "top": 20, "right": 10, "bottom": 20}
             )
             .configure_view(
                 strokeWidth=0,
