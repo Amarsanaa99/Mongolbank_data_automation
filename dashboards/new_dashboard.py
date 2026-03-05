@@ -569,8 +569,8 @@ with right:
         legend_config = alt.Legend(
             title=None,
             orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
-            offset=5,
-            padding=8,
+            offset=0,
+            padding=0,
             labelFontSize=11,
             symbolType="stroke",
             symbolSize=80,
@@ -579,7 +579,7 @@ with right:
             fillColor=None,
             strokeColor=None,
             cornerRadius=0,
-            labelLimit=160
+            labelLimit=180
         )
         # ===== 6️⃣ SHARED BRUSH/ZOOM SELECTION =====
         # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
@@ -631,16 +631,13 @@ with right:
                 y=alt.Y(
                     "DisplayValue:Q",
                     title=None,
-                    scale=alt.Scale(zero=False),
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
                         domain=True,
                         labelFontSize=11,
                         offset=5,
-                        format=",.2f",
-                        labels=True,
-                        ticks=True
+                        format=",.2f"
                     )
                 ),
                 color=alt.Color(
@@ -862,10 +859,7 @@ with right:
                 .resolve_scale(y='independent')
                 .properties(
                     height=400,
-                    autosize=alt.AutoSizeParams(
-                        type='fit',
-                        contains='padding'
-                    )
+                    width=850
                 )
                 .add_params(zoom_brush)
             )
@@ -880,7 +874,8 @@ with right:
                     last_point
                 )
                 .properties(
-                    height=400
+                    height=400,
+                    width=850
                 )
                 .add_params(zoom_brush)
             )
@@ -935,7 +930,8 @@ with right:
                 mini_window
             )
             .properties(
-                height=60
+                height=60,
+                width=800
             )
             # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
             .add_params(mini_brush)
@@ -989,11 +985,10 @@ with right:
             )
             .properties(
                 # ✅ ЯГ ӨМНӨХ ШИГЭЭ PADDING
-                padding={"left": 0, "top": 20, "right": 10, "bottom": 20}
+                padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
             )
             .configure_view(
-                strokeWidth=0,
-                clip=True
+                strokeWidth=0
             )
             .configure_axis(
                 grid=True,
