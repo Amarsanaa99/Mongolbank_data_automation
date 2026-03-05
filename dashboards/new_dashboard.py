@@ -859,7 +859,7 @@ with right:
                 .resolve_scale(y='independent')
                 .properties(
                     height=400,
-                    width=850
+                    width=750
                 )
                 .add_params(zoom_brush)
             )
@@ -931,7 +931,7 @@ with right:
             )
             .properties(
                 height=60,
-                width=700
+                width=750
             )
             # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
             .add_params(mini_brush)
