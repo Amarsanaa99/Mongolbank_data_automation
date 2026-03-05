@@ -568,18 +568,18 @@ with right:
         # ===== 5️⃣ LEGEND ТОХИРУУЛГА - ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД =====
         legend_config = alt.Legend(
             title=None,
-            orient='right',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
+            orient='bottom',  # ✅ ЯГ ӨМНӨХ ШИГЭЭ БАРУУН ТАЛД
             offset=0,
             padding=0,
             labelFontSize=11,
             symbolType="stroke",
             symbolSize=80,
-            direction='vertical',
+            direction='horizontal',
             # ✅ ЯГ ӨМНӨХ ШИГЭЭ ДЭВСГЭРГҮЙ, ЦЭВЭР
             fillColor=None,
             strokeColor=None,
             cornerRadius=0,
-            labelLimit=180
+            labelLimit=200
         )
         # ===== 6️⃣ SHARED BRUSH/ZOOM SELECTION =====
         # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
@@ -858,7 +858,11 @@ with right:
                 alt.layer(bars, line_household, line_corporate)
                 .resolve_scale(y='independent')
                 .properties(
-                    height=400
+                    height=400,
+                    autosize=alt.AutoSizeParams(
+                        type='fit',
+                        contains='padding'
+                    )
                 )
                 .add_params(zoom_brush)
             )
@@ -985,7 +989,8 @@ with right:
                 padding={"left": 0, "top": 20, "right": 20, "bottom": 20}
             )
             .configure_view(
-                strokeWidth=0
+                strokeWidth=0,
+                clip=True
             )
             .configure_axis(
                 grid=True,
