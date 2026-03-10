@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1400">
+<title>СЭЗИС KPI Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Noto+Sans+Mongolian&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #060d18;
+    --bg-card: #0a1628;
+    --bg-card2: #0e1e35;
+    --bg-hover: #122240;
+    --border: #1a3356;
+    --border-bright: #1e4a7a;
+    --accent-blue: #2d8ef5;
+    --accent-cyan: #00d4ff;
+    --accent-amber: #f59e0b;
+    --accent-green: #10d98a;
+    --accent-red: #ff4d6a;
+    --accent-purple: #a78bfa;
+    --text-primary: #e8f1ff;
+    --text-secondary: #6b8ab5;
+    --text-dim: #334d6e;
+    --glow-blue: 0 0 20px rgba(45,142,245,0.3);
+    --glow-green: 0 0 20px rgba(16,217,138,0.3);
+    --glow-amber: 0 0 20px rgba(245,158,11,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* Grid background */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(45,142,245,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45,142,245,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 0 40px;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    background: linear-gradient(180deg, rgba(6,13,24,0.98) 0%, rgba(10,22,40,0.95) 100%);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-badge {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    box-shadow: var(--glow-blue);
+  }
+
+  .logo-text {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+
+  .logo-text span {
+    display: block;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: 0.05em;
+  }
+
+  .topbar-center {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .nav-pill {
+    padding: 7px 18px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+    border: none;
+    background: none;
+  }
+
+  .nav-pill.active {
+    background: var(--accent-blue);
+    color: #fff;
+    box-shadow: var(--glow-blue);
+  }
+
+  .nav-pill:hover:not(.active) { color: var(--text-primary); background: var(--bg-hover); }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .year-select {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 14px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .school-badge {
+    display: flex;
+    gap: 6px;
+  }
+
+  .school-tag {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .school-tag.active { background: rgba(45,142,245,0.2); color: var(--accent-cyan); border: 1px solid var(--accent-blue); }
+  .school-tag.inactive { background: var(--bg-card); color: var(--text-dim); border: 1px solid var(--border); }
+
+  /* ─── PAGE CONTENT ─── */
+  .page { padding: 20px 28px; display: none; }
+  .page.active { display: block; }
+
+  /* ─── CHIGLEL PILLS ─── */
+  .chiglel-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .chiglel-pill {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.25s;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chiglel-pill.active {
+    background: linear-gradient(135deg, rgba(45,142,245,0.25), rgba(0,212,255,0.1));
+    border-color: var(--accent-blue);
+    color: var(--accent-cyan);
+    box-shadow: var(--glow-blue);
+  }
+
+  .chiglel-pill:hover:not(.active) { border-color: var(--border-bright); color: var(--text-primary); }
+
+  /* ─── STAT CARDS ROW ─── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.blue::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); }
+  .stat-card.green::before { background: linear-gradient(90deg, var(--accent-green), #00ffaa); }
+  .stat-card.amber::before { background: linear-gradient(90deg, var(--accent-amber), #ffd60a); }
+  .stat-card.red::before { background: linear-gradient(90deg, var(--accent-red), #ff8fa3); }
+  .stat-card.purple::before { background: linear-gradient(90deg, var(--accent-purple), #c4b5fd); }
+
+  .stat-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+
+  .stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-value.blue { color: var(--accent-cyan); }
+  .stat-value.green { color: var(--accent-green); }
+  .stat-value.amber { color: var(--accent-amber); }
+  .stat-value.red { color: var(--accent-red); }
+  .stat-value.purple { color: var(--accent-purple); }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-delta {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .stat-delta.up { background: rgba(16,217,138,0.15); color: var(--accent-green); }
+  .stat-delta.down { background: rgba(255,77,106,0.15); color: var(--accent-red); }
+
+  .stat-icon {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-size: 28px;
+    opacity: 0.12;
+  }
+
+  /* ─── MAIN CHART GRID ─── */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chart-card.full { grid-column: 1 / -1; }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .chart-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chart-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: var(--accent-blue);
+    border-radius: 2px;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 14px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ─── SVG CHARTS ─── */
+  svg { overflow: visible; }
+
+  .axis-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--text-dim);
+  }
+
+  .grid-line { stroke: var(--border); stroke-width: 0.5; }
+  .area-path { opacity: 0.15; }
+
+  /* ─── RADAR CHART ─── */
+  .radar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 320px;
+  }
+
+  /* ─── KPI TABLE ─── */
+  .kpi-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .kpi-table th {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .kpi-table td {
+    padding: 11px 14px;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(26,51,86,0.4);
+    color: var(--text-secondary);
+    vertical-align: middle;
+  }
+
+  .kpi-table tr:hover td { background: var(--bg-hover); color: var(--text-primary); }
+
+  .kpi-name { font-size: 12px; color: var(--text-primary); font-weight: 500; max-width: 280px; }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .progress-bar-wrap {
+    background: var(--bg-base);
+    border-radius: 4px;
+    height: 6px;
+    width: 90px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease;
+  }
+
+  .pct-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .pct-badge.good { background: rgba(16,217,138,0.12); color: var(--accent-green); border: 1px solid rgba(16,217,138,0.2); }
+  .pct-badge.warn { background: rgba(245,158,11,0.12); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.2); }
+  .pct-badge.bad { background: rgba(255,77,106,0.12); color: var(--accent-red); border: 1px solid rgba(255,77,106,0.2); }
+
+  /* ─── BULLET CHART ─── */
+  .bullet-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(26,51,86,0.3);
+  }
+
+  .bullet-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    width: 160px;
+    flex-shrink: 0;
+    line-height: 1.3;
+  }
+
+  .bullet-track {
+    flex: 1;
+    height: 20px;
+    background: var(--bg-base);
+    border-radius: 4px;
+    position: relative;
+    overflow: visible;
+  }
+
+  .bullet-range {
+    position: absolute;
+    top: 3px; bottom: 3px;
+    left: 0;
+    border-radius: 2px;
+  }
+
+  .bullet-range.satisfactory { background: rgba(245,158,11,0.15); }
+  .bullet-range.good { background: rgba(16,217,138,0.12); }
+
+  .bullet-fill {
+    position: absolute;
+    top: 4px; bottom: 4px;
+    left: 0;
+    border-radius: 2px;
+    background: var(--accent-blue);
+    transition: width 1s ease;
+  }
+
+  .bullet-target {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: var(--accent-amber);
+  }
+
+  .bullet-pct {
+    width: 44px;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* ─── TENKHIM PAGE ─── */
+  .tenkhim-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+  }
+
+  .tenkhim-list {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    height: fit-content;
+  }
+
+  .tenkhim-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    line-height: 1.4;
+  }
+
+  .tenkhim-item.active {
+    background: rgba(45,142,245,0.12);
+    border-color: var(--accent-blue);
+    color: var(--accent-cyan);
+  }
+
+  .tenkhim-item:hover:not(.active) { background: var(--bg-hover); color: var(--text-primary); }
+
+  /* ─── TREND CHART ─── */
+  .trend-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  /* ─── SECTION DIVIDER ─── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin: 20px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg-base); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-card, .chart-card, .trend-card {
+    animation: fadeInUp 0.5s ease both;
+  }
+
+  .stat-card:nth-child(1) { animation-delay: 0.05s; }
+  .stat-card:nth-child(2) { animation-delay: 0.10s; }
+  .stat-card:nth-child(3) { animation-delay: 0.15s; }
+  .stat-card:nth-child(4) { animation-delay: 0.20s; }
+
+  .glow-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    box-shadow: 0 0 8px var(--accent-green);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .watermark {
+    position: fixed;
+    bottom: 16px;
+    right: 24px;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.1em;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo-area">
+      <div class="logo-badge">С</div>
+      <div class="logo-text">
+        ШИНЖЛЭХ УХААНЫ ДЭЭД СУРГУУЛЬ
+        <span>СЭЗИС · KPI ДАШБОРД</span>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <button class="nav-pill active" onclick="showPage('overview')">Нийт тойм</button>
+      <button class="nav-pill" onclick="showPage('detail')">KPI Дэлгэрэнгүй</button>
+      <button class="nav-pill" onclick="showPage('tenkhim')">Тэнхимийн харьцуулалт</button>
+    </div>
+
+    <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="glow-dot"></div>
+        <span style="font-size:11px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;">LIVE</span>
+      </div>
+      <select class="year-select" id="yearSelect">
+        <option>2025</option>
+        <option>2026</option>
+        <option>2027</option>
+      </select>
+      <div class="school-badge">
+        <div class="school-tag active">СЭЗИС</div>
+        <div class="school-tag inactive">СУТ</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PAGE 1: НИЙТ ТОЙМ ═══════════════ -->
+  <div class="page active" id="page-overview">
+    <div class="section-label">Чиглэл сонгох</div>
+
+    <div class="chiglel-bar" id="chiglel-bar">
+      <div class="chiglel-pill active" data-ch="all">🌐 Бүгд</div>
+      <div class="chiglel-pill" data-ch="bagsh">👩‍🏫 Багшийн хөгжил</div>
+      <div class="chiglel-pill" data-ch="hotolbor">📚 Хөтөлбөр хөгжил</div>
+      <div class="chiglel-pill" data-ch="suraltsagch">🎓 Суралцагч хөгжил</div>
+      <div class="chiglel-pill" data-ch="surgalt">🏫 Сургалт</div>
+      <div class="chiglel-pill" data-ch="sudalgaa">🔬 Судалгаа</div>
+      <div class="chiglel-pill" data-ch="tosol">💡 Төсөл хөтөлбөр</div>
+      <div class="chiglel-pill" data-ch="sankhuu">💰 Санхүүгийн хувь нэмэр</div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+      <div class="stat-card blue">
+        <div class="stat-icon">👩‍🏫</div>
+        <div class="stat-label">Багшийн хөгжил · KPI</div>
+        <div class="stat-value blue">78.4<span style="font-size:16px">%</span></div>
+        <div class="stat-sub">
+          Биелэлтийн дундаж
+          <span class="stat-delta up">↑ +3.2%</span>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">📚</div>
+        <div class="stat-label">Хөтөлбөр хөгжил · KPI</div>
+        <div class="stat-value green">91.2<span style="font-size:16px">%</span></div>
+        <div class="stat-sub">
+          Биелэлтийн дундаж
+          <span class="stat-delta up">↑ +7.8%</span>
+        </div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon">🎓</div>
+        <div class="stat-label">Суралцагч хөгжил · KPI</div>
+        <div class="stat-value amber">64.7<span style="font-size:16px">%</span></div>
+        <div class="stat-sub">
+          Биелэлтийн дундаж
+          <span class="stat-delta down">↓ -2.1%</span>
+        </div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-label">THE Rank · 2025</div>
+        <div class="stat-value purple">1,175</div>
+        <div class="stat-sub">
+          Зорилт: 1,211
+          <span class="stat-delta up">↑ +35</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CHARTS -->
+    <div class="chart-grid-3">
+      <!-- LINE CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">KPI Биелэлтийн трэнд · 2021–2027</div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div>Зорилт</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-cyan)"></div>Биелэлт</div>
+          </div>
+        </div>
+        <svg width="100%" height="220" viewBox="0 0 600 220">
+          <!-- Grid -->
+          <line x1="50" y1="20" x2="50" y2="185" class="grid-line"/>
+          <line x1="50" y1="185" x2="590" y2="185" class="grid-line"/>
+          <line x1="50" y1="60" x2="590" y2="60" class="grid-line" stroke-dasharray="4,4"/>
+          <line x1="50" y1="100" x2="590" y2="100" class="grid-line" stroke-dasharray="4,4"/>
+          <line x1="50" y1="140" x2="590" y2="140" class="grid-line" stroke-dasharray="4,4"/>
+
+          <!-- Y labels -->
+          <text x="38" y="185" class="axis-label" text-anchor="end">0</text>
+          <text x="38" y="140" class="axis-label" text-anchor="end">25%</text>
+          <text x="38" y="100" class="axis-label" text-anchor="end">50%</text>
+          <text x="38" y="60" class="axis-label" text-anchor="end">75%</text>
+          <text x="38" y="25" class="axis-label" text-anchor="end">100%</text>
+
+          <!-- X labels: 2021, 2024, 2025, 2026, 2027 -->
+          <text x="80" y="200" class="axis-label" text-anchor="middle">2021</text>
+          <text x="200" y="200" class="axis-label" text-anchor="middle">2024</text>
+          <text x="310" y="200" class="axis-label" text-anchor="middle">2025</text>
+          <text x="420" y="200" class="axis-label" text-anchor="middle">2026</text>
+          <text x="530" y="200" class="axis-label" text-anchor="middle">2027</text>
+
+          <!-- Area fill for Биелэлт -->
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2d8ef5" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#2d8ef5" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M80,120 L200,95 L310,110 L420,75 L530,90 L530,185 L80,185 Z" fill="url(#areaGrad)"/>
+
+          <!-- Зорилт line (dashed) -->
+          <polyline points="80,85 200,75 310,80 420,65 530,72" fill="none" stroke="#1e88e5" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.7"/>
+
+          <!-- Биелэлт line -->
+          <polyline points="80,120 200,95 310,110 420,75 530,90" fill="none" stroke="#00d4ff" stroke-width="2.5"/>
+
+          <!-- Dots -->
+          <circle cx="80" cy="120" r="4" fill="#00d4ff"/>
+          <circle cx="200" cy="95" r="4" fill="#00d4ff"/>
+          <circle cx="310" cy="110" r="4" fill="#00d4ff"/>
+          <circle cx="420" cy="75" r="4" fill="#00d4ff"/>
+          <circle cx="530" cy="90" r="4" fill="#00d4ff" stroke="#00d4ff" stroke-width="2" fill-opacity="0.3"/>
+
+          <!-- Values on dots -->
+          <text x="80" y="112" class="axis-label" text-anchor="middle" fill="#00d4ff" font-size="9">42%</text>
+          <text x="200" y="87" class="axis-label" text-anchor="middle" fill="#00d4ff" font-size="9">61%</text>
+          <text x="310" y="102" class="axis-label" text-anchor="middle" fill="#00d4ff" font-size="9">53%</text>
+          <text x="420" y="67" class="axis-label" text-anchor="middle" fill="#00d4ff" font-size="9">78%</text>
+          <text x="530" y="82" class="axis-label" text-anchor="middle" fill="#00d4ff" font-size="9">71%</text>
+        </svg>
+      </div>
+
+      <!-- RADAR CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Чиглэл бүрийн биелэлт</div>
+        </div>
+        <div class="radar-container">
+          <svg width="260" height="260" viewBox="-130 -130 260 260">
+            <!-- Radar grid circles -->
+            <polygon points="0,-100 86.6,-50 86.6,50 0,100 -86.6,50 -86.6,-50" fill="none" stroke="#1a3356" stroke-width="0.5"/>
+            <polygon points="0,-75 65,-37.5 65,37.5 0,75 -65,37.5 -65,-37.5" fill="none" stroke="#1a3356" stroke-width="0.5"/>
+            <polygon points="0,-50 43.3,-25 43.3,25 0,50 -43.3,25 -43.3,-25" fill="none" stroke="#1a3356" stroke-width="0.5"/>
+            <polygon points="0,-25 21.6,-12.5 21.6,12.5 0,25 -21.6,12.5 -21.6,-12.5" fill="none" stroke="#1a3356" stroke-width="0.5"/>
+
+            <!-- Axis lines -->
+            <line x1="0" y1="0" x2="0" y2="-100" stroke="#1a3356" stroke-width="0.5"/>
+            <line x1="0" y1="0" x2="86.6" y2="-50" stroke="#1a3356" stroke-width="0.5"/>
+            <line x1="0" y1="0" x2="86.6" y2="50" stroke="#1a3356" stroke-width="0.5"/>
+            <line x1="0" y1="0" x2="0" y2="100" stroke="#1a3356" stroke-width="0.5"/>
+            <line x1="0" y1="0" x2="-86.6" y2="50" stroke="#1a3356" stroke-width="0.5"/>
+            <line x1="0" y1="0" x2="-86.6" y2="-50" stroke="#1a3356" stroke-width="0.5"/>
+
+            <!-- Data polygon - Зорилт (target) -->
+            <polygon points="0,-88 75,-43 70,43 0,80 -60,43 -72,-44"
+              fill="rgba(30,136,229,0.08)" stroke="#1e88e5" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+            <!-- Data polygon - Биелэлт (actual) -->
+            <polygon points="0,-78 65,-35 62,38 0,65 -52,38 -60,-38"
+              fill="rgba(0,212,255,0.1)" stroke="#00d4ff" stroke-width="2"/>
+
+            <!-- Dots on actual -->
+            <circle cx="0" cy="-78" r="3.5" fill="#00d4ff"/>
+            <circle cx="65" cy="-35" r="3.5" fill="#00d4ff"/>
+            <circle cx="62" cy="38" r="3.5" fill="#00d4ff"/>
+            <circle cx="0" cy="65" r="3.5" fill="#00d4ff"/>
+            <circle cx="-52" cy="38" r="3.5" fill="#00d4ff"/>
+            <circle cx="-60" cy="-38" r="3.5" fill="#00d4ff"/>
+
+            <!-- Labels -->
+            <text x="0" y="-112" class="axis-label" text-anchor="middle" font-size="9" fill="#6b8ab5">Багш</text>
+            <text x="100" y="-55" class="axis-label" text-anchor="start" font-size="9" fill="#6b8ab5">Хөтөлбөр</text>
+            <text x="100" y="60" class="axis-label" text-anchor="start" font-size="9" fill="#6b8ab5">Суралцагч</text>
+            <text x="0" y="118" class="axis-label" text-anchor="middle" font-size="9" fill="#6b8ab5">Сургалт</text>
+            <text x="-100" y="60" class="axis-label" text-anchor="end" font-size="9" fill="#6b8ab5">Судалгаа</text>
+            <text x="-100" y="-55" class="axis-label" text-anchor="end" font-size="9" fill="#6b8ab5">Санхүү</text>
+
+            <!-- Pct labels -->
+            <text x="0" y="-82" class="axis-label" text-anchor="middle" font-size="8" fill="#00d4ff">78%</text>
+            <text x="68" y="-40" class="axis-label" font-size="8" fill="#00d4ff">91%</text>
+            <text x="66" y="44" class="axis-label" font-size="8" fill="#00d4ff">65%</text>
+            <text x="0" y="80" class="axis-label" text-anchor="middle" font-size="8" fill="#00d4ff">83%</text>
+            <text x="-76" y="44" class="axis-label" text-anchor="end" font-size="8" fill="#00d4ff">71%</text>
+            <text x="-64" y="-44" class="axis-label" text-anchor="end" font-size="8" fill="#00d4ff">76%</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECOND ROW -->
+    <div class="chart-grid">
+      <!-- HORIZONTAL BAR: KPI by Chiglel -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Чиглэл бүрийн биелэлт % · 2025</div>
+        </div>
+        <svg width="100%" height="230" viewBox="0 0 520 230">
+          <!-- БАГШИЙН ХӨГЖИЛ -->
+          <text x="10" y="28" class="axis-label" font-size="10" fill="#a0b8d8">БАГШИЙН ХӨГЖИЛ</text>
+          <rect x="10" y="33" width="430" height="8" rx="4" fill="#0e1e35"/>
+          <rect x="10" y="33" width="335" height="8" rx="4" fill="url(#barGrad1)"/>
+          <text x="450" y="41" class="axis-label" text-anchor="start" fill="#00d4ff" font-size="10">78%</text>
+
+          <text x="10" y="62" class="axis-label" font-size="10" fill="#a0b8d8">ХӨТӨЛБӨР ХӨГЖИЛ</text>
+          <rect x="10" y="67" width="430" height="8" rx="4" fill="#0e1e35"/>
+          <rect x="10" y="67" width="390" height="8" rx="4" fill="url(#barGrad2)"/>
+          <text x="450" y="75" class="axis-label" text-anchor="start" fill="#10d98a" font-size="10">91%</text>
+
+          <text x="10" y="96" class="axis-label" font-size="10" fill="#a0b8d8">СУРАЛЦАГЧ ХӨГЖИЛ</text>
+          <rect x="10" y="101" width="430" height="8" rx="4" fill="#0e1e35"/>
+          <rect x="10" y="101" width="278" height="8" rx="4" fill="url(#barGrad3)"/>
+          <text x="450" y="109" class="axis-label" text-anchor="start" fill="#f59e0b" font-size="10">65%</text>
+
+          <text x="10" y="130" class="axis-label" font-size="10" fill="#a0b8d8">СУРГАЛТ</text>
+          <rect x="10" y="135" width="430" height="8" rx="4" fill="#0e1e35"/>
+          <rect x="10" y="135" width="356" height="8" rx="4" fill="url(#barGrad2)"/>
+          <text x="450" y="143" class="axis-label" text-anchor="start" fill="#10d98a" font-size="10">83%</text>
+
+          <text x="10" y="164" class="axis-label" font-size="10" fill="#a0b8d8">СУДАЛГАА</text>
+          <rect x="10" y="169" width="430" height="8" rx="4" fill="#0e1e35"/>
+          <rect x="10" y="169" width="305" height="8" rx="4" fill="url(#barGrad4)"/>
+          <text x="450" y="177" class="axis-label" text-anchor="start" fill="#a78bfa" font-size="10">71%</text>
+
+          <text x="10" y="198" class="axis-label" font-size="10" fill="#a0b8d8">САНХҮҮГИЙН ХУВЬ НЭМЭР</text>
+          <rect x="10" y="203" width="430" height="8" rx="4" fill="#0e1e35"/>
+          <rect x="10" y="203" width="326" height="8" rx="4" fill="url(#barGrad1)"/>
+          <text x="450" y="211" class="axis-label" text-anchor="start" fill="#00d4ff" font-size="10">76%</text>
+
+          <!-- Target line at 100% -->
+          <line x1="440" y1="20" x2="440" y2="220" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+          <text x="440" y="14" class="axis-label" text-anchor="middle" fill="#f59e0b" font-size="9">Зорилт</text>
+
+          <defs>
+            <linearGradient id="barGrad1" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#2d8ef5"/>
+              <stop offset="100%" stop-color="#00d4ff"/>
+            </linearGradient>
+            <linearGradient id="barGrad2" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#10d98a"/>
+              <stop offset="100%" stop-color="#00ffaa"/>
+            </linearGradient>
+            <linearGradient id="barGrad3" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#ffd60a"/>
+            </linearGradient>
+            <linearGradient id="barGrad4" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#a78bfa"/>
+              <stop offset="100%" stop-color="#c4b5fd"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <!-- СТЭК БАРС: Он бүрийн биелэлт -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Биелэлт он дараалан</div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#10d98a"></div>≥90%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>70–89%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ff4d6a"></div>&lt;70%</div>
+          </div>
+        </div>
+        <svg width="100%" height="230" viewBox="0 0 340 230">
+          <!-- 5 grouped bars: 2021, 2024, 2025, 2026, 2027 -->
+          <!-- 2021 -->
+          <rect x="20" y="150" width="36" height="50" rx="3" fill="#2d8ef5" opacity="0.7"/>
+          <text x="38" y="210" class="axis-label" text-anchor="middle">2021</text>
+          <text x="38" y="145" class="axis-label" text-anchor="middle" fill="#6b8ab5" font-size="9">42%</text>
+
+          <!-- 2024 -->
+          <rect x="80" y="110" width="36" height="90" rx="3" fill="#f59e0b"/>
+          <text x="98" y="210" class="axis-label" text-anchor="middle">2024</text>
+          <text x="98" y="105" class="axis-label" text-anchor="middle" fill="#f59e0b" font-size="9">71%</text>
+
+          <!-- 2025 -->
+          <rect x="140" y="92" width="36" height="108" rx="3" fill="#10d98a"/>
+          <text x="158" y="210" class="axis-label" text-anchor="middle">2025</text>
+          <text x="158" y="87" class="axis-label" text-anchor="middle" fill="#10d98a" font-size="9">78%</text>
+
+          <!-- 2026 (target) -->
+          <rect x="200" y="72" width="36" height="128" rx="3" fill="#2d8ef5" opacity="0.5" stroke="#2d8ef5" stroke-dasharray="4,2"/>
+          <text x="218" y="210" class="axis-label" text-anchor="middle">2026</text>
+          <text x="218" y="67" class="axis-label" text-anchor="middle" fill="#2d8ef5" font-size="9">88%</text>
+
+          <!-- 2027 (target) -->
+          <rect x="260" y="50" width="36" height="150" rx="3" fill="#2d8ef5" opacity="0.3" stroke="#2d8ef5" stroke-dasharray="4,2"/>
+          <text x="278" y="210" class="axis-label" text-anchor="middle">2027</text>
+          <text x="278" y="45" class="axis-label" text-anchor="middle" fill="#2d8ef5" font-size="9">95%</text>
+
+          <!-- baseline -->
+          <line x1="10" y1="200" x2="310" y2="200" stroke="#1a3356" stroke-width="1"/>
+
+          <!-- Y axis -->
+          <text x="8" y="200" class="axis-label" text-anchor="end" font-size="8">0</text>
+          <text x="8" y="150" class="axis-label" text-anchor="end" font-size="8">50%</text>
+          <text x="8" y="100" class="axis-label" text-anchor="end" font-size="8">75%</text>
+          <text x="8" y="55" class="axis-label" text-anchor="end" font-size="8">100%</text>
+          <line x1="10" y1="55" x2="310" y2="55" stroke="#1a3356" stroke-width="0.5" stroke-dasharray="4,4"/>
+          <line x1="10" y1="100" x2="310" y2="100" stroke="#1a3356" stroke-width="0.5" stroke-dasharray="4,4"/>
+
+          <!-- Legend: дашаар = зорилт -->
+          <text x="200" y="225" class="axis-label" font-size="8" fill="#6b8ab5">↑ зорилт</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PAGE 2: KPI ДЭЛГЭРЭНГҮЙ ═══════════════ -->
+  <div class="page" id="page-detail">
+    <div class="section-label">Чиглэл & KPI сонгох</div>
+
+    <div class="chiglel-bar">
+      <div class="chiglel-pill active">👩‍🏫 Багшийн хөгжил</div>
+      <div class="chiglel-pill">📚 Хөтөлбөр хөгжил</div>
+      <div class="chiglel-pill">🎓 Суралцагч хөгжил</div>
+      <div class="chiglel-pill">🔬 Судалгаа</div>
+      <div class="chiglel-pill">💰 Санхүү</div>
+    </div>
+
+    <!-- KPI BULLET CHART -->
+    <div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-header">
+        <div class="chart-title">БАГШИЙН ХӨГЖИЛ — Bullet Chart · Зорилт vs Биелэлт 2025</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#2d8ef5"></div>Биелэлт</div>
+          <div class="legend-item" style="gap:5px"><div style="width:8px;height:2px;background:#f59e0b;border-radius:1px"></div>Зорилт</div>
+        </div>
+      </div>
+      <div style="padding: 0 8px;">
+        <!-- bullet rows -->
+        <div class="bullet-row">
+          <div class="bullet-label">Доктор зэрэгтэй багшийн хувь</div>
+          <div class="bullet-track">
+            <div class="bullet-range satisfactory" style="width:90%"></div>
+            <div class="bullet-range good" style="width:60%; left:30%"></div>
+            <div class="bullet-fill" style="width:64.2%; background:linear-gradient(90deg,#2d8ef5,#00d4ff)"></div>
+            <div class="bullet-target" style="left:56%"></div>
+          </div>
+          <div class="bullet-pct" style="color:#10d98a">114%</div>
+        </div>
+        <div class="bullet-row">
+          <div class="bullet-label">Гадаад хэл дээр хичээл заах чадвартай</div>
+          <div class="bullet-track">
+            <div class="bullet-range satisfactory" style="width:90%"></div>
+            <div class="bullet-range good" style="width:50%; left:40%"></div>
+            <div class="bullet-fill" style="width:52%; background:linear-gradient(90deg,#2d8ef5,#00d4ff)"></div>
+            <div class="bullet-target" style="left:60%"></div>
+          </div>
+          <div class="bullet-pct" style="color:#f59e0b">87%</div>
+        </div>
+        <div class="bullet-row">
+          <div class="bullet-label">Гадаад багшийн эзлэх хувь</div>
+          <div class="bullet-track">
+            <div class="bullet-range satisfactory" style="width:90%"></div>
+            <div class="bullet-range good" style="width:55%; left:35%"></div>
+            <div class="bullet-fill" style="width:38%; background:linear-gradient(90deg,#ff4d6a,#ff8fa3)"></div>
+            <div class="bullet-target" style="left:65%"></div>
+          </div>
+          <div class="bullet-pct" style="color:#ff4d6a">58%</div>
+        </div>
+        <div class="bullet-row">
+          <div class="bullet-label">Суралцагч, багшийн харьцаа</div>
+          <div class="bullet-track">
+            <div class="bullet-range satisfactory" style="width:90%"></div>
+            <div class="bullet-range good" style="width:50%; left:40%"></div>
+            <div class="bullet-fill" style="width:79%; background:linear-gradient(90deg,#10d98a,#00ffaa)"></div>
+            <div class="bullet-target" style="left:72%"></div>
+          </div>
+          <div class="bullet-pct" style="color:#10d98a">110%</div>
+        </div>
+        <div class="bullet-row">
+          <div class="bullet-label">h-индекстэй судлаач багшийн хувь</div>
+          <div class="bullet-track">
+            <div class="bullet-range satisfactory" style="width:90%"></div>
+            <div class="bullet-range good" style="width:55%; left:35%"></div>
+            <div class="bullet-fill" style="width:55%; background:linear-gradient(90deg,#2d8ef5,#00d4ff)"></div>
+            <div class="bullet-target" style="left:68%"></div>
+          </div>
+          <div class="bullet-pct" style="color:#f59e0b">81%</div>
+        </div>
+        <div class="bullet-row">
+          <div class="bullet-label">WOS, Scopus өгүүлэл хэвлүүлсэн багш</div>
+          <div class="bullet-track">
+            <div class="bullet-range satisfactory" style="width:90%"></div>
+            <div class="bullet-range good" style="width:50%; left:40%"></div>
+            <div class="bullet-fill" style="width:43%; background:linear-gradient(90deg,#f59e0b,#ffd60a)"></div>
+            <div class="bullet-target" style="left:70%"></div>
+          </div>
+          <div class="bullet-pct" style="color:#f59e0b">61%</div>
+        </div>
+        <div class="bullet-row">
+          <div class="bullet-label">Оюутны сэтгэл ханамжийн үнэлгээ</div>
+          <div class="bullet-track">
+            <div class="bullet-range satisfactory" style="width:90%"></div>
+            <div class="bullet-range good" style="width:45%; left:45%"></div>
+            <div class="bullet-fill" style="width:83%; background:linear-gradient(90deg,#10d98a,#00ffaa)"></div>
+            <div class="bullet-target" style="left:78%"></div>
+          </div>
+          <div class="bullet-pct" style="color:#10d98a">106%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI TABLE -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">KPI Хүснэгт — Суурь / Зорилт / Биелэлт</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="kpi-table">
+          <thead>
+            <tr>
+              <th>KPI нэр</th>
+              <th>Суурь (2021)</th>
+              <th>Зорилт (2025)</th>
+              <th>Биелэлт (2025)</th>
+              <th>Биелэлт %</th>
+              <th>Явц</th>
+              <th>Дүгнэлт</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="kpi-name">Доктор зэрэгтэй багшийн эзлэх хувь</td>
+              <td class="mono" style="color:#6b8ab5">22.3%</td>
+              <td class="mono" style="color:#f59e0b">56%</td>
+              <td class="mono" style="color:#00d4ff">64.2%</td>
+              <td><span class="pct-badge good">114%</span></td>
+              <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:100%;background:var(--accent-green)"></div></div></td>
+              <td style="color:var(--accent-green);font-size:12px">✓ Хэтэрхий биелсэн</td>
+            </tr>
+            <tr>
+              <td class="kpi-name">Гадаад хэл дээр хичээл заах чадвартай багшийн хувь</td>
+              <td class="mono" style="color:#6b8ab5">—</td>
+              <td class="mono" style="color:#f59e0b">30%</td>
+              <td class="mono" style="color:#00d4ff">26%</td>
+              <td><span class="pct-badge warn">87%</span></td>
+              <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:87%;background:var(--accent-amber)"></div></div></td>
+              <td style="color:var(--accent-amber);font-size:12px">△ Дутагдалтай</td>
+            </tr>
+            <tr>
+              <td class="kpi-name">Гадаад багшийн эзлэх хувь</td>
+              <td class="mono" style="color:#6b8ab5">—</td>
+              <td class="mono" style="color:#f59e0b">12%</td>
+              <td class="mono" style="color:#00d4ff">7%</td>
+              <td><span class="pct-badge bad">58%</span></td>
+              <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:58%;background:var(--accent-red)"></div></div></td>
+              <td style="color:var(--accent-red);font-size:12px">✕ Хүрэлгүй</td>
+            </tr>
+            <tr>
+              <td class="kpi-name">Суралцагч, багшийн харьцаа</td>
+              <td class="mono" style="color:#6b8ab5">1:18</td>
+              <td class="mono" style="color:#f59e0b">1:15</td>
+              <td class="mono" style="color:#00d4ff">1:14</td>
+              <td><span class="pct-badge good">110%</span></td>
+              <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:100%;background:var(--accent-green)"></div></div></td>
+              <td style="color:var(--accent-green);font-size:12px">✓ Биелсэн</td>
+            </tr>
+            <tr>
+              <td class="kpi-name">WOS, Scopus-д нийтлүүлсэн багшийн хувь</td>
+              <td class="mono" style="color:#6b8ab5">—</td>
+              <td class="mono" style="color:#f59e0b">20%</td>
+              <td class="mono" style="color:#00d4ff">12.2%</td>
+              <td><span class="pct-badge bad">61%</span></td>
+              <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:61%;background:var(--accent-red)"></div></div></td>
+              <td style="color:var(--accent-red);font-size:12px">✕ Хүрэлгүй</td>
+            </tr>
+            <tr>
+              <td class="kpi-name">Оюутны сэтгэл ханамжийн үнэлгээ</td>
+              <td class="mono" style="color:#6b8ab5">—</td>
+              <td class="mono" style="color:#f59e0b">80%</td>
+              <td class="mono" style="color:#00d4ff">84.8%</td>
+              <td><span class="pct-badge good">106%</span></td>
+              <td><div class="progress-bar-wrap"><div class="progress-bar" style="width:100%;background:var(--accent-green)"></div></div></td>
+              <td style="color:var(--accent-green);font-size:12px">✓ Биелсэн</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PAGE 3: ТЭНХИМИЙН ХАРЬЦУУЛАЛТ ═══════════════ -->
+  <div class="page" id="page-tenkhim">
+    <div class="tenkhim-grid">
+      <!-- LEFT: tenkhim list -->
+      <div>
+        <div class="tenkhim-list">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">Тэнхим сонгох</div>
+          <div class="tenkhim-item active">Бизнесийн удирдлагын тэнхим</div>
+          <div class="tenkhim-item">Маркетингийн тэнхим</div>
+          <div class="tenkhim-item">Мэдээллийн системийн менежментийн тэнхим</div>
+          <div class="tenkhim-item">Нягтлан бодох бүртгэлийн тэнхим</div>
+          <div class="tenkhim-item">Санхүүгийн удирдлагын тэнхим</div>
+          <div class="tenkhim-item">Экономиксийн тэнхим</div>
+          <div class="tenkhim-item">Энтрепренершип институт</div>
+          <div class="tenkhim-item">Эрх зүйн тэнхим</div>
+          <div class="tenkhim-item" style="color:var(--accent-cyan);border-color:var(--border-bright)">🌐 Нийт</div>
+        </div>
+
+        <!-- mini stat cards -->
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+          <div class="stat-card green" style="padding:14px">
+            <div class="stat-label">Нийт үндсэн багш</div>
+            <div class="stat-value green" style="font-size:24px">18</div>
+            <div class="stat-sub">БУТ</div>
+          </div>
+          <div class="stat-card blue" style="padding:14px">
+            <div class="stat-label">Доктор зэрэгтэй</div>
+            <div class="stat-value blue" style="font-size:24px">12</div>
+            <div class="stat-sub"><span class="stat-delta up">67%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: charts -->
+      <div>
+        <div class="trend-card">
+          <div class="chart-header">
+            <div class="chart-title">Тэнхим бүрийн KPI харьцуулалт · 2025</div>
+          </div>
+          <svg width="100%" height="280" viewBox="0 0 680 280">
+            <!-- Tenkhim grouped bars -->
+            <!-- Headers -->
+            <text x="10" y="14" class="axis-label" font-size="9" fill="#6b8ab5">Тэнхим</text>
+            <text x="510" y="14" class="axis-label" font-size="9" fill="#6b8ab5">Биелэлт %</text>
+
+            <!-- Bar rows -->
+            <!-- БУТ -->
+            <text x="10" y="40" class="axis-label" font-size="9">БУТ</text>
+            <rect x="100" y="28" width="380" height="14" rx="3" fill="#0e1e35"/>
+            <rect x="100" y="28" width="297" height="14" rx="3" fill="url(#barGrad1)"/>
+            <text x="505" y="40" class="axis-label" text-anchor="start" fill="#00d4ff">78%</text>
+
+            <!-- Маркетинг -->
+            <text x="10" y="68" class="axis-label" font-size="9">Маркетинг</text>
+            <rect x="100" y="56" width="380" height="14" rx="3" fill="#0e1e35"/>
+            <rect x="100" y="56" width="341" height="14" rx="3" fill="url(#barGrad2)"/>
+            <text x="505" y="68" class="axis-label" text-anchor="start" fill="#10d98a">90%</text>
+
+            <!-- МСМ -->
+            <text x="10" y="96" class="axis-label" font-size="9">МСМ</text>
+            <rect x="100" y="84" width="380" height="14" rx="3" fill="#0e1e35"/>
+            <rect x="100" y="84" width="258" height="14" rx="3" fill="url(#barGrad3)"/>
+            <text x="505" y="96" class="axis-label" text-anchor="start" fill="#f59e0b">68%</text>
+
+            <!-- НББ -->
+            <text x="10" y="124" class="axis-label" font-size="9">НББ</text>
+            <rect x="100" y="112" width="380" height="14" rx="3" fill="#0e1e35"/>
+            <rect x="100" y="112" width="318" height="14" rx="3" fill="url(#barGrad1)"/>
+            <text x="505" y="124" class="axis-label" text-anchor="start" fill="#00d4ff">84%</text>
+
+            <!-- Санхүү -->
+            <text x="10" y="152" class="axis-label" font-size="9">Санхүүгийн</text>
+            <rect x="100" y="140" width="380" height="14" rx="3" fill="#0e1e35"/>
+            <rect x="100" y="140" width="266" height="14" rx="3" fill="url(#barGrad4)"/>
+            <text x="505" y="152" class="axis-label" text-anchor="start" fill="#a78bfa">70%</text>
+
+            <!-- Экономикс -->
+            <text x="10" y="180" class="axis-label" font-size="9">Экономикс</text>
+            <rect x="100" y="168" width="380" height="14" rx="3" fill="#0e1e35"/>
+            <rect x="100" y="168" width="341" height="14" rx="3" fill="url(#barGrad2)"/>
+            <text x="505" y="180" class="axis-label" text-anchor="start" fill="#10d98a">90%</text>
+
+            <!-- Энтрепренершип -->
+            <text x="10" y="208" class="axis-label" font-size="9">Энтрепрен.</text>
+            <rect x="100" y="196" width="380" height="14" rx="3" fill="#0e1e35"/>
+            <rect x="100" y="196" width="228" height="14" rx="3" fill="url(#barGrad3)"/>
+            <text x="505" y="208" class="axis-label" text-anchor="start" fill="#f59e0b">60%</text>
+
+            <!-- Эрх зүй -->
+            <text x="10" y="236" class="axis-label" font-size="9">Эрх зүй</text>
+            <rect x="100" y="224" width="380" height="14" rx="3" fill="#0e1e35"/>
+            <rect x="100" y="224" width="304" height="14" rx="3" fill="url(#barGrad1)"/>
+            <text x="505" y="236" class="axis-label" text-anchor="start" fill="#00d4ff">80%</text>
+
+            <!-- 80% target line -->
+            <line x1="404" y1="20" x2="404" y2="250" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+            <text x="404" y="265" class="axis-label" text-anchor="middle" fill="#f59e0b" font-size="8">80% зорилт</text>
+          </svg>
+        </div>
+
+        <!-- Small stat row -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px">
+          <div class="stat-card green" style="padding:14px">
+            <div class="stat-label">Хамгийн өндөр</div>
+            <div class="stat-value green" style="font-size:22px">90%</div>
+            <div class="stat-sub">Маркетинг, Экономикс</div>
+          </div>
+          <div class="stat-card red" style="padding:14px">
+            <div class="stat-label">Хамгийн бага</div>
+            <div class="stat-value red" style="font-size:22px">60%</div>
+            <div class="stat-sub">Энтрепренершип</div>
+          </div>
+          <div class="stat-card amber" style="padding:14px">
+            <div class="stat-label">Дундаж</div>
+            <div class="stat-value amber" style="font-size:22px">77%</div>
+            <div class="stat-sub">Бүх тэнхим</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<div class="watermark">СЭЗИС · KPI Dashboard v2.0 · 2025</div>
+
+<script>
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-pill').forEach((btn, i) => {
+    const pages = ['overview','detail','tenkhim'];
+    btn.classList.toggle('active', pages[i] === name);
+  });
+}
+
+// Chiglel pill toggle
+document.querySelectorAll('#chiglel-bar .chiglel-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('#chiglel-bar .chiglel-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+  });
+});
+
+// Tenkhim item toggle
+document.querySelectorAll('.tenkhim-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.tenkhim-item').forEach(t => t.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+
+// Animate progress bars on load
+setTimeout(() => {
+  document.querySelectorAll('.progress-bar').forEach(bar => {
+    const w = bar.style.width;
+    bar.style.width = '0';
+    setTimeout(() => { bar.style.width = w; }, 100);
+  });
+}, 200);
+</script>
+</body>
+</html>
