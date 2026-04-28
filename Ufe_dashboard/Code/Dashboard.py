@@ -152,7 +152,7 @@ def load_prog_data():
 @st.cache_data
 def load_stud_data():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    DATA_PATH = os.path.join(BASE_DIR, "..", "data", "stud_dev_cl.xlsx")
+    DATA_PATH = os.path.join(BASE_DIR, "..", "data", "Less_dev_cl.xlsx")
     df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=None)
     df.columns = ["Ангилал", "Үзүүлэлт", "Он", "БУТ", "МКТ", "МСМТ", "НББТ",
                   "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ", "Нийт"]
@@ -284,7 +284,7 @@ if "dept" not in st.session_state:
 # SIDEBAR
 # ============================================================
 dept_labels = {
-    "Нийт": "🏛️ Нийт (бүх тэнхим)",
+    "Нийт": "🏛️ UFE",
     "БУТ": "📐 БУТ", "МКТ": "💻 МКТ", "МСМТ": "📊 МСМТ",
     "НББТ": "💰 НББТ", "ОУАЖССИ": "🌐 ОУАЖССИ", "ОУНББСМИ": "🏦 ОУНББСМИ",
     "ОУС": "📚 ОУС", "СДСТ": "🔬 СДСТ", "СУТ": "⚙️ СУТ",
@@ -350,7 +350,7 @@ with col_h3:
 with col_h4:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     is_stud = st.session_state.page == "stud"
-    if st.button("🎓 Суралцагч хөгжил",
+    if st.button("🎓 Хичээл, Сургалт",
                  key="nav_stud",
                  type="primary" if is_stud else "secondary"):
         st.session_state.page = "stud"
