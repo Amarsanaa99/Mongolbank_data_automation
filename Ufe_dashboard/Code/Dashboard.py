@@ -456,7 +456,7 @@ with col_b:
         if fx and hx:
             fig_edu.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
                 mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-    t_edu = dict(**theme(280))
+    t_edu = dict(**theme(260))
     t_edu["title"] = dict(text="Багшийн боловсролын түвшин", font=dict(color=C["white"], size=12))
     if CURRENT_YEAR in yrs_e:
         fig_edu.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
@@ -484,7 +484,7 @@ with col_b:
         if fx and hx:
             fig_rk.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
                 mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-    t_rk = dict(**theme(280))
+    t_rk = dict(**theme(260))
     t_rk["title"] = dict(text="Багшийн зэрэглэл", font=dict(color=C["white"], size=12))
     if CURRENT_YEAR in yrs_r:
         fig_rk.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
@@ -510,7 +510,7 @@ with col_b:
         if fx and hx:
             fig_pt.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
                 mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-    t_pt = dict(**theme(280))
+    t_pt = dict(**theme(260))
     t_pt["title"] = dict(text="Гадаад хэл / Солилцоо / Төсөл (%)", font=dict(color=C["white"], size=12))
     t_pt["yaxis"]["tickformat"] = ".0%"
     if CURRENT_YEAR in yrs_pt:
