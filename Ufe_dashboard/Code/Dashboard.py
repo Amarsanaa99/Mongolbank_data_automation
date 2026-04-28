@@ -457,7 +457,7 @@ with col_b:
             fig_edu.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
                 mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
     t_edu = dict(**theme(260))
-    t_edu["title"] = dict(text="Боловсролын түвшингийн динамик", font=dict(color=C["white"], size=12))
+    t_edu["title"] = dict(text="Багшийн боловсролын түвшин", font=dict(color=C["white"], size=12))
     if CURRENT_YEAR in yrs_e:
         fig_edu.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
     fig_edu.update_layout(**t_edu)
@@ -485,7 +485,7 @@ with col_b:
             fig_rk.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
                 mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
     t_rk = dict(**theme(260))
-    t_rk["title"] = dict(text="Зэрэглэлийн динамик", font=dict(color=C["white"], size=12))
+    t_rk["title"] = dict(text="Багшийн зэрэглэл", font=dict(color=C["white"], size=12))
     if CURRENT_YEAR in yrs_r:
         fig_rk.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
     fig_rk.update_layout(**t_rk)
@@ -495,8 +495,8 @@ with col_b:
     # Гадаад хэл / Солилцоо / Төсөл хувь trend
     pct_trends = [
         ("Гадаад хэлээр заах чадвартай багшийн эзлэх хувь", "Гадаад хэл", C["blue"]),
-        ("Солилцооны хөтөлбөрт хамрагдсан багшийн эзлэх хувь", "Солилцоо", C["purple"]),
-        ("Төсөл удирдсан багшийн эзлэх хувь", "Төсөл", C["orange"]),
+        ("Солилцооны хөтөлбөрт хамрагдсан багшийн эзлэх хувь", "Солилцооны хөтөлбөрт хамрагдсан", C["purple"]),
+        ("Төсөл удирдсан багшийн эзлэх хувь", "Төсөл удирдсан багш", C["orange"]),
     ]
     fig_pt = go.Figure()
     for m, lbl, clr in pct_trends:
