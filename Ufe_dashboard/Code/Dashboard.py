@@ -611,44 +611,6 @@ with exp_col:
     fig_exp.update_layout(**t_exp)
     st.plotly_chart(fig_exp, use_container_width=True)
 
-# ============================================================
-# SECTION 7 — ТЭНХИМИЙН СТЭК ГРАФИК
-# ============================================================
-st.markdown("<div class='section-title'>📊 Тэнхимийн нарийвчилсан харьцуулалт (2026)</div>", unsafe_allow_html=True)
-
-tab_choice = st.radio("Харах:", ["Боловсролын түвшин", "Зэрэглэл", "Мэргэжил дээшлүүлэлт"],
-                       horizontal=True, label_visibility="collapsed")
-
-if tab_choice == "Боловсролын түвшин":
-    fig_stk = stacked_bar_fig(
-        "Тэнхим тус бүрийн боловсролын түвшин (2026)",
-        "Боловсролын түвшин",
-        ["Бакалавр", "Магистр", "Доктор"],
-        ["Бакалавр", "Магистр", "Доктор"],
-        [C["blue"], C["purple"], C["teal"]], CURRENT_YEAR
-    )
-    st.plotly_chart(fig_stk, use_container_width=True)
-
-elif tab_choice == "Зэрэглэл":
-    fig_stk = stacked_bar_fig(
-        "Тэнхим тус бүрийн зэрэглэл (2026)",
-        "Зэрэглэл",
-        ["Дадлагажигч багш", "Багш", "Ахлах багш", "Дэд профессор", "Профессор"],
-        ["Дадлагажигч", "Багш", "Ахлах багш", "Дэд профессор", "Профессор"],
-        [C["teal"], C["green"], C["blue"], C["purple"], C["orange"]], CURRENT_YEAR
-    )
-    st.plotly_chart(fig_stk, use_container_width=True)
-
-else:
-    fig_stk = stacked_bar_fig(
-        "Тэнхим тус бүрийн мэргэжил дээшлүүлэлт (2026)",
-        "Мэргэжил дээшлүүлэлт",
-        ["Гадаадад", "Дотоодод", "1-3 хоног", "4-10 хоног"],
-        ["Гадаадад", "Дотоодод", "1-3 хоног", "4-10 хоног"],
-        [C["blue"], C["orange"], C["green"], C["purple"]], CURRENT_YEAR
-    )
-    st.plotly_chart(fig_stk, use_container_width=True)
-
 # Footer
 st.markdown("---")
 st.markdown("""
