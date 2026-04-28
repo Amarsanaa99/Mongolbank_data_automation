@@ -152,7 +152,7 @@ def load_prog_data():
 @st.cache_data
 def load_stud_data():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    DATA_PATH = os.path.join(BASE_DIR, "..", "data", "stud_dev_cl.xlsx")
+    DATA_PATH = os.path.join(BASE_DIR, "..", "data", "Less_dev_cl.xlsx")
     df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=None)
     df.columns = ["Ангилал", "Үзүүлэлт", "Он", "БУТ", "МКТ", "МСМТ", "НББТ",
                   "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ", "Нийт"]
