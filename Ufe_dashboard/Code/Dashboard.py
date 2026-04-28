@@ -386,17 +386,19 @@ pct_kpis = [
     ("Хувь", "WOS, Scopus-д өгүүлэл хэвлүүлсэн багшийн эзлэх хувь",  "📰 WOS/Scopus %",       C["purple"]),
 ]
 
-pct_cols = st.columns(5)
+kpi_cols = st.columns(5)
 for i, (cat, met, lbl, clr) in enumerate(pct_kpis):
     v = gv(cat, met, CURRENT_YEAR, D)
     pct_str = f"{v*100:.1f}%" if v is not None else "—"
-    pct_cols[i % 5].markdown(f"""
-    <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
-    padding:12px 10px;text-align:center;margin-bottom:8px;
-    border-top:2px solid {clr};'>
-        <div style='color:{clr};font-size:20px;font-weight:700;'>{pct_str}</div>
-        <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
-    </div>""", unsafe_allow_html=True)
+    with kpi_cols[i % 5]:
+        st.markdown(f"""
+        <div class="kpi-card" style="border-top: 4px solid {clr};">
+            <div class="kpi-num {'kpi-num-teal' if 'Доктор' in lbl else 'kpi-num-green' if 'Оюутны' in lbl else 'kpi-num-orange' if 'Багшийн' in lbl else 'kpi-num-purple'}">
+                {pct_str}
+            </div>
+            <div class="kpi-label">{lbl}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ============================================================
 # SECTION 3 — KPI ТРЕНДИЙН ГРАФИКУУД
