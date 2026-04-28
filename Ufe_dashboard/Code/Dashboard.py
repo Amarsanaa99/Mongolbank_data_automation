@@ -153,7 +153,10 @@ st.markdown("""
 # ============================================================
 @st.cache_data
 def load_data():
-    df = pd.read_excel("Taech_dev_cl.xlsx", sheet_name="Sheet1", header=None)
+    import os
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_PATH = os.path.join(BASE_DIR, "..", "data", "Taech_dev_cl.xlsx")
+    df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=None)
     df.columns = ["Ангилал", "Үзүүлэлт", "Он", "БУТ", "МКТ", "МСМТ", "НББТ",
                   "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ", "Нийт"]
     df = df[df["Он"].notna()]
@@ -165,7 +168,6 @@ def load_data():
     for c in DEPTS + ["Нийт"]:
         df[c] = pd.to_numeric(df[c], errors="coerce")
     return df, DEPTS
-
 df, DEPTS = load_data()
 CURRENT_YEAR = 2026
 FUTURE_YEARS = [y for y in sorted(df["Он"].unique()) if y > CURRENT_YEAR]
