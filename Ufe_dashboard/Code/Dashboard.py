@@ -408,12 +408,14 @@ col_a, col_b = st.columns(2)
 with col_a:
     # Нийт багшийн тоо trend
     yrs, vals = gseries("Багшийн тоо", "Нийт багшийн тоо", D)
-    st.plotly_chart(line_fig("Нийт багшийн тооны өөрчлөлт", yrs, vals), use_container_width=True)
+    with st.container(border=True):
+        st.plotly_chart(line_fig("Нийт багшийн тооны өөрчлөлт", yrs, vals), use_container_width=True)
 
     # Доктор хувь trend
     yrs2, vals2 = gseries("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь", D)
     fig2 = pct_line_fig("Доктор зэрэгтэй багшийн хувь", yrs2, vals2)
-    st.plotly_chart(fig2, use_container_width=True)
+    with st.container(border=True):
+        st.plotly_chart(fig2, use_container_width=True)
 
     # Сэтгэл ханамж
     yrs3, v3 = gseries("Хувь", "Оюутны сэтгэл ханамжийн үнэлгээний дундаж хувь", D)
@@ -436,10 +438,11 @@ with col_a:
     fig3.update_layout(**t3)
     if CURRENT_YEAR in yrs3:
         fig3.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
-    st.plotly_chart(fig3, use_container_width=True)
+    with st.container(border=True):
+        st.plotly_chart(fig3, use_container_width=True)
 
 with col_b:
-    # Боловсролын түвшин trend stacked
+    # Боловсролын түвшин trend
     fig_edu = go.Figure()
     edu_items = [("Бакалавр", C["blue"]), ("Магистр", C["purple"]), ("Доктор", C["teal"])]
     for m, clr in edu_items:
@@ -458,7 +461,8 @@ with col_b:
     if CURRENT_YEAR in yrs_e:
         fig_edu.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
     fig_edu.update_layout(**t_edu)
-    st.plotly_chart(fig_edu, use_container_width=True)
+    with st.container(border=True):
+        st.plotly_chart(fig_edu, use_container_width=True)
 
     # Зэрэглэл trend
     rank_trend = [
@@ -485,7 +489,8 @@ with col_b:
     if CURRENT_YEAR in yrs_r:
         fig_rk.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
     fig_rk.update_layout(**t_rk)
-    st.plotly_chart(fig_rk, use_container_width=True)
+    with st.container(border=True):
+        st.plotly_chart(fig_rk, use_container_width=True)
 
     # Гадаад хэл / Солилцоо / Төсөл хувь trend
     pct_trends = [
@@ -511,8 +516,8 @@ with col_b:
     if CURRENT_YEAR in yrs_pt:
         fig_pt.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
     fig_pt.update_layout(**t_pt)
-    st.plotly_chart(fig_pt, use_container_width=True)
-
+    with st.container(border=True):
+        st.plotly_chart(fig_pt, use_container_width=True)
 # ============================================================
 # SECTION 4 — ТЭНХИМИЙН ХАРЬЦУУЛСАН ГРАФИКУУД
 # ============================================================
