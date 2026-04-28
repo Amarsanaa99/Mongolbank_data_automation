@@ -409,11 +409,11 @@ with col_a:
     # Нийт багшийн тоо trend
     yrs, vals = gseries("Багшийн тоо", "Нийт багшийн тоо", D)
     with st.container(border=True):
-        st.plotly_chart(line_fig("Нийт багшийн тооны өөрчлөлт", yrs, vals), use_container_width=True)
+        st.plotly_chart(line_fig("Нийт багшийн тооны өөрчлөлт", yrs, vals, h=280), use_container_width=True)
 
     # Доктор хувь trend
     yrs2, vals2 = gseries("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь", D)
-    fig2 = pct_line_fig("Доктор зэрэгтэй багшийн хувь", yrs2, vals2)
+    fig2 = pct_line_fig("Доктор зэрэгтэй багшийн хувь", yrs2, vals2, h=280)
     with st.container(border=True):
         st.plotly_chart(fig2, use_container_width=True)
 
@@ -456,7 +456,7 @@ with col_b:
         if fx and hx:
             fig_edu.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
                 mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-    t_edu = dict(**theme(260))
+    t_edu = dict(**theme(280))
     t_edu["title"] = dict(text="Багшийн боловсролын түвшин", font=dict(color=C["white"], size=12))
     if CURRENT_YEAR in yrs_e:
         fig_edu.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
@@ -484,7 +484,7 @@ with col_b:
         if fx and hx:
             fig_rk.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
                 mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-    t_rk = dict(**theme(260))
+    t_rk = dict(**theme(280))
     t_rk["title"] = dict(text="Багшийн зэрэглэл", font=dict(color=C["white"], size=12))
     if CURRENT_YEAR in yrs_r:
         fig_rk.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
@@ -510,7 +510,7 @@ with col_b:
         if fx and hx:
             fig_pt.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
                 mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-    t_pt = dict(**theme(260))
+    t_pt = dict(**theme(280))
     t_pt["title"] = dict(text="Гадаад хэл / Солилцоо / Төсөл (%)", font=dict(color=C["white"], size=12))
     t_pt["yaxis"]["tickformat"] = ".0%"
     if CURRENT_YEAR in yrs_pt:
@@ -523,25 +523,64 @@ with col_b:
 # ============================================================
 st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
 
-# Selectbox for which metric to show by dept
 metric_options = {
-    "Нийт багшийн тоо": ("Багшийн тоо", "Нийт багшийн тоо"),
-    "Үндсэн багшийн тоо": ("Багшийн тоо", "Нийт үндсэн багшийн тоо"),
-    "Гэрээт багшийн тоо": ("Багшийн тоо", "Нийт гэрээт багшийн тоо"),
-    "Эмэгтэй багшийн тоо": ("Багшийн тоо", "Үндсэн эмэгтэй багшийн тоо"),
-    "Доктор зэрэгтэй": ("Боловсролын түвшин", "Доктор"),
-    "Магистр": ("Боловсролын түвшин", "Магистр"),
-    "Профессор": ("Зэрэглэл", "Профессор"),
-    "Ахлах багш": ("Зэрэглэл", "Ахлах багш"),
+    "Нийт багшийн тоо": ("Багшийн тоо", "Нийт багшийн тоо", False),
+    "Үндсэн багшийн тоо": ("Багшийн тоо", "Нийт үндсэн багшийн тоо", False),
+    "Гэрээт багшийн тоо": ("Багшийн тоо", "Нийт гэрээт багшийн тоо", False),
+    "Эмэгтэй багшийн тоо": ("Багшийн тоо", "Үндсэн эмэгтэй багшийн тоо", False),
+    "Доктор зэрэгтэй": ("Боловсролын түвшин", "Доктор", False),
+    "Магистр": ("Боловсролын түвшин", "Магистр", False),
+    "Профессор": ("Зэрэглэл", "Профессор", False),
+    "Ахлах багш": ("Зэрэглэл", "Ахлах багш", False),
+    # --- хувийн үзүүлэлтүүд ---
+    "Доктор зэрэгтэй багшийн хувь": ("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь", True),
+    "Гадаад багшийн хувь": ("Хувь", "Гадаад багшийн эзлэх хувь", True),
+    "Оюутны сэтгэл ханамж": ("Хувь", "Оюутны сэтгэл ханамжийн үнэлгээний дундаж хувь", True),
+    "Багшийн сэтгэл ханамж": ("Хувь", "Багшийн сэтгэл ханамжийн үнэлгээний дундаж хувь", True),
+    "Гадаад хэлээр заах чадвар": ("Хувь", "Гадаад хэлээр заах чадвартай багшийн эзлэх хувь", True),
+    "Солилцооны хөтөлбөр": ("Хувь", "Солилцооны хөтөлбөрт хамрагдсан багшийн эзлэх хувь", True),
+    "Төсөл удирдсан багшийн хувь": ("Хувь", "Төсөл удирдсан багшийн эзлэх хувь", True),
+    "Хамтарсан судалгааны хувь": ("Хувь", "Хамтарсан судалгаа, төсөлд оролцсон багшийн эзлэх хувь", True),
+    "h-индекстэй багшийн хувь": ("Хувь", "h-индекстэй багшийн эзлэх хувь", True),
+    "WOS/Scopus өгүүлэл": ("Хувь", "WOS, Scopus-д өгүүлэл хэвлүүлсэн багшийн эзлэх хувь", True),
 }
 
 sel_metric = st.selectbox("Тэнхимээр харьцуулах үзүүлэлт сонгох:", list(metric_options.keys()))
-sel_cat, sel_met = metric_options[sel_metric]
-fig_dept_bar = bar_dept_fig(
-    f"Тэнхим тус бүрийн {sel_metric} (2026)",
-    sel_cat, sel_met, CURRENT_YEAR, DEPT_COLORS, h=320
+sel_cat, sel_met, is_pct = metric_options[sel_metric]
+
+# хувь эсэхээс хамааран утга авах
+vals_dept = []
+for d in DEPTS:
+    v = gv(sel_cat, sel_met, CURRENT_YEAR, d)
+    if v is None:
+        vals_dept.append(0)
+    elif is_pct:
+        vals_dept.append(round(v * 100, 1))
+    else:
+        vals_dept.append(v)
+
+text_vals = [f"{v}%" if is_pct else str(int(v)) for v in vals_dept]
+
+fig_dept_bar = go.Figure(go.Bar(
+    x=DEPTS,
+    y=vals_dept,
+    marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+    text=text_vals,
+    textposition="outside",
+    textfont=dict(color=C["text"], size=10),
+))
+t_bar = dict(**theme(340))
+t_bar["title"] = dict(
+    text=f"Тэнхим тус бүрийн {sel_metric} (2026){' (%)' if is_pct else ''}",
+    font=dict(color=C["white"], size=12)
 )
-st.plotly_chart(fig_dept_bar, use_container_width=True)
+t_bar["xaxis"]["tickfont"] = dict(size=10)
+if is_pct:
+    t_bar["yaxis"]["ticksuffix"] = "%"
+fig_dept_bar.update_layout(**t_bar)
+
+with st.container(border=True):
+    st.plotly_chart(fig_dept_bar, use_container_width=True)
 
 # ============================================================
 # SECTION 5 — ДУГУЙ ДИАГРАМ (БҮРЭЛДЭХҮҮН)
