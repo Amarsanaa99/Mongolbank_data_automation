@@ -201,13 +201,19 @@ DEPT_COLORS = ["#00d4ff","#00e676","#b388ff","#ffab40","#ff80ab","#64ffda",
 
 def theme(h=300):
     return dict(
-        plot_bgcolor=C["bg"], paper_bgcolor=C["bg"],
+        plot_bgcolor=C["bg"], paper_bgcolor="#0a1428",
         font=dict(color=C["text"], size=11),
         height=h, margin=dict(l=40, r=20, t=36, b=36),
         xaxis=dict(gridcolor=C["grid"], zerolinecolor=C["grid"]),
         yaxis=dict(gridcolor=C["grid"], zerolinecolor=C["grid"]),
         legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(color=C["text"], size=10),
                     orientation="h", y=-0.18),
+        shapes=[dict(
+            type="rect", xref="paper", yref="paper",
+            x0=0, y0=0, x1=1, y1=1,
+            line=dict(color="#1e3a6e", width=1.5),
+            fillcolor="rgba(0,0,0,0)",
+        )],
     )
 
 def gv(cat, metric, year, dept):
