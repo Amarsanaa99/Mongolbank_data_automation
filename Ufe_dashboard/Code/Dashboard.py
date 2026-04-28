@@ -552,6 +552,17 @@ for d in DEPTS:
 
 text_vals = [f"{v}%" if is_pct else str(int(v)) for v in vals_dept]
 
+avg_val = round(sum(v for v in vals_dept if v > 0) / max(len([v for v in vals_dept if v > 0]), 1), 1)
+fig_dept_bar.add_hline(
+    y=avg_val,
+    line_dash="dash",
+    line_color="#ff4d4d",
+    line_width=1.5,
+    annotation_text=f"Дундаж: {avg_val}{'%' if is_pct else ''}",
+    annotation_position="top right",
+    annotation_font=dict(color="#ff4d4d", size=11),
+)
+
 fig_dept_bar = go.Figure(go.Bar(
     x=DEPTS,
     y=vals_dept,
