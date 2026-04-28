@@ -409,7 +409,7 @@ with col_a:
     # Нийт багшийн тоо trend
     yrs, vals = gseries("Багшийн тоо", "Нийт багшийн тоо", D)
     with st.container(border=True):
-        st.plotly_chart(line_fig("Нийт багшийн тооны өөрчлөлт", yrs, vals, h=280), use_container_width=True)
+        st.plotly_chart(line_fig("Нийт багшийн тооны зорилт", yrs, vals, h=280), use_container_width=True)
 
     # Доктор хувь trend
     yrs2, vals2 = gseries("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь", D)
