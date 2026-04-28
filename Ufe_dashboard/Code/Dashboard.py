@@ -284,7 +284,7 @@ if "dept" not in st.session_state:
 # SIDEBAR
 # ============================================================
 dept_labels = {
-    "Нийт": "🏛️ Нийт (бүх тэнхим)",
+    "Нийт": "🏛️ UFE",
     "БУТ": "📐 БУТ", "МКТ": "💻 МКТ", "МСМТ": "📊 МСМТ",
     "НББТ": "💰 НББТ", "ОУАЖССИ": "🌐 ОУАЖССИ", "ОУНББСМИ": "🏦 ОУНББСМИ",
     "ОУС": "📚 ОУС", "СДСТ": "🔬 СДСТ", "СУТ": "⚙️ СУТ",
@@ -350,7 +350,7 @@ with col_h3:
 with col_h4:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     is_stud = st.session_state.page == "stud"
-    if st.button("🎓 Суралцагч хөгжил",
+    if st.button("🎓 Хичээл",
                  key="nav_stud",
                  type="primary" if is_stud else "secondary"):
         st.session_state.page = "stud"
