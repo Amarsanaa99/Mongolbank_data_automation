@@ -20,14 +20,12 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background: #0a0f1e; color: #c8d8f0; }
 
-/* Sidebar */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #080d1a 0%, #0a1228 100%);
     border-right: 1px solid #162040;
 }
 [data-testid="stSidebar"] * { color: #8aaad8 !important; }
 
-/* Dept buttons in sidebar */
 div[data-testid="stSidebar"] .stButton > button {
     width: 100% !important;
     text-align: left !important;
@@ -46,7 +44,6 @@ div[data-testid="stSidebar"] .stButton > button:hover {
     border-color: #3a6adc !important;
 }
 
-/* KPI metric cards */
 .kpi-card {
     background: linear-gradient(135deg, #0d1f4a 0%, #112240 100%);
     border: 1px solid #1a3060;
@@ -83,7 +80,6 @@ div[data-testid="stSidebar"] .stButton > button:hover {
 .kpi-num-teal   { color: #64ffda; }
 .kpi-label { color: #6080a8; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* Section divider */
 .section-title {
     color: #4a8aff;
     font-size: 13px;
@@ -93,31 +89,6 @@ div[data-testid="stSidebar"] .stButton > button:hover {
     border-bottom: 1px solid #1a3060;
     padding-bottom: 8px;
     margin: 24px 0 12px 0;
-}
-
-/* Page nav tabs in header */
-.page-tab-active {
-    display: inline-block;
-    background: linear-gradient(135deg, #1a3a7a, #2a4d9a);
-    color: #fff !important;
-    border: 1px solid #4a7acc;
-    border-radius: 8px;
-    padding: 7px 18px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-right: 6px;
-    cursor: pointer;
-}
-.page-tab {
-    display: inline-block;
-    background: #0d1830;
-    color: #7090c0 !important;
-    border: 1px solid #1a2e5a;
-    border-radius: 8px;
-    padding: 7px 18px;
-    font-size: 13px;
-    margin-right: 6px;
-    cursor: pointer;
 }
 
 ::-webkit-scrollbar { width: 5px; }
@@ -148,6 +119,8 @@ def load_teacher_data():
     DEPTS = ["БУТ", "МКТ", "МСМТ", "НББТ", "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ"]
     for c in DEPTS + ["Нийт"]:
         df[c] = pd.to_numeric(df[c], errors="coerce")
+    df["Ангилал"] = df["Ангилал"].ffill()
+    df["Үзүүлэлт"] = df["Үзүүлэлт"].ffill()
     df["Ангилал"] = df["Ангилал"].str.strip()
     return df, DEPTS
 
@@ -173,8 +146,32 @@ def load_prog_data():
     df["Ангилал"] = df["Ангилал"].str.strip()
     return df, DEPTS
 
+# ============================================================
+# DATA LOADING — Суралцагч хөгжил
+# ============================================================
+@st.cache_data
+def load_stud_data():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_PATH = os.path.join(BASE_DIR, "..", "data", "stud_dev_cl.xlsx")
+    df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=None)
+    df.columns = ["Ангилал", "Үзүүлэлт", "Он", "БУТ", "МКТ", "МСМТ", "НББТ",
+                  "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ", "Нийт"]
+    df = df[df["Он"].notna()]
+    df = df[df["Он"] != "Он"]
+    df["Ангилал"] = df["Ангилал"].ffill()
+    df["Үзүүлэлт"] = df["Үзүүлэлт"].ffill()
+    df["Он"] = pd.to_numeric(df["Он"], errors="coerce").astype("Int64")
+    df = df[df["Он"].notna()]
+    DEPTS = ["БУТ", "МКТ", "МСМТ", "НББТ", "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ"]
+    for c in DEPTS + ["Нийт"]:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df["Ангилал"] = df["Ангилал"].str.strip()
+    df["Үзүүлэлт"] = df["Үзүүлэлт"].str.strip()
+    return df, DEPTS
+
 df, DEPTS       = load_teacher_data()
 dfp, DEPTS_P    = load_prog_data()
+dfs, DEPTS_S    = load_stud_data()
 
 CURRENT_YEAR = 2026
 
@@ -209,6 +206,16 @@ def gv(cat, metric, year, dept, src="teacher"):
 def gseries(cat, metric, dept, src="teacher"):
     d = df if src == "teacher" else dfp
     s = d[(d["Ангилал"]==cat)&(d["Үзүүлэлт"]==metric)].sort_values("Он")
+    return list(s["Он"]), list(s[dept])
+
+def sv(metric, year, dept):
+    """Get value from stud data"""
+    r = dfs[(dfs["Үзүүлэлт"]==metric)&(dfs["Он"]==year)]
+    return r.iloc[0][dept] if not r.empty else None
+
+def sseries(metric, dept):
+    """Get series from stud data"""
+    s = dfs[dfs["Үзүүлэлт"]==metric].sort_values("Он")
     return list(s["Он"]), list(s[dept])
 
 def line_fig(title, yrs, vals, h=280, target_color=C["target"]):
@@ -312,7 +319,7 @@ D = st.session_state.dept
 # ============================================================
 # HEADER — page navigation tabs
 # ============================================================
-col_h1, col_h2, col_h3 = st.columns([3, 1, 1])
+col_h1, col_h2, col_h3, col_h4 = st.columns([3, 1, 1, 1])
 with col_h1:
     st.markdown(f"""
 <div style='background:linear-gradient(90deg,#0d1f4a,#1a2d6b,#0d1f4a);
@@ -340,16 +347,22 @@ with col_h3:
         st.session_state.page = "prog"
         st.rerun()
 
+with col_h4:
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    is_stud = st.session_state.page == "stud"
+    if st.button("🎓 Суралцагч хөгжил",
+                 key="nav_stud",
+                 type="primary" if is_stud else "secondary"):
+        st.session_state.page = "stud"
+        st.rerun()
+
 st.markdown("<div style='margin-bottom:16px'></div>", unsafe_allow_html=True)
 
 # ============================================================
-# ============================================================
-# PAGE 1 — БАГШИЙН ХӨГЖИЛ (өөрчлөлтгүй)
-# ============================================================
+# PAGE 1 — БАГШИЙН ХӨГЖИЛ
 # ============================================================
 if st.session_state.page == "teacher":
 
-    # SECTION 2 — ХУВИЙН KPI ҮЗҮҮЛЭЛТҮҮД
     st.markdown("<div class='section-title'>📈 2026 оны хувийн KPI үзүүлэлтүүд</div>", unsafe_allow_html=True)
     pct_kpis = [
         ("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь",                     "🔬 Доктор %",             C["teal"]),
@@ -374,7 +387,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
 
-    # SECTION 3 — KPI ТРЕНДИЙН ГРАФИКУУД
     st.markdown("<div class='section-title'>📉 KPI Трендийн графикууд — Бодит ба Зорилт</div>", unsafe_allow_html=True)
     col_a, col_b = st.columns(2)
 
@@ -477,7 +489,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         with st.container(border=True):
             st.plotly_chart(fig_pt, use_container_width=True)
 
-    # SECTION 4 — ТЭНХИМИЙН ХАРЬЦУУЛСАН
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
     metric_options = {
         "Доктор зэрэгтэй багшийн хувь":  ("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь", True),
@@ -517,7 +528,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     with st.container(border=True):
         st.plotly_chart(fig_dept_bar, use_container_width=True)
 
-    # SECTION 5 — ДУГУЙ ДИАГРАМ
     st.markdown("<div class='section-title'>🔵 Нийт бүрэлдэхүүний харьцаа (2026)</div>", unsafe_allow_html=True)
     d_col1, d_col2, d_col3 = st.columns(3)
     with d_col1:
@@ -536,7 +546,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         ]
         st.plotly_chart(donut_fig(comp_labels, comp_vals, "Үндсэн ба Гэрээт багш"), use_container_width=True)
 
-    # SECTION 6 — НАСНЫ БҮЛЭГ & АЖИЛЛАСАН ЖИЛ
     st.markdown("<div class='section-title'>👥 Насны бүлэг ба Ажилласан жил (2026)</div>", unsafe_allow_html=True)
     age_col, exp_col = st.columns(2)
     with age_col:
@@ -566,13 +575,10 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         st.plotly_chart(fig_exp, use_container_width=True)
 
 # ============================================================
-# ============================================================
 # PAGE 2 — ХӨТӨЛБӨР ХӨГЖИЛ
-# ============================================================
 # ============================================================
 elif st.session_state.page == "prog":
 
-    # --- Helper: prog data accessor ---
     def pgv(metric, year, dept):
         r = dfp[(dfp["Үзүүлэлт"]==metric)&(dfp["Он"]==year)]
         return r.iloc[0][dept] if not r.empty else None
@@ -581,7 +587,6 @@ elif st.session_state.page == "prog":
         s = dfp[dfp["Үзүүлэлт"]==metric].sort_values("Он")
         return list(s["Он"]), list(s[dept])
 
-    # ── SECTION A: Тоон KPI cards (2026) ──────────────────────
     st.markdown("<div class='section-title'>📊 2026 оны үндсэн үзүүлэлтүүд</div>", unsafe_allow_html=True)
 
     count_kpis = [
@@ -594,7 +599,7 @@ elif st.session_state.page == "prog":
         ("Интерактив хөтөлбөрийн тоо",                       "🔬 Интерактив",              C["teal"]),
         ("Ажлын байранд суурилсан хөтөлбөрийн тоо",         "🏭 Ажлын байранд суурилсан", C["blue"]),
         ("Хамтын ажиллагааны гэрээтэй байгууллагын тоо",    "📝 Гэрээт байгуулага",       C["purple"]),
-        ("Хүлээн зөвшөөрөгдсөн ОУ мэргэжлийн байгууллагын тоо", "✅ ОУ мэргэжлийн байгууллага", C["green"]),
+        ("Хүлээн зөвшөөрөгдсөн ОУ мэргэжлийн байгууллагын тоо", "✅ ОУ мэргэжлийн байгуулага", C["green"]),
     ]
     kpi_cols = st.columns(5)
     for i, (met, lbl, clr) in enumerate(count_kpis):
@@ -607,7 +612,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
 
-    # ── SECTION B: Хувийн KPI cards (2026) ────────────────────
     st.markdown("<div class='section-title'>📈 2026 оны хувийн KPI үзүүлэлтүүд</div>", unsafe_allow_html=True)
 
     pct_kpis_p = [
@@ -627,7 +631,6 @@ padding:14px 12px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
 
-    # ── SECTION C: Хувийн KPI трендийн графикууд ──────────────
     st.markdown("<div class='section-title'>📉 Хувийн KPI трендийн графикууд — Бодит ба Зорилт</div>", unsafe_allow_html=True)
 
     pct_trend_metrics = [
@@ -663,7 +666,6 @@ padding:14px 12px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             with st.container(border=True):
                 st.plotly_chart(fig_p, use_container_width=True)
 
-    # ── SECTION D: Тоон үзүүлэлтүүдийн 2026 тэнхимийн харьцуулалт ──
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
 
     prog_dept_opts = {
@@ -705,7 +707,6 @@ padding:14px 12px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     with st.container(border=True):
         st.plotly_chart(fig_dp, use_container_width=True)
 
-    # ── SECTION E: Тоон трендийн графикууд (2026 оны утга + зорилт) ──
     st.markdown("<div class='section-title'>📊 Тоон үзүүлэлтүүдийн өөрчлөлт</div>", unsafe_allow_html=True)
 
     count_trend_groups = [
@@ -755,6 +756,269 @@ padding:14px 12px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             with cols_t[ci]:
                 with st.container(border=True):
                     st.plotly_chart(fig_t, use_container_width=True)
+
+# ============================================================
+# PAGE 3 — СУРАЛЦАГЧ ХӨГЖИЛ
+# ============================================================
+elif st.session_state.page == "stud":
+
+    # ── SECTION A: Хувийн KPI cards — 2026 оны хувийн үзүүлэлтүүд ──
+    st.markdown("<div class='section-title'>📈 2026 оны хувийн KPI үзүүлэлтүүд</div>", unsafe_allow_html=True)
+
+    pct_kpis_s = [
+        ("Виртуал цахимаар хэрэгжиж буй хичээлийн хувь",        "💻 Цахим хичээл %",         C["blue"]),
+        ("AI суурилсан хичээлийн сэтгэл ханамжийн хувь",        "🤖 AI сэтгэл ханамж %",     C["purple"]),
+        ("Шинэ технологи нэвтрүүлэлтийн үр дүн, үр нөлөө",      "⚡ Технологи нэвтрүүлэлт %", C["teal"]),
+        ("Нийт зэргийн бус сургалтын сэтгэл ханамж",            "😊 Зэргийн бус сэтгэл ханамж %", C["green"]),
+    ]
+
+    pct_s_cols = st.columns(4)
+    for i, (met, lbl, clr) in enumerate(pct_kpis_s):
+        v = sv(met, CURRENT_YEAR, D)
+        val_str = f"{v*100:.1f}%" if v is not None else "—"
+        pct_s_cols[i].markdown(f"""
+<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
+padding:14px 12px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
+    <div style='color:{clr};font-size:24px;font-weight:700;'>{val_str}</div>
+    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
+</div>""", unsafe_allow_html=True)
+
+    # ── SECTION B: Тоон KPI cards — 2026 оны тоон үзүүлэлтүүд ──
+    st.markdown("<div class='section-title'>📊 2026 оны тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
+
+    count_kpis_s = [
+        ("Хичээлийн тоо",                                                  "📚 Нийт хичээл",               C["blue"]),
+        ("Цахим хэлбэрээр орж буй хичээлийн тоо",                         "💻 Цахим хичээл",               C["teal"]),
+        ("Гадаад хэлээр зааж буй хичээлийн тоо",                          "🌐 Гадаад хэлний хичээл",       C["green"]),
+        ("AI суурилсан хичээлийн тоо",                                     "🤖 AI суурилсан хичээл",        C["purple"]),
+        ("Шинээр хөгжүүлсэн хичээлийн тоо",                               "✨ Шинэ хичээл",                C["orange"]),
+        ("Гадаад хэлээр заасан нийт группийн тоо",                        "👥 Гадаад хэлний групп",        C["pink"]),
+        ("Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо",          "🎯 Зэргийн бус хөтөлбөр",       C["teal"]),
+        ("Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо", "🖥️ Платформ сургалт",            C["blue"]),
+    ]
+
+    cnt_cols = st.columns(4)
+    for i, (met, lbl, clr) in enumerate(count_kpis_s):
+        v = sv(met, CURRENT_YEAR, D)
+        val_str = str(int(v)) if v is not None else "—"
+        cnt_cols[i % 4].markdown(f"""
+<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
+padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
+    <div style='color:{clr};font-size:24px;font-weight:700;'>{val_str}</div>
+    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
+</div>""", unsafe_allow_html=True)
+
+    # ── SECTION C: Хувийн KPI трендийн графикууд (2026-аас хойш зорилт) ──
+    st.markdown("<div class='section-title'>📉 Хувийн KPI трендийн графикууд — Бодит ба Зорилт</div>", unsafe_allow_html=True)
+
+    pct_trend_s = [
+        ("Виртуал цахимаар хэрэгжиж буй хичээлийн хувь",     "Цахим хичээлийн хувь (%)",          C["blue"]),
+        ("AI суурилсан хичээлийн сэтгэл ханамжийн хувь",     "AI хичээлийн сэтгэл ханамж (%)",    C["purple"]),
+        ("Шинэ технологи нэвтрүүлэлтийн үр дүн, үр нөлөө",  "Технологи нэвтрүүлэлтийн үр нөлөө (%)", C["teal"]),
+        ("Нийт зэргийн бус сургалтын сэтгэл ханамж",         "Зэргийн бус сэтгэл ханамж (%)",     C["green"]),
+    ]
+
+    sc1, sc2 = st.columns(2)
+    s_cols_cycle = [sc1, sc2, sc1, sc2]
+    for i, (met, lbl, clr) in enumerate(pct_trend_s):
+        yrs_s, vals_s = sseries(met, D)
+        fig_s = go.Figure()
+        hx = [y for y,v in zip(yrs_s,vals_s) if y<=CURRENT_YEAR and v is not None]
+        hy = [v for y,v in zip(yrs_s,vals_s) if y<=CURRENT_YEAR and v is not None]
+        fx = [y for y,v in zip(yrs_s,vals_s) if y>CURRENT_YEAR and v is not None]
+        fy = [v for y,v in zip(yrs_s,vals_s) if y>CURRENT_YEAR and v is not None]
+        fig_s.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
+            line=dict(color=clr, width=2.5), marker=dict(size=7, color=clr)))
+        if fx and hx:
+            fig_s.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
+                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
+                marker=dict(size=7, color=C["target"], symbol="diamond")))
+        if CURRENT_YEAR in yrs_s:
+            fig_s.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)",
+                annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)", annotation_font_size=10)
+        ts = dict(**theme(280))
+        ts["title"] = dict(text=lbl, font=dict(color=C["white"], size=12))
+        ts["yaxis"]["tickformat"] = ".0%"
+        fig_s.update_layout(**ts)
+        with s_cols_cycle[i]:
+            with st.container(border=True):
+                st.plotly_chart(fig_s, use_container_width=True)
+
+    # ── SECTION D: 2026 оны тоон үзүүлэлтүүдийн визуализаци ──
+    st.markdown("<div class='section-title'>📊 2026 оны хичээлийн бүрэлдэхүүн — Pie chart</div>", unsafe_allow_html=True)
+
+    pie_col1, pie_col2, pie_col3 = st.columns(3)
+
+    with pie_col1:
+        # Хичээлийн төрлийн харьцаа
+        course_types = [
+            "Цахим хэлбэрээр орж буй хичээлийн тоо",
+            "Гадаад хэлээр зааж буй хичээлийн тоо",
+            "AI суурилсан хичээлийн тоо",
+            "Шинээр хөгжүүлсэн хичээлийн тоо",
+        ]
+        course_labels = ["Цахим", "Гадаад хэлний", "AI суурилсан", "Шинэ"]
+        course_vals = [sv(m, CURRENT_YEAR, D) or 0 for m in course_types]
+        total_c = sv("Хичээлийн тоо", CURRENT_YEAR, D) or 1
+        # Бусад = нийт - тусгай ангиллаас гадна
+        fig_pie1 = go.Figure(go.Pie(
+            labels=course_labels,
+            values=course_vals,
+            hole=0.5,
+            marker=dict(colors=DEPT_COLORS[:4], line=dict(color=C["bg"], width=2)),
+            textinfo="label+percent",
+            textfont=dict(color=C["text"], size=10),
+            insidetextorientation="radial",
+        ))
+        t_pie1 = dict(**theme(280))
+        t_pie1["title"] = dict(text="Хичээлийн ангиллын харьцаа", font=dict(color=C["white"], size=12))
+        t_pie1["showlegend"] = False
+        fig_pie1.update_layout(**t_pie1)
+        st.plotly_chart(fig_pie1, use_container_width=True)
+
+    with pie_col2:
+        # Группийн харьцаа — гадаад хэлний групп vs нийт
+        grp_val = sv("Гадаад хэлээр заасан нийт группийн тоо", CURRENT_YEAR, D) or 0
+        total_course = sv("Хичээлийн тоо", CURRENT_YEAR, D) or 0
+        other_grp = max(total_course - grp_val, 0)
+        fig_pie2 = go.Figure(go.Pie(
+            labels=["Гадаад хэлний групп", "Бусад"],
+            values=[grp_val, other_grp],
+            hole=0.5,
+            marker=dict(colors=[C["green"], C["grid"]], line=dict(color=C["bg"], width=2)),
+            textinfo="label+value",
+            textfont=dict(color=C["text"], size=10),
+        ))
+        t_pie2 = dict(**theme(280))
+        t_pie2["title"] = dict(text="Гадаад хэлний группийн харьцаа", font=dict(color=C["white"], size=12))
+        t_pie2["showlegend"] = False
+        fig_pie2.update_layout(**t_pie2)
+        st.plotly_chart(fig_pie2, use_container_width=True)
+
+    with pie_col3:
+        # Платформ сургалт vs зэргийн бус хөтөлбөр
+        plat_val = sv("Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо", CURRENT_YEAR, D) or 0
+        cert_val = sv("Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо", CURRENT_YEAR, D) or 0
+        fig_pie3 = go.Figure(go.Pie(
+            labels=["Платформ сургалт", "Зэргийн бус хөтөлбөр"],
+            values=[plat_val, cert_val],
+            hole=0.5,
+            marker=dict(colors=[C["orange"], C["purple"]], line=dict(color=C["bg"], width=2)),
+            textinfo="label+value",
+            textfont=dict(color=C["text"], size=10),
+        ))
+        t_pie3 = dict(**theme(280))
+        t_pie3["title"] = dict(text="Платформ & Зэргийн бус сургалт", font=dict(color=C["white"], size=12))
+        t_pie3["showlegend"] = False
+        fig_pie3.update_layout(**t_pie3)
+        st.plotly_chart(fig_pie3, use_container_width=True)
+
+    # ── SECTION E: Тэнхимийн харьцуулсан баганан диаграм ──
+    st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
+
+    stud_dept_opts = {
+        "Нийт хичээлийн тоо":                  "Хичээлийн тоо",
+        "Цахим хичээлийн тоо":                  "Цахим хэлбэрээр орж буй хичээлийн тоо",
+        "Гадаад хэлний хичээлийн тоо":          "Гадаад хэлээр зааж буй хичээлийн тоо",
+        "AI суурилсан хичээлийн тоо":            "AI суурилсан хичээлийн тоо",
+        "Шинэ хичээлийн тоо":                   "Шинээр хөгжүүлсэн хичээлийн тоо",
+        "Гадаад хэлний группийн тоо":            "Гадаад хэлээр заасан нийт группийн тоо",
+        "Зэргийн бус хөтөлбөрийн тоо":          "Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо",
+        "Платформ сургалтын тоо":                "Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо",
+    }
+
+    sel_sd = st.selectbox("Тэнхимээр харьцуулах үзүүлэлт:", list(stud_dept_opts.keys()), key="stud_dept_sel")
+    sel_met_sd = stud_dept_opts[sel_sd]
+
+    vals_sd = []
+    for d in DEPTS_S:
+        v = sv(sel_met_sd, CURRENT_YEAR, d)
+        vals_sd.append(int(v) if v is not None else 0)
+
+    avg_sd = round(sum(vals_sd) / max(len([v for v in vals_sd if v > 0]), 1), 1)
+    fig_sd = go.Figure(go.Bar(
+        x=DEPTS_S, y=vals_sd,
+        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+        text=[str(v) for v in vals_sd], textposition="outside",
+        textfont=dict(color=C["text"], size=10),
+    ))
+    t_sd = dict(**theme(340))
+    t_sd["title"] = dict(text=f"Тэнхим тус бүрийн {sel_sd} (2026)", font=dict(color=C["white"], size=12))
+    t_sd["xaxis"]["tickfont"] = dict(size=10)
+    fig_sd.update_layout(**t_sd)
+    fig_sd.add_hline(y=avg_sd, line_dash="dash", line_color="#ff4d4d", line_width=1.5,
+        annotation_text=f"Дундаж: {avg_sd}",
+        annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
+    with st.container(border=True):
+        st.plotly_chart(fig_sd, use_container_width=True)
+
+    # ── SECTION F: Хичээлийн тоон үзүүлэлтүүдийн хэлбэлзэл — 2026 оны Heatmap ──
+    st.markdown("<div class='section-title'>🔥 Хичээлийн үзүүлэлтүүдийн тэнхимийн heatmap (2026)</div>", unsafe_allow_html=True)
+
+    heatmap_metrics = [
+        ("Хичээлийн тоо",                                                  "Нийт хичээл"),
+        ("Цахим хэлбэрээр орж буй хичээлийн тоо",                         "Цахим"),
+        ("Гадаад хэлээр зааж буй хичээлийн тоо",                          "Гадаад хэл"),
+        ("AI суурилсан хичээлийн тоо",                                     "AI суурилсан"),
+        ("Шинээр хөгжүүлсэн хичээлийн тоо",                               "Шинэ"),
+        ("Гадаад хэлээр заасан нийт группийн тоо",                        "Гадаад групп"),
+        ("Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо",          "Зэргийн бус"),
+        ("Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо", "Платформ"),
+    ]
+
+    hm_data = []
+    hm_labels = []
+    for met, lbl in heatmap_metrics:
+        row = [sv(met, CURRENT_YEAR, d) or 0 for d in DEPTS_S]
+        hm_data.append(row)
+        hm_labels.append(lbl)
+
+    fig_hm = go.Figure(go.Heatmap(
+        z=hm_data,
+        x=DEPTS_S,
+        y=hm_labels,
+        colorscale=[[0, "#080e1c"], [0.3, "#0d2a5a"], [0.6, "#1a5299"], [1.0, "#00d4ff"]],
+        text=[[str(int(v)) for v in row] for row in hm_data],
+        texttemplate="%{text}",
+        textfont=dict(color=C["white"], size=10),
+        showscale=True,
+        colorbar=dict(
+            tickfont=dict(color=C["text"]),
+            outlinecolor=C["grid"],
+            outlinewidth=1,
+        ),
+    ))
+    t_hm = dict(**theme(360))
+    t_hm["title"] = dict(text="Тэнхимийн хичээлийн үзүүлэлтүүдийн heatmap (2026)", font=dict(color=C["white"], size=12))
+    t_hm["xaxis"]["tickfont"] = dict(size=10)
+    t_hm["yaxis"]["tickfont"] = dict(size=10)
+    t_hm["margin"]["l"] = 140
+    fig_hm.update_layout(**t_hm)
+    with st.container(border=True):
+        st.plotly_chart(fig_hm, use_container_width=True)
+
+    # ── SECTION G: Стэк баганан диаграм — хичээлийн төрлүүд тэнхимээр ──
+    st.markdown("<div class='section-title'>📊 Хичээлийн төрлүүдийн стэк диаграм (2026)</div>", unsafe_allow_html=True)
+
+    stack_metrics = [
+        ("Цахим хэлбэрээр орж буй хичээлийн тоо",  "Цахим",       C["teal"]),
+        ("Гадаад хэлээр зааж буй хичээлийн тоо",   "Гадаад хэл",  C["green"]),
+        ("AI суурилсан хичээлийн тоо",              "AI суурилсан", C["purple"]),
+        ("Шинээр хөгжүүлсэн хичээлийн тоо",        "Шинэ",        C["orange"]),
+    ]
+
+    fig_stk = go.Figure()
+    for met, lbl, clr in stack_metrics:
+        vals_stk = [sv(met, CURRENT_YEAR, d) or 0 for d in DEPTS_S]
+        fig_stk.add_trace(go.Bar(x=DEPTS_S, y=vals_stk, name=lbl, marker_color=clr))
+
+    t_stk = dict(**theme(340))
+    t_stk["title"] = dict(text="Хичээлийн төрлүүд тэнхимээр (2026)", font=dict(color=C["white"], size=12))
+    t_stk["barmode"] = "stack"
+    t_stk["xaxis"]["tickfont"] = dict(size=10)
+    fig_stk.update_layout(**t_stk)
+    with st.container(border=True):
+        st.plotly_chart(fig_stk, use_container_width=True)
 
 # ============================================================
 # FOOTER
