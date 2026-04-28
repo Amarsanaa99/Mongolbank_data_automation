@@ -539,7 +539,6 @@ metric_options = {
 sel_metric = st.selectbox("Тэнхимээр харьцуулах үзүүлэлт сонгох:", list(metric_options.keys()))
 sel_cat, sel_met, is_pct = metric_options[sel_metric]
 
-# хувь эсэхээс хамааран утга авах
 vals_dept = []
 for d in DEPTS:
     v = gv(sel_cat, sel_met, CURRENT_YEAR, d)
@@ -552,6 +551,28 @@ for d in DEPTS:
 
 text_vals = [f"{v}%" if is_pct else str(int(v)) for v in vals_dept]
 
+# 1. Эхлээд figure үүсгэ
+fig_dept_bar = go.Figure(go.Bar(
+    x=DEPTS,
+    y=vals_dept,
+    marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+    text=text_vals,
+    textposition="outside",
+    textfont=dict(color=C["text"], size=10),
+))
+
+# 2. Дараа нь layout тохируул
+t_bar = dict(**theme(340))
+t_bar["title"] = dict(
+    text=f"Тэнхим тус бүрийн {sel_metric} (2026){' (%)' if is_pct else ''}",
+    font=dict(color=C["white"], size=12)
+)
+t_bar["xaxis"]["tickfont"] = dict(size=10)
+if is_pct:
+    t_bar["yaxis"]["ticksuffix"] = "%"
+fig_dept_bar.update_layout(**t_bar)
+
+# 3. Хамгийн сүүлд дундаж шугам нэм
 avg_val = round(sum(v for v in vals_dept if v > 0) / max(len([v for v in vals_dept if v > 0]), 1), 1)
 fig_dept_bar.add_hline(
     y=avg_val,
@@ -562,24 +583,6 @@ fig_dept_bar.add_hline(
     annotation_position="top right",
     annotation_font=dict(color="#ff4d4d", size=11),
 )
-
-fig_dept_bar = go.Figure(go.Bar(
-    x=DEPTS,
-    y=vals_dept,
-    marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
-    text=text_vals,
-    textposition="outside",
-    textfont=dict(color=C["text"], size=10),
-))
-t_bar = dict(**theme(340))
-t_bar["title"] = dict(
-    text=f"Тэнхим тус бүрийн {sel_metric} (2026){' (%)' if is_pct else ''}",
-    font=dict(color=C["white"], size=12)
-)
-t_bar["xaxis"]["tickfont"] = dict(size=10)
-if is_pct:
-    t_bar["yaxis"]["ticksuffix"] = "%"
-fig_dept_bar.update_layout(**t_bar)
 
 with st.container(border=True):
     st.plotly_chart(fig_dept_bar, use_container_width=True)
