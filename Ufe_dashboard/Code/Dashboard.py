@@ -369,50 +369,6 @@ border:1px solid #1e3a8a;border-radius:14px;padding:16px 24px;margin-bottom:20px
 """, unsafe_allow_html=True)
 
 # ============================================================
-# SECTION 1 — ЧУХАЛ ТООН ҮЗҮҮЛЭЛТҮҮД (2026)
-# ============================================================
-st.markdown("<div class='section-title'>📊 2026 оны гол үзүүлэлтүүд</div>", unsafe_allow_html=True)
-
-kpi_items = [
-    ("Багшийн тоо", "Нийт үндсэн багшийн тоо",  "👤", "Үндсэн багш",  "blue"),
-    ("Багшийн тоо", "Нийт гэрээт багшийн тоо",   "📋", "Гэрээт багш",  "purple"),
-    ("Багшийн тоо", "Нийт багшийн тоо",           "👥", "Нийт багш",    "green"),
-    ("Багшийн тоо", "Үндсэн эмэгтэй багшийн тоо","👩", "Эмэгтэй багш", "pink"),
-    ("Багшийн тоо", "Нийт багш, ажилтаны тоо",   "🏢", "Нийт ажилтан", "orange"),
-    ("Боловсролын түвшин", "Доктор",              "🔬", "Доктор",        "teal"),
-]
-
-cols = st.columns(6)
-for col, (cat, met, icon, lbl, color) in zip(cols, kpi_items):
-    v = gv(cat, met, CURRENT_YEAR, D)
-    col.markdown(f"""
-    <div class='kpi-card kpi-{color}'>
-        <div class='kpi-icon'>{icon}</div>
-        <div class='kpi-num kpi-num-{color}'>{fmt(v)}</div>
-        <div class='kpi-label'>{lbl}</div>
-    </div>""", unsafe_allow_html=True)
-
-# Зэрэглэл row
-st.markdown("")
-rank_items = [
-    ("Зэрэглэл", "Профессор",        "👑", "Профессор",         "orange"),
-    ("Зэрэглэл", "Дэд профессор",    "🏆", "Дэд профессор",     "purple"),
-    ("Зэрэглэл", "Ахлах багш",       "⭐", "Ахлах багш",        "blue"),
-    ("Зэрэглэл", "Багш",             "📖", "Багш",               "green"),
-    ("Зэрэглэл", "Дадлагажигч багш", "🌱", "Дадлагажигч",       "teal"),
-    ("Боловсролын түвшин", "Магистр","📚", "Магистр",            "pink"),
-]
-cols2 = st.columns(6)
-for col, (cat, met, icon, lbl, color) in zip(cols2, rank_items):
-    v = gv(cat, met, CURRENT_YEAR, D)
-    col.markdown(f"""
-    <div class='kpi-card kpi-{color}'>
-        <div class='kpi-icon'>{icon}</div>
-        <div class='kpi-num kpi-num-{color}'>{fmt(v)}</div>
-        <div class='kpi-label'>{lbl}</div>
-    </div>""", unsafe_allow_html=True)
-
-# ============================================================
 # SECTION 2 — ХУВИЙН KPI ҮЗҮҮЛЭЛТҮҮД (2026 он)
 # ============================================================
 st.markdown("<div class='section-title'>📈 2026 оны хувийн KPI үзүүлэлтүүд</div>", unsafe_allow_html=True)
