@@ -547,7 +547,9 @@ st.markdown("<div style='margin-bottom:16px'></div>", unsafe_allow_html=True)
 # PAGE 1 — БАГШИЙН ХӨГЖИЛ
 # ============================================================
 if st.session_state.page == "teacher":
-
+# ============================================================
+# SECTION 1 — KPI КАРТ ҮЗҮҮЛЭЛТҮҮД
+# ============================================================
     st.markdown("<div class='section-title'>📈 2026 оны хувийн KPI үзүүлэлтүүд</div>", unsafe_allow_html=True)
     pct_kpis = [
         ("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь",                     "🔬 Доктор зэрэгтэй багш",             C["teal"]),
@@ -571,7 +573,9 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     <div style='color:{clr};font-size:20px;font-weight:700;'>{pct_str}</div>
     <div style='color:#4a6a98;font-size:14px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
-
+# ============================================================
+# SECTION 2 — KPI Трендийн графикууд (col_a — зүүн)
+# ============================================================
     st.markdown("<div class='section-title'>📉 KPI Трендийн графикууд — Бодит ба Зорилт</div>", unsafe_allow_html=True)
     col_a, col_b = st.columns(2)
 
@@ -606,7 +610,9 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             fig3.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
         with st.container(border=True):
             st.plotly_chart(fig3, use_container_width=True)
-
+# ============================================================
+# SECTION 3 — KPI Трендийн графикууд (col_b — баруун)
+# ============================================================
     with col_b:
         fig_edu = go.Figure()
         for m, clr in [("Бакалавр", C["blue"]), ("Магистр", C["purple"]), ("Доктор", C["teal"])]:
@@ -673,7 +679,9 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         fig_pt.update_layout(**t_pt)
         with st.container(border=True):
             st.plotly_chart(fig_pt, use_container_width=True)
-
+# ============================================================
+# SECTION 4 — Тэнхимийн харьцуулсан үзүүлэлтүүд
+# ============================================================
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
     metric_options = {
         "Доктор зэрэгтэй багшийн хувь":  ("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь", True),
@@ -716,7 +724,9 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
     with st.container(border=True):
         st.plotly_chart(fig_dept_bar, use_container_width=True)
-
+# ============================================================
+# SECTION 5 — Donut график ба Насны бүлэг
+# ============================================================
     st.markdown("<div class='section-title'>🔵 Нийт бүрэлдэхүүний харьцаа (2026)</div>", unsafe_allow_html=True)
     d_col1, d_col2, d_col3 = st.columns(3)
     with d_col1:
