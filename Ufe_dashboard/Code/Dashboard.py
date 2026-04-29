@@ -25,13 +25,6 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     border-right: 1px solid #162040;
 }
 [data-testid="stSidebar"] * { color: #8aaad8 !important; }
-[data-testid="stSidebar"] > div:first-child {
-    padding-top: 8px !important;
-    padding-bottom: 0px !important;
-}
-[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-    gap: 0px !important;
-}
 
 div[data-testid="stSidebar"] .stButton > button {
     width: 100% !important;
@@ -107,8 +100,45 @@ div[data-testid="stSidebar"] .stButton > button:hover {
     border-color: #1a3060 !important;
     color: #8aaad8 !important;
 }
+
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 8px !important;
+}
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 0px !important;
+}
+section[data-testid="stSidebar"] {
+    overflow: hidden !important;
+    height: 100vh !important;
+}
+section[data-testid="stSidebar"] > div {
+    overflow-y: auto !important;
+    height: 100% !important;
+}
 </style>
 """, unsafe_allow_html=True)
+
+# ============================================================
+# DATA LOADING — Багшийн хөгжил
+# ============================================================
+@st.cache_data
+def load_teacher_data():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_PATH = os.path.join(BASE_DIR, "..", "data", "Teach_dev_cl.xlsx")
+    df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=None)
+    df.columns = ["Ангилал", "Үзүүлэлт", "Он", "БУТ", "МКТ", "МСМТ", "НББТ",
+                  "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ", "Нийт"]
+    df = df[df["Он"].notna()]
+    df = df[df["Он"] != "Он"]
+    df["Он"] = pd.to_numeric(df["Он"], errors="coerce").astype("Int64")
+    df = df[df["Он"].notna()]
+    DEPTS = ["БУТ", "МКТ", "МСМТ", "НББТ", "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ"]
+    for c in DEPTS + ["Нийт"]:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df["Ангилал"] = df["Ангилал"].ffill()
+    df["Үзүүлэлт"] = df["Үзүүлэлт"].ffill()
+    df["Ангилал"] = df["Ангилал"].str.strip()
+    return df, DEPTS
 
 # ============================================================
 # DATA LOADING — Хөтөлбөр хөгжил
@@ -460,6 +490,7 @@ with st.sidebar:
             if st.button(f"📋 {short}", key=f"prog_{prog}"):
                 st.session_state.sd_prog = prog
                 st.rerun()
+
 D = st.session_state.dept
 SELECTED_PROG = st.session_state.sd_prog
 SELECTED_PROG_IDX = PROGRAMS_D.index(SELECTED_PROG) if SELECTED_PROG in PROGRAMS_D else 0
