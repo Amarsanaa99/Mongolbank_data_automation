@@ -94,10 +94,26 @@ div[data-testid="stSidebar"] .stButton > button:hover {
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #080d1a; }
 ::-webkit-scrollbar-thumb { background: #1a3060; border-radius: 3px; }
+
 .stSelectbox > div > div {
     background: #0d1830 !important;
     border-color: #1a3060 !important;
     color: #8aaad8 !important;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 8px !important;
+}
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 0px !important;
+}
+section[data-testid="stSidebar"] {
+    overflow: hidden !important;
+    height: 100vh !important;
+}
+section[data-testid="stSidebar"] > div {
+    overflow-y: auto !important;
+    height: 100% !important;
 }
 </style>
 """, unsafe_allow_html=True)
