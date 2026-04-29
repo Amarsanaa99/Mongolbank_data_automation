@@ -1342,55 +1342,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     with st.container(border=True):
         st.plotly_chart(fig_pc, use_container_width=True)
 
-    # ── SECTION G: Хөтөлбөр бүрийн нийт суралцагч trend хэлбэрийн радар диаграм ──
-    st.markdown("<div class='section-title'>🔵 Бүх хөтөлбөрийн 2026 хэмжүүрийн радар диаграм</div>", unsafe_allow_html=True)
-
-    radar_metrics = [
-        ("Үндсэн хөтөлбөрийн суралцагчийн тоо",                "Үндсэн"),
-        ("Цагийн хөтөлбөрийн суралцагчийн тоо",                "Цагийн"),
-        ("Цахимаар хэрэгжиж буй хөтөлбөрийн суралцагчийн тоо","Цахим"),
-        ("Гадаад хэлээр явуулах хөтөлбөрийн суралцагчийн тоо","Гадаад хэл"),
-        ("Хамтарсан хөтөлбөрийн суралцагчийн тоо",             "Хамтарсан"),
-        ("ОУ дипломтой хөтөлбөрийн суралцагчийн тоо",          "ОУ диплом"),
-        ("Үүнээс эмэгтэй оюутны тоо",                          "Эмэгтэй"),
-        ("Тэтгэлэг хүртсэн суралцагчийн тоо",                  "Тэтгэлэгт"),
-    ]
-    r_labels = [lbl for _, lbl in radar_metrics]
-    r_vals_sel = [sdv_prog_total(met, CURRENT_YEAR, PROG_IDX) or 0 for met, _ in radar_metrics]
-    r_vals_avg = [
-        round(sum(sdv_prog_total(met, CURRENT_YEAR, i) or 0 for i in range(len(PROGRAMS_D))) / len(PROGRAMS_D), 1)
-        for met, _ in radar_metrics
-    ]
-
-    fig_radar = go.Figure()
-    fig_radar.add_trace(go.Scatterpolar(
-        r=r_vals_sel + [r_vals_sel[0]],
-        theta=r_labels + [r_labels[0]],
-        fill="toself", name=SELECTED_PROG,
-        line=dict(color=C["orange"], width=2),
-        fillcolor="rgba(255,171,64,0.15)",
-    ))
-    fig_radar.add_trace(go.Scatterpolar(
-        r=r_vals_avg + [r_vals_avg[0]],
-        theta=r_labels + [r_labels[0]],
-        fill="toself", name="Нийт дундаж",
-        line=dict(color=C["blue"], width=2, dash="dot"),
-        fillcolor="rgba(0,212,255,0.08)",
-    ))
-    t_radar = dict(**theme(400))
-    t_radar["title"] = dict(text=f"{SELECTED_PROG} vs Нийт дундаж (2026)", font=dict(color=C["white"], size=12))
-    t_radar["polar"] = dict(
-        bgcolor=C["bg"],
-        radialaxis=dict(gridcolor=C["grid"], tickfont=dict(color=C["text"], size=9)),
-        angularaxis=dict(gridcolor=C["grid"], tickfont=dict(color=C["text"], size=10)),
-    )
-    t_radar["legend"] = dict(bgcolor="rgba(0,0,0,0)", font=dict(color=C["text"], size=11))
-    del t_radar["xaxis"]
-    del t_radar["yaxis"]
-    fig_radar.update_layout(**t_radar)
-    with st.container(border=True):
-        st.plotly_chart(fig_radar, use_container_width=True)
-
     # ── SECTION H: Heatmap — бүх хөтөлбөр × үзүүлэлт (2026) ──
     st.markdown("<div class='section-title'>🔥 Хөтөлбөр × Үзүүлэлтийн heatmap (2026)</div>", unsafe_allow_html=True)
 
