@@ -728,70 +728,69 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 # SECTION 5 — Donut график ба Насны бүлэг
 # ============================================================
 
-BLUE_PALETTE = ["#1E90FF", "#4DB8FF", "#0A4A8A", "#00BFFF", "#0066CC", "#63CFFF"]
-
-st.markdown("<div class='section-title'>🔵 Нийт бүрэлдэхүүний харьцаа (2026)</div>", unsafe_allow_html=True)
-d_col1, d_col2, d_col3 = st.columns(3)
-with d_col1:
-    edu_labels = ["Бакалавр", "Магистр", "Доктор"]
-    edu_vals = [gv("Боловсролын түвшин", lv, CURRENT_YEAR, D) or 0 for lv in edu_labels]
-    st.plotly_chart(donut_fig(edu_labels, edu_vals, "Боловсролын түвшин", colors=BLUE_PALETTE), use_container_width=True)
-with d_col2:
-    rank_labels = ["Дадлагажигч багш", "Багш", "Ахлах багш", "Дэд профессор", "Профессор"]
-    rank_vals = [gv("Зэрэглэл", lv, CURRENT_YEAR, D) or 0 for lv in rank_labels]
-    st.plotly_chart(donut_fig(rank_labels, rank_vals, "Зэрэглэлийн бүрэлдэхүүн", colors=BLUE_PALETTE), use_container_width=True)
-with d_col3:
-    comp_labels = ["Үндсэн багш", "Гэрээт багш"]
-    comp_vals = [
-        gv("Багшийн тоо", "Нийт үндсэн багшийн тоо", CURRENT_YEAR, D) or 0,
-        gv("Багшийн тоо", "Нийт гэрээт багшийн тоо", CURRENT_YEAR, D) or 0,
-    ]
-    st.plotly_chart(donut_fig(comp_labels, comp_vals, "Үндсэн ба Гэрээт багш", colors=BLUE_PALETTE), use_container_width=True)
-
-st.markdown("<div class='section-title'>👥 Насны бүлэг ба Ажилласан жил (2026)</div>", unsafe_allow_html=True)
-age_col, exp_col = st.columns(2)
-
-with age_col:
-    age_groups = ["25 хүртэл", "26-35", "36-45", "46-55", "56 ба түүнээс дээш"]
-    age_vals = [gv("Насны бүлэг", ag, CURRENT_YEAR, D) or 0 for ag in age_groups]
-    # ✅ Vertical баганан диаграмм болгосон + rounded + цэнхэр
-    fig_age = go.Figure(go.Bar(
-        x=age_groups, y=age_vals,
-        orientation="v",
-        marker=dict(color="#1E90FF", cornerradius=8),
-        text=age_vals, textposition="outside",
-        textfont=dict(color=C["text"], size=10)
-    ))
-    t_age = dict(**theme(260))
-    t_age["title"] = dict(text="Насны бүлгийн бүрэлдэхүүн", font=dict(color=C["white"], size=12))
-    t_age["yaxis"]["title"] = "Тоо"
-    fig_age.update_layout(**t_age)
-    st.plotly_chart(fig_age, use_container_width=True)
-
-with exp_col:
-    exp_groups = ["3 жил хүртэл", "4-6 жил", "Ажилласан жил - 7-9 жил", "10-15 жил", "16-20 жил", "21 ба түүнээс дээш"]
-    exp_labels = ["≤3 жил", "4-6 жил", "7-9 жил", "10-15 жил", "16-20 жил", "21+ жил"]
-    exp_vals = [gv("Ажилласан жил", eg, CURRENT_YEAR, D) or 0 for eg in exp_groups]
-    # ✅ Horizontal + rounded + цэнхэр нэг өнгө
-    fig_exp = go.Figure(go.Bar(
-        x=exp_vals, y=exp_labels,
-        orientation="h",
-        marker=dict(color="#1E90FF", cornerradius=8),
-        text=exp_vals, textposition="outside",
-        textfont=dict(color=C["text"], size=10)
-    ))
-    t_exp = dict(**theme(260))
-    t_exp["title"] = dict(text="Ажилласан жилийн бүрэлдэхүүн", font=dict(color=C["white"], size=12))
-    t_exp["xaxis"]["title"] = "Тоо"
-    t_exp["margin"]["l"] = 100
-    fig_exp.update_layout(**t_exp)
-    st.plotly_chart(fig_exp, use_container_width=True)
+    BLUE_PALETTE = ["#1E90FF", "#4DB8FF", "#0A4A8A", "#00BFFF", "#0066CC", "#63CFFF"]
+    
+    st.markdown("<div class='section-title'>🔵 Нийт бүрэлдэхүүний харьцаа (2026)</div>", unsafe_allow_html=True)
+    d_col1, d_col2, d_col3 = st.columns(3)
+    with d_col1:
+        edu_labels = ["Бакалавр", "Магистр", "Доктор"]
+        edu_vals = [gv("Боловсролын түвшин", lv, CURRENT_YEAR, D) or 0 for lv in edu_labels]
+        st.plotly_chart(donut_fig(edu_labels, edu_vals, "Боловсролын түвшин", colors=BLUE_PALETTE), use_container_width=True)
+    with d_col2:
+        rank_labels = ["Дадлагажигч багш", "Багш", "Ахлах багш", "Дэд профессор", "Профессор"]
+        rank_vals = [gv("Зэрэглэл", lv, CURRENT_YEAR, D) or 0 for lv in rank_labels]
+        st.plotly_chart(donut_fig(rank_labels, rank_vals, "Зэрэглэлийн бүрэлдэхүүн", colors=BLUE_PALETTE), use_container_width=True)
+    with d_col3:
+        comp_labels = ["Үндсэн багш", "Гэрээт багш"]
+        comp_vals = [
+            gv("Багшийн тоо", "Нийт үндсэн багшийн тоо", CURRENT_YEAR, D) or 0,
+            gv("Багшийн тоо", "Нийт гэрээт багшийн тоо", CURRENT_YEAR, D) or 0,
+        ]
+        st.plotly_chart(donut_fig(comp_labels, comp_vals, "Үндсэн ба Гэрээт багш", colors=BLUE_PALETTE), use_container_width=True)
+    
+    st.markdown("<div class='section-title'>👥 Насны бүлэг ба Ажилласан жил (2026)</div>", unsafe_allow_html=True)
+    age_col, exp_col = st.columns(2)
+    
+    with age_col:
+        age_groups = ["25 хүртэл", "26-35", "36-45", "46-55", "56 ба түүнээс дээш"]
+        age_vals = [gv("Насны бүлэг", ag, CURRENT_YEAR, D) or 0 for ag in age_groups]
+        # ✅ Vertical баганан диаграмм болгосон + rounded + цэнхэр
+        fig_age = go.Figure(go.Bar(
+            x=age_groups, y=age_vals,
+            orientation="v",
+            marker=dict(color="#1E90FF", cornerradius=8),
+            text=age_vals, textposition="outside",
+            textfont=dict(color=C["text"], size=10)
+        ))
+        t_age = dict(**theme(260))
+        t_age["title"] = dict(text="Насны бүлгийн бүрэлдэхүүн", font=dict(color=C["white"], size=12))
+        t_age["yaxis"]["title"] = "Тоо"
+        fig_age.update_layout(**t_age)
+        st.plotly_chart(fig_age, use_container_width=True)
+    
+    with exp_col:
+        exp_groups = ["3 жил хүртэл", "4-6 жил", "Ажилласан жил - 7-9 жил", "10-15 жил", "16-20 жил", "21 ба түүнээс дээш"]
+        exp_labels = ["≤3 жил", "4-6 жил", "7-9 жил", "10-15 жил", "16-20 жил", "21+ жил"]
+        exp_vals = [gv("Ажилласан жил", eg, CURRENT_YEAR, D) or 0 for eg in exp_groups]
+        # ✅ Horizontal + rounded + цэнхэр нэг өнгө
+        fig_exp = go.Figure(go.Bar(
+            x=exp_vals, y=exp_labels,
+            orientation="h",
+            marker=dict(color="#1E90FF", cornerradius=8),
+            text=exp_vals, textposition="outside",
+            textfont=dict(color=C["text"], size=10)
+        ))
+        t_exp = dict(**theme(260))
+        t_exp["title"] = dict(text="Ажилласан жилийн бүрэлдэхүүн", font=dict(color=C["white"], size=12))
+        t_exp["xaxis"]["title"] = "Тоо"
+        t_exp["margin"]["l"] = 100
+        fig_exp.update_layout(**t_exp)
+        st.plotly_chart(fig_exp, use_container_width=True)
 
 # ============================================================
 # PAGE 2 — ХӨТӨЛБӨР ХӨГЖИЛ
 # ============================================================
 elif st.session_state.page == "prog":
-
     def pgv(metric, year, dept):
         r = dfp[(dfp["Үзүүлэлт"]==metric)&(dfp["Он"]==year)]
         return r.iloc[0][dept] if not r.empty else None
