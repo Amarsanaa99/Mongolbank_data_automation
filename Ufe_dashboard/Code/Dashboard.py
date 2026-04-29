@@ -997,7 +997,7 @@ elif st.session_state.page == "stud":
 <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
 padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
     <div style='color:{clr};font-size:24px;font-weight:700;'>{val_str}</div>
-    <div style='color:#ffffff;font-size:10px;margin-top:3px;'>{lbl}</div>
+    <div style='color:#ffffff;font-size:14px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
 
     # ── SECTION B: Хувийн KPI трендийн графикууд ──
