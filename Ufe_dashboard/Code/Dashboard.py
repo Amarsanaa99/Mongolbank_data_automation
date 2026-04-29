@@ -474,15 +474,6 @@ with st.sidebar:
                 st.session_state.sd_prog = prog
                 st.rerun()
 
-    st.markdown("---")
-    st.markdown("""
-<div style='font-size:11px;color:#3a5a90;line-height:1.8;'>
-📌 <b style='color:#4a7acc'>2026</b> = Одоогийн жил<br>
-<span style='color:#ff4da6'>●</span> Тасархай = Зорилт<br>
-<span style='color:#00d4ff'>●</span> Суцлсан = Бодит утга
-</div>
-""", unsafe_allow_html=True)
-
 D = st.session_state.dept
 SELECTED_PROG = st.session_state.sd_prog
 SELECTED_PROG_IDX = PROGRAMS_D.index(SELECTED_PROG) if SELECTED_PROG in PROGRAMS_D else 0
