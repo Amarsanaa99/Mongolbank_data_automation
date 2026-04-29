@@ -569,7 +569,7 @@ if st.session_state.page == "teacher":
 <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
 padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
     <div style='color:{clr};font-size:20px;font-weight:700;'>{pct_str}</div>
-    <div style='color:#4a6a98;font-size:12px;margin-top:3px;'>{lbl}</div>
+    <div style='color:#4a6a98;font-size:14px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
 
     st.markdown("<div class='section-title'>📉 KPI Трендийн графикууд — Бодит ба Зорилт</div>", unsafe_allow_html=True)
