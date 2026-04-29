@@ -1345,47 +1345,7 @@ elif st.session_state.page == "res":
         s = dfr[dfr["Үзүүлэлт"] == metric].sort_values("Он")
         return list(s["Он"]), list(s[dept])
 
-    # ── SECTION A: Чухал хувийн KPI товчлуур (2026 + trend) ──
-    st.markdown("<div class='section-title'>📈 Хувийн KPI үзүүлэлтүүд — 2026 ба Зорилтын трендийн график</div>", unsafe_allow_html=True)
-
-    PCT_METRICS_R = [
-        ("Гадаадтай хамтарсан бүтээлийн хувь",    "🌍 Гадаадтай хамтарсан %",  C["blue"]),
-        ("Судалгааны бүтээмж (дундаж)",             "📊 Судалгааны бүтээмж",      C["teal"]),
-        ("Эшлэлийн хэмжээ (дундаж)",               "📰 Эшлэлийн хэмжээ",         C["purple"]),
-        ("Захиалагчын сэтгэл ханамжийн хувь",      "😊 Захиалагчын сэтгэл ханамж", C["green"]),
-    ]
-
-    # Хувийн trend графикууд — бодит + зорилт
-    tr_c1, tr_c2 = st.columns(2)
-    tr_cycle = [tr_c1, tr_c2, tr_c1, tr_c2]
-    for i, (met, lbl, clr) in enumerate(PCT_METRICS_R):
-        yrs_r, vals_r = rgseries(met, D)
-        fig_r = go.Figure()
-        hx = [y for y, v in zip(yrs_r, vals_r) if y <= CURRENT_YEAR and v is not None]
-        hy = [v for y, v in zip(yrs_r, vals_r) if y <= CURRENT_YEAR and v is not None]
-        fx = [y for y, v in zip(yrs_r, vals_r) if y > CURRENT_YEAR and v is not None]
-        fy = [v for y, v in zip(yrs_r, vals_r) if y > CURRENT_YEAR and v is not None]
-        fig_r.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
-            line=dict(color=clr, width=2.5), marker=dict(size=7, color=clr)))
-        if fx and hx:
-            fig_r.add_trace(go.Scatter(x=[hx[-1]] + fx, y=[hy[-1]] + fy, mode="lines+markers",
-                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
-                marker=dict(size=7, color=C["target"], symbol="diamond")))
-        if CURRENT_YEAR in yrs_r:
-            fig_r.add_vline(x=CURRENT_YEAR, line_dash="dash",
-                            line_color="rgba(255,255,255,0.2)",
-                            annotation_text="2026",
-                            annotation_font_color="rgba(255,255,255,0.4)",
-                            annotation_font_size=10)
-        tr = dict(**theme(280))
-        tr["title"] = dict(text=lbl, font=dict(color=C["white"], size=12))
-        tr["yaxis"]["tickformat"] = ".0%"
-        fig_r.update_layout(**tr)
-        with tr_cycle[i]:
-            with st.container(border=True):
-                st.plotly_chart(fig_r, use_container_width=True)
-
-    # ── SECTION B: 2026 оны тоон KPI товчлуур ──
+        # ── SECTION B: 2026 оны тоон KPI товчлуур ──
     st.markdown("<div class='section-title'>🔢 2026 оны тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
 
     TOP_COUNT_KPIS = [
@@ -1434,6 +1394,45 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     <div style='color:{clr};font-size:26px;font-weight:700;'>{val_str}</div>
     <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
+    # ── SECTION A: Чухал хувийн KPI товчлуур (2026 + trend) ──
+    st.markdown("<div class='section-title'>📈 Хувийн KPI үзүүлэлтүүд — 2026 ба Зорилтын трендийн график</div>", unsafe_allow_html=True)
+
+    PCT_METRICS_R = [
+        ("Гадаадтай хамтарсан бүтээлийн хувь",    "🌍 Гадаадтай хамтарсан %",  C["blue"]),
+        ("Судалгааны бүтээмж (дундаж)",             "📊 Судалгааны бүтээмж",      C["teal"]),
+        ("Эшлэлийн хэмжээ (дундаж)",               "📰 Эшлэлийн хэмжээ",         C["purple"]),
+        ("Захиалагчын сэтгэл ханамжийн хувь",      "😊 Захиалагчын сэтгэл ханамж", C["green"]),
+    ]
+
+    # Хувийн trend графикууд — бодит + зорилт
+    tr_c1, tr_c2 = st.columns(2)
+    tr_cycle = [tr_c1, tr_c2, tr_c1, tr_c2]
+    for i, (met, lbl, clr) in enumerate(PCT_METRICS_R):
+        yrs_r, vals_r = rgseries(met, D)
+        fig_r = go.Figure()
+        hx = [y for y, v in zip(yrs_r, vals_r) if y <= CURRENT_YEAR and v is not None]
+        hy = [v for y, v in zip(yrs_r, vals_r) if y <= CURRENT_YEAR and v is not None]
+        fx = [y for y, v in zip(yrs_r, vals_r) if y > CURRENT_YEAR and v is not None]
+        fy = [v for y, v in zip(yrs_r, vals_r) if y > CURRENT_YEAR and v is not None]
+        fig_r.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
+            line=dict(color=clr, width=2.5), marker=dict(size=7, color=clr)))
+        if fx and hx:
+            fig_r.add_trace(go.Scatter(x=[hx[-1]] + fx, y=[hy[-1]] + fy, mode="lines+markers",
+                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
+                marker=dict(size=7, color=C["target"], symbol="diamond")))
+        if CURRENT_YEAR in yrs_r:
+            fig_r.add_vline(x=CURRENT_YEAR, line_dash="dash",
+                            line_color="rgba(255,255,255,0.2)",
+                            annotation_text="2026",
+                            annotation_font_color="rgba(255,255,255,0.4)",
+                            annotation_font_size=10)
+        tr = dict(**theme(280))
+        tr["title"] = dict(text=lbl, font=dict(color=C["white"], size=12))
+        tr["yaxis"]["tickformat"] = ".0%"
+        fig_r.update_layout(**tr)
+        with tr_cycle[i]:
+            with st.container(border=True):
+                st.plotly_chart(fig_r, use_container_width=True)
 
     # ── SECTION C: Тэнхимийн харьцуулалт — Баганан диаграм ──
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
