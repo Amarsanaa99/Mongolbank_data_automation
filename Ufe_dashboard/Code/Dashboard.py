@@ -1855,7 +1855,7 @@ elif st.session_state.page == "fin":
 
     def fmt_money(v):
         if v is None: return "—"
-        if v >= 1_000_000_000: return f"₮{v/1_000_000_000:.1f}тн"
+        if v >= 1_000_000_000: return f"₮{v/1_000_000_000:.1f}т.төг"
         if v >= 1_000_000: return f"₮{v/1_000_000:.0f}сая"
         return f"₮{int(v):,}"
 
@@ -1979,29 +1979,18 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         with fc_cycle[i]:
             with st.container(border=True):
                 st.plotly_chart(fig_f, use_container_width=True)
-    # ── SECTION E: Тэнхимийн харьцуулалт ──
+# ── SECTION E: Тэнхимийн харьцуулалт ──
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан санхүүгийн үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
-
     fin_dept_opts = {
-        "Нийт орлого":                         "Нийт орлого",
-        "Бакалаврын сургалтын орлого":          "Бакалаврын сургалтын орлого",
-        "Судалгааны орлого":                    "Судалгаа, эрдэм шинжилгээний орлого",
-        "Зэргийн бус сургалтын орлого":        "Зэргийн бус сургалтын орлого",
-        "Патентын орлого":                      "Патентын орлого",
-        "Гарааны бизнесийн орлого":             "Гарааны бизнесийн орлого",
-        "Хандиваар авсан санхүүжилт":           "Хандиваар авсан санхүүжилт",
         "Нэг багшид ногдох судалгааны орлого":  "Нэг багшид ногдох судалгааны орлого",
         "Тэнхимийн 1 багшид ногдох орлого":     "Тэнхимийн 1 багшид ногдох орлого",
-        "Тэнхимийн үйл ажиллагааны төсөв":      "Тэнхимийн үйл ажиллагааны төсөв",
         "Багшийн хөгжилд зориулсан төсөв":      "Багшийн хөгжилд зориулсан төсөв",
         "Цахим хөгжилд зарцуулсан төсөв":       "Цахим хөгжилд зарцуулсан төсөв",
     }
-
     sel_fd = st.selectbox("Тэнхимээр харьцуулах санхүүгийн үзүүлэлт:", list(fin_dept_opts.keys()), key="fin_dept_sel")
     sel_met_fd = fin_dept_opts[sel_fd]
     vals_fd = [fgv(sel_met_fd, CY, d) or 0 for d in FDEPTS]
     avg_fd = round(sum(vals_fd) / max(len([v for v in vals_fd if v > 0]), 1), 1)
-
     fig_fd = go.Figure(go.Bar(
         x=FDEPTS, y=vals_fd,
         marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
@@ -2017,6 +2006,41 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
     with st.container(border=True):
         st.plotly_chart(fig_fd, use_container_width=True)
+
+    # ── SECTION G: Хувийн үзүүлэлтийн тэнхимийн харьцуулалт ──
+    st.markdown("<div class='section-title'>📊 Хувийн санхүүгийн KPI тэнхимээр харьцуулалт (2026)</div>", unsafe_allow_html=True)
+    pct_dept_opts = {
+        "Нийт орлогод эзлэх хувь":            "СЭЗИС-ийн нийт орлогод эзлэх хувь",
+        "Бакалаврын орлогын хувь":             "Бакалаврын сургалтын орлогын нийт орлогод эзлэх хувь",
+        "Судалгааны орлогын хувь":             "Судалгаа, эрдэм шинжилгээний орлогын нийт орлогод эзлэх хувь",
+        "Зэргийн бус орлогын хувь":            "Зэргийн бус сургалтын орлогын нийт орлогод эзлэх хувь",
+        "Үйл ажиллагааны төсвийн хувь":        "Тэнхимийн үйл ажиллагааны төсвийн эзлэх хувь",
+        "Багшийн хөгжлийн төсвийн хувь":       "Багшийн хөгжилд зориулсан төсвийн эзлэх хувь",
+        "Цахим хөгжлийн төсвийн хувь":         "Цахим хөгжилд зарцуулсан төсвийн эзлэх хувь",
+        "Суралцагчийн үйл ажиллагааны хувь":   "Суралцагч дунд зохион байгуулсан үйл ажиллагааны зардлын эзлэх хувь",
+        "Гарааны бизнесийн орлогын хувь":      "Гарааны бизнесийн нийт орлогод эзлэх хувь",
+        "Гадаад оюутны орлогын хувь":          "Гадаад оюутнаас олох орлогын нийт орлогод эзлэх хувь",
+    }
+    sel_pfd = st.selectbox("Харьцуулах хувийн үзүүлэлт:", list(pct_dept_opts.keys()), key="fin_pct_dept_sel")
+    sel_met_pfd = pct_dept_opts[sel_pfd]
+    vals_pfd = [round((fgv(sel_met_pfd, CY, d) or 0)*100, 2) for d in FDEPTS]
+    avg_pfd = round(sum(vals_pfd) / max(len([v for v in vals_pfd if v > 0]), 1), 2)
+    fig_pfd = go.Figure(go.Bar(
+        x=FDEPTS, y=vals_pfd,
+        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+        text=[f"{v}%" for v in vals_pfd],
+        textposition="outside", textfont=dict(color=C["text"], size=10),
+    ))
+    t_pfd = dict(**theme(320))
+    t_pfd["title"] = dict(text=f"Тэнхим тус бүрийн {sel_pfd} (2026, %)", font=dict(color=C["white"], size=12))
+    t_pfd["xaxis"]["tickfont"] = dict(size=10)
+    t_pfd["yaxis"]["ticksuffix"] = "%"
+    fig_pfd.update_layout(**t_pfd)
+    fig_pfd.add_hline(y=avg_pfd, line_dash="dash", line_color="#ff4d4d", line_width=1.5,
+        annotation_text=f"Дундаж: {avg_pfd}%",
+        annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
+    with st.container(border=True):
+        st.plotly_chart(fig_pfd, use_container_width=True)
 
     # ── SECTION F: Орлого vs Зардал харьцуулалт — 2026 тэнхимээр ──
     st.markdown("<div class='section-title'>⚖️ Орлого ба Төсвийн харьцуулалт тэнхимээр (2026)</div>", unsafe_allow_html=True)
@@ -2039,42 +2063,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     fig_ov.update_layout(**t_ov)
     with st.container(border=True):
         st.plotly_chart(fig_ov, use_container_width=True)
-
-    # ── SECTION G: Хувийн үзүүлэлтийн тэнхимийн харьцуулалт ──
-    st.markdown("<div class='section-title'>📊 Хувийн санхүүгийн KPI тэнхимээр харьцуулалт (2026)</div>", unsafe_allow_html=True)
-
-    pct_dept_opts = {
-        "Нийт орлогод эзлэх хувь":            "СЭЗИС-ийн нийт орлогод эзлэх хувь",
-        "Бакалаврын орлогын хувь":             "Бакалаврын сургалтын орлогын нийт орлогод эзлэх хувь",
-        "Судалгааны орлогын хувь":             "Судалгаа, эрдэм шинжилгээний орлогын нийт орлогод эзлэх хувь",
-        "Зэргийн бус орлогын хувь":           "Зэргийн бус сургалтын орлогын нийт орлогод эзлэх хувь",
-        "Үйл ажиллагааны төсвийн хувь":       "Тэнхимийн үйл ажиллагааны төсвийн эзлэх хувь",
-        "Багшийн хөгжлийн төсвийн хувь":      "Багшийн хөгжилд зориулсан төсвийн эзлэх хувь",
-        "Цахим хөгжлийн төсвийн хувь":        "Цахим хөгжилд зарцуулсан төсвийн эзлэх хувь",
-        "Суралцагчийн үйл ажиллагааны хувь":  "Суралцагч дунд зохион байгуулсан үйл ажиллагааны зардлын эзлэх хувь",
-    }
-
-    sel_pfd = st.selectbox("Харьцуулах хувийн үзүүлэлт:", list(pct_dept_opts.keys()), key="fin_pct_dept_sel")
-    sel_met_pfd = pct_dept_opts[sel_pfd]
-    vals_pfd = [round((fgv(sel_met_pfd, CY, d) or 0)*100, 2) for d in FDEPTS]
-    avg_pfd = round(sum(vals_pfd) / max(len([v for v in vals_pfd if v > 0]), 1), 2)
-
-    fig_pfd = go.Figure(go.Bar(
-        x=FDEPTS, y=vals_pfd,
-        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
-        text=[f"{v}%" for v in vals_pfd],
-        textposition="outside", textfont=dict(color=C["text"], size=10),
-    ))
-    t_pfd = dict(**theme(320))
-    t_pfd["title"] = dict(text=f"Тэнхим тус бүрийн {sel_pfd} (2026, %)", font=dict(color=C["white"], size=12))
-    t_pfd["xaxis"]["tickfont"] = dict(size=10)
-    t_pfd["yaxis"]["ticksuffix"] = "%"
-    fig_pfd.update_layout(**t_pfd)
-    fig_pfd.add_hline(y=avg_pfd, line_dash="dash", line_color="#ff4d4d", line_width=1.5,
-        annotation_text=f"Дундаж: {avg_pfd}%",
-        annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
-    with st.container(border=True):
-        st.plotly_chart(fig_pfd, use_container_width=True)
 # ============================================================
 # FOOTER
 # ============================================================
