@@ -871,57 +871,77 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
     with st.container(border=True):
         st.plotly_chart(fig_dp, use_container_width=True)
+# ── SECTION D: Хөтөлбөрийн бүрэлдэхүүн ба үзүүлэлтүүд (2026) ──
+    st.markdown("<div class='section-title'>📊 2026 оны хөтөлбөрийн бүрэлдэхүүн ба үзүүлэлтүүд</div>", unsafe_allow_html=True)
 
-    # ── SECTION D: Тоон үзүүлэлтүүдийн өөрчлөлт ──
-    st.markdown("<div class='section-title'>📊 Тоон үзүүлэлтүүдийн өөрчлөлт</div>", unsafe_allow_html=True)
+    # Pie chart — хөтөлбөрийн төрлийн бүрэлдэхүүн
+    pie_labels = ["Үндсэн", "Цахим", "Цагийн", "Гадаад хэлний", "Хамтарсан", "ОУ дипломтой"]
+    pie_metrics = [
+        "Хэрэгжүүлж буй үндсэн хөтөлбөрийн тоо",
+        "Цахимаар хэрэгжиж буй хөтөлбөрийн тоо",
+        "Цагийн хөтөлбөрийн тоо",
+        "Гадаад хэлээр явуулах хөтөлбөрийн тоо",
+        "Хамтарсан хөтөлбөрийн тоо",
+        "ОУ дипломтой хөтөлбөрийн тоо",
+    ]
+    pie_vals = [pgv(m, CURRENT_YEAR, D) or 0 for m in pie_metrics]
+    pie_clrs = [C["blue"], C["teal"], C["purple"], C["green"], C["orange"], C["pink"]]
 
-    count_trend_groups = [
-        [
-            ("Хэрэгжүүлж буй үндсэн хөтөлбөрийн тоо", "Үндсэн хөтөлбөр",  C["blue"]),
-            ("Цахимаар хэрэгжиж буй хөтөлбөрийн тоо", "Цахим хөтөлбөр",   C["teal"]),
-            ("Цагийн хөтөлбөрийн тоо",                 "Цагийн хөтөлбөр",  C["purple"]),
-        ],
-        [
-            ("Гадаад хэлээр явуулах хөтөлбөрийн тоо", "Гадаад хэлний",     C["green"]),
-            ("Хамтарсан хөтөлбөрийн тоо",             "Хамтарсан хөтөлбөр",C["orange"]),
-            ("ОУ дипломтой хөтөлбөрийн тоо",          "ОУ диплом",          C["pink"]),
-        ],
-        [
-            ("Ажиглалтад хамрагдсан хичээлийн тоо",                   "Ажиглалтад хамрагдсан", C["blue"]),
-            ("Хичээлийн СҮД хурлаар хэлэлцүүлсэн хичээлийн тоо",    "СҮД хэлэлцүүлсэн",     C["orange"]),
-            ("СҮД хурлаас гарсан санал, хүсэлтийн тоо",               "СҮД санал хүсэлт",      C["teal"]),
-        ],
-        [
-            ("Хамтын ажиллагааны гэрээтэй байгууллагын тоо",       "Гэрээт байгуулага",   C["purple"]),
-            ("Хамтарсан хөтөлбөр хэрэгжүүлэгч сургуулийн тоо",   "Хамтарсан сургууль",  C["green"]),
-            ("Солилцооны хөтөлбөр хэрэгжүүлэгч институтийн тоо", "Солилцооны институт", C["pink"]),
-        ],
+    fig_pie_prog = go.Figure(go.Pie(
+        labels=pie_labels, values=pie_vals, hole=0.52,
+        marker=dict(colors=pie_clrs, line=dict(color=C["bg"], width=2)),
+        textinfo="label+value+percent", textfont=dict(color=C["text"], size=11),
+        insidetextorientation="radial",
+    ))
+    t_pie_prog = dict(**theme(360))
+    t_pie_prog["title"] = dict(text="Хөтөлбөрийн төрлийн бүрэлдэхүүн (2026)", font=dict(color=C["white"], size=12))
+    t_pie_prog["showlegend"] = False
+    fig_pie_prog.update_layout(**t_pie_prog)
+    with st.container(border=True):
+        st.plotly_chart(fig_pie_prog, use_container_width=True)
+
+    # Шугаман chart — зөвхөн 2026 оны 6 үзүүлэлт
+    st.markdown("<div class='section-title'>📈 2026 оны бусад үзүүлэлтүүд</div>", unsafe_allow_html=True)
+
+    bar_metrics_2026 = [
+        ("Ажиглалтад хамрагдсан хичээлийн тоо",                  "Ажиглалтад хамрагдсан", C["blue"]),
+        ("Хичээлийн СҮД хурлаар хэлэлцүүлсэн хичээлийн тоо",   "СҮД хэлэлцүүлсэн",      C["orange"]),
+        ("СҮД хурлаас гарсан санал, хүсэлтийн тоо",              "СҮД санал хүсэлт",       C["teal"]),
+        ("Хамтын ажиллагааны гэрээтэй байгууллагын тоо",          "Гэрээт байгуулага",      C["purple"]),
+        ("Хамтарсан хөтөлбөр хэрэгжүүлэгч сургуулийн тоо",      "Хамтарсан сургууль",     C["green"]),
+        ("Солилцооны хөтөлбөр хэрэгжүүлэгч институтийн тоо",    "Солилцооны институт",    C["pink"]),
     ]
 
-    for row_grp in count_trend_groups:
-        cols_t = st.columns(len(row_grp))
-        for ci, (met, lbl, clr) in enumerate(row_grp):
-            yrs_t, vals_t = pgseries(met, D)
-            fig_t = go.Figure()
-            hx = [y for y,v in zip(yrs_t,vals_t) if y<=CURRENT_YEAR and v is not None]
-            hy = [v for y,v in zip(yrs_t,vals_t) if y<=CURRENT_YEAR and v is not None]
-            fx = [y for y,v in zip(yrs_t,vals_t) if y>CURRENT_YEAR and v is not None]
-            fy = [v for y,v in zip(yrs_t,vals_t) if y>CURRENT_YEAR and v is not None]
-            fig_t.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
-                line=dict(color=clr, width=2.5), marker=dict(size=7)))
-            if fx and hx:
-                fig_t.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
-                    name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
-                    marker=dict(size=6, symbol="diamond", color=C["target"])))
-            if CURRENT_YEAR in yrs_t:
-                fig_t.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)",
-                    annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)", annotation_font_size=9)
-            tt = dict(**theme(240))
-            tt["title"] = dict(text=lbl, font=dict(color=C["white"], size=11))
-            fig_t.update_layout(**tt)
-            with cols_t[ci]:
-                with st.container(border=True):
-                    st.plotly_chart(fig_t, use_container_width=True)
+    col1, col2, col3 = st.columns(3)
+    cols_cycle = [col1, col2, col3, col1, col2, col3]
+
+    for i, (met, lbl, clr) in enumerate(bar_metrics_2026):
+        v = pgv(met, CURRENT_YEAR, D) or 0
+        fig_b = go.Figure()
+        fig_b.add_trace(go.Scatter(
+            x=[CURRENT_YEAR], y=[v],
+            mode="markers+text",
+            marker=dict(size=18, color=clr, symbol="circle"),
+            text=[str(int(v))],
+            textposition="top center",
+            textfont=dict(color=C["white"], size=13),
+            showlegend=False,
+        ))
+        tb = dict(**theme(200))
+        tb["title"] = dict(text=lbl, font=dict(color=C["white"], size=11))
+        tb["xaxis"] = dict(
+            showticklabels=False, showgrid=False,
+            zeroline=False, gridcolor=C["grid"],
+        )
+        tb["yaxis"] = dict(
+            gridcolor=C["grid"], zerolinecolor=C["grid"],
+            range=[0, v * 1.6 if v > 0 else 5],
+        )
+        tb["margin"] = dict(l=30, r=20, t=40, b=20)
+        fig_b.update_layout(**tb)
+        with cols_cycle[i]:
+            with st.container(border=True):
+                st.plotly_chart(fig_b, use_container_width=True)
 
 # ============================================================
 # PAGE 3 — Хичээл сургалт
