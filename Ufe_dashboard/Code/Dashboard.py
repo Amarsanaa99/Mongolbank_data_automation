@@ -1951,17 +1951,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         ("Цахим хөгжилд зарцуулсан төсвийн эзлэх хувь",            "💻 Цахим хөгжлийн төсвийн хувь", C["blue"]),
     ]
 
-    pct_f_cols = st.columns(4)
-    for i, (met, lbl, clr) in enumerate(PCT_FIN_KPIS):
-        v = fgv(met, CY, D)
-        val_str = f"{v*100:.1f}%" if v is not None else "—"
-        pct_f_cols[i % 4].markdown(f"""
-<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
-padding:12px 10px;text-align:center;margin-bottom:10px;border-top:2px solid {clr};'>
-    <div style='color:{clr};font-size:20px;font-weight:700;'>{val_str}</div>
-    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
-</div>""", unsafe_allow_html=True)
-
     # Хувийн KPI trend графикууд — 2024-2031 (2027+ зорилт)
     fc1, fc2 = st.columns(2)
     fc_cycle = [fc1, fc2, fc1, fc2, fc1, fc2, fc1, fc2]
@@ -1990,64 +1979,6 @@ padding:12px 10px;text-align:center;margin-bottom:10px;border-top:2px solid {clr
         with fc_cycle[i]:
             with st.container(border=True):
                 st.plotly_chart(fig_f, use_container_width=True)
-
-    # ── SECTION D: Нийт орлогын өсөлтийн трендийн график ──
-    st.markdown("<div class='section-title'>📉 Нийт орлогын өсөлтийн трендийн график (2024–2031)</div>", unsafe_allow_html=True)
-
-    td1, td2 = st.columns(2)
-
-    with td1:
-        yrs_tot, vals_tot = fgseries("Нийт орлого", D)
-        fig_tot = go.Figure()
-        hx = [y for y, v in zip(yrs_tot, vals_tot) if y <= CY and v is not None]
-        hy = [v for y, v in zip(yrs_tot, vals_tot) if y <= CY and v is not None]
-        fx = [y for y, v in zip(yrs_tot, vals_tot) if y > CY and v is not None]
-        fy = [v for y, v in zip(yrs_tot, vals_tot) if y > CY and v is not None]
-        fig_tot.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
-            line=dict(color=C["blue"], width=2.5), marker=dict(size=8)))
-        if fx and hx:
-            fig_tot.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
-                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
-                marker=dict(size=7, color=C["target"], symbol="diamond")))
-        if CY in yrs_tot:
-            fig_tot.add_vline(x=CY, line_dash="dash", line_color="rgba(255,255,255,0.2)",
-                annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)")
-        tf_tot = dict(**theme(300))
-        tf_tot["title"] = dict(text="Нийт орлогын өсөлт (₮)", font=dict(color=C["white"], size=12))
-        tf_tot["yaxis"]["tickformat"] = ",.0f"
-        fig_tot.update_layout(**tf_tot)
-        with st.container(border=True):
-            st.plotly_chart(fig_tot, use_container_width=True)
-
-    with td2:
-        # Орлогын эх үүсвэр бүрийн трендийн нэгтгэл
-        fig_multi = go.Figure()
-        multi_items = [
-            ("Бакалаврын сургалтын орлого", "Бакалаврын", C["blue"]),
-            ("Судалгаа, эрдэм шинжилгээний орлого", "Судалгаа", C["purple"]),
-            ("Зэргийн бус сургалтын орлого", "Зэргийн бус", C["green"]),
-            ("Патентын орлого", "Патент", C["orange"]),
-            ("Гарааны бизнесийн орлого", "Гараа", C["pink"]),
-        ]
-        for met, lbl, clr in multi_items:
-            yrs_m, vals_m = fgseries(met, D)
-            hx = [y for y, v in zip(yrs_m, vals_m) if y <= CY and v is not None]
-            hy = [v for y, v in zip(yrs_m, vals_m) if y <= CY and v is not None]
-            fx = [y for y, v in zip(yrs_m, vals_m) if y > CY and v is not None]
-            fy = [v for y, v in zip(yrs_m, vals_m) if y > CY and v is not None]
-            fig_multi.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name=lbl,
-                line=dict(color=clr, width=2), marker=dict(size=5)))
-            if fx and hx:
-                fig_multi.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
-                    mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-        if CY in yrs_m:
-            fig_multi.add_vline(x=CY, line_dash="dash", line_color="rgba(255,255,255,0.2)")
-        tf_m = dict(**theme(300))
-        tf_m["title"] = dict(text="Орлогын эх үүсвэрүүдийн трендийн харьцуулалт", font=dict(color=C["white"], size=12))
-        fig_multi.update_layout(**tf_m)
-        with st.container(border=True):
-            st.plotly_chart(fig_multi, use_container_width=True)
-
     # ── SECTION E: Тэнхимийн харьцуулалт ──
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан санхүүгийн үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
 
