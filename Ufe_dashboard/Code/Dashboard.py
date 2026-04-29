@@ -382,11 +382,13 @@ def line_fig(title, yrs, vals, h=280, target_color=C["target"]):
     fx = [y for y,v in zip(yrs,vals) if y>CURRENT_YEAR and v is not None]
     fy = [v for y,v in zip(yrs,vals) if y>CURRENT_YEAR and v is not None]
     fig.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
-        line=dict(color=C["blue"], width=2.5), marker=dict(size=7, color=C["blue"])))
-    if fx and hx:
-        fig.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
-            name="Зорилт", line=dict(color=target_color, width=2, dash="dot"),
-            marker=dict(size=7, color=target_color, symbol="diamond")))
+            line=dict(color=C["blue"], width=2.5), marker=dict(size=7, color=C["blue"]),
+            fill="tozeroy", fillcolor=f"rgba(0,212,255,0.08)"))
+        if fx and hx:
+            fig.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
+                name="Зорилт", line=dict(color=target_color, width=2, dash="dot"),
+                marker=dict(size=7, color=target_color, symbol="diamond"),
+                fill="tozeroy", fillcolor=f"rgba(255,77,166,0.05)"))
     if CURRENT_YEAR in yrs:
         fig.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)",
                       annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)",
@@ -573,106 +575,128 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 </div>""", unsafe_allow_html=True)
 
     st.markdown("<div class='section-title'>📉 KPI Трендийн графикууд — Бодит ба Зорилт</div>", unsafe_allow_html=True)
-    col_a, col_b = st.columns(2)
-
-    with col_a:
-        yrs, vals = gseries("Багшийн тоо", "Нийт багшийн тоо", D)
-        with st.container(border=True):
-            st.plotly_chart(line_fig("Нийт багшийн тооны өөрчлөлт", yrs, vals, h=280), use_container_width=True)
-
-        yrs2, vals2 = gseries("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь", D)
-        with st.container(border=True):
-            st.plotly_chart(pct_line_fig("Доктор зэрэгтэй багшийн хувь", yrs2, vals2, h=280), use_container_width=True)
-
-        yrs3, v3 = gseries("Хувь", "Оюутны сэтгэл ханамжийн үнэлгээний дундаж хувь", D)
-        yrs4, v4 = gseries("Хувь", "Багшийн сэтгэл ханамжийн үнэлгээний дундаж хувь", D)
-        fig3 = go.Figure()
-        for lbl2, ylist, vlist, clr2 in [("Оюутны сэтгэл ханамж", yrs3, v3, C["green"]),
-                                           ("Багшийн сэтгэл ханамж", yrs4, v4, C["orange"])]:
-            hx = [y for y,v in zip(ylist,vlist) if y<=CURRENT_YEAR]
-            hy = [v for y,v in zip(ylist,vlist) if y<=CURRENT_YEAR]
-            fx = [y for y,v in zip(ylist,vlist) if y>CURRENT_YEAR]
-            fy = [v for y,v in zip(ylist,vlist) if y>CURRENT_YEAR]
-            fig3.add_trace(go.Scatter(x=hx, y=hy, name=lbl2, mode="lines+markers",
-                line=dict(color=clr2, width=2), marker=dict(size=6)))
-            if fx and hx:
-                fig3.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
-                    mode="lines", line=dict(color=clr2, dash="dot", width=1.5)))
-        t3 = dict(**theme(280))
-        t3["title"] = dict(text="Сэтгэл ханамжийн үнэлгээ", font=dict(color=C["white"], size=12))
-        t3["yaxis"]["tickformat"] = ".0%"
-        fig3.update_layout(**t3)
-        if CURRENT_YEAR in yrs3:
-            fig3.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
-        with st.container(border=True):
-            st.plotly_chart(fig3, use_container_width=True)
-
-    with col_b:
-        fig_edu = go.Figure()
-        for m, clr in [("Бакалавр", C["blue"]), ("Магистр", C["purple"]), ("Доктор", C["teal"])]:
-            yrs_e, vals_e = gseries("Боловсролын түвшин", m, D)
-            hx = [y for y,v in zip(yrs_e,vals_e) if y<=CURRENT_YEAR]
-            hy = [v for y,v in zip(yrs_e,vals_e) if y<=CURRENT_YEAR]
-            fx = [y for y,v in zip(yrs_e,vals_e) if y>CURRENT_YEAR]
-            fy = [v for y,v in zip(yrs_e,vals_e) if y>CURRENT_YEAR]
-            fig_edu.add_trace(go.Scatter(x=hx, y=hy, name=m, mode="lines+markers",
-                line=dict(color=clr, width=2), marker=dict(size=6)))
-            if fx and hx:
-                fig_edu.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
-                    mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-        t_edu = dict(**theme(280))
-        t_edu["title"] = dict(text="Багшийн боловсролын түвшин", font=dict(color=C["white"], size=12))
-        if CURRENT_YEAR in yrs_e:
-            fig_edu.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
-        fig_edu.update_layout(**t_edu)
-        with st.container(border=True):
-            st.plotly_chart(fig_edu, use_container_width=True)
-
-        fig_rk = go.Figure()
-        for m, clr in [("Профессор",C["orange"]),("Дэд профессор",C["purple"]),
-                       ("Ахлах багш",C["blue"]),("Багш",C["green"]),("Дадлагажигч багш",C["teal"])]:
-            yrs_r, vals_r = gseries("Зэрэглэл", m, D)
-            hx = [y for y,v in zip(yrs_r,vals_r) if y<=CURRENT_YEAR]
-            hy = [v for y,v in zip(yrs_r,vals_r) if y<=CURRENT_YEAR]
-            fx = [y for y,v in zip(yrs_r,vals_r) if y>CURRENT_YEAR]
-            fy = [v for y,v in zip(yrs_r,vals_r) if y>CURRENT_YEAR]
-            fig_rk.add_trace(go.Scatter(x=hx, y=hy, name=m, mode="lines+markers",
-                line=dict(color=clr, width=2), marker=dict(size=5)))
-            if fx and hx:
-                fig_rk.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
-                    mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-        t_rk = dict(**theme(280))
-        t_rk["title"] = dict(text="Багшийн зэрэглэл", font=dict(color=C["white"], size=12))
-        if CURRENT_YEAR in yrs_r:
-            fig_rk.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
-        fig_rk.update_layout(**t_rk)
-        with st.container(border=True):
-            st.plotly_chart(fig_rk, use_container_width=True)
-
-        fig_pt = go.Figure()
-        for m, lbl, clr in [
-            ("Гадаад хэлээр заах чадвартай багшийн эзлэх хувь", "Гадаад хэл", C["blue"]),
-            ("Солилцооны хөтөлбөрт хамрагдсан багшийн эзлэх хувь", "Солилцооны хөтөлбөрт хамрагдсан", C["purple"]),
-            ("Төсөл удирдсан багшийн эзлэх хувь", "Төсөл удирдсан багш", C["orange"]),
-        ]:
-            yrs_pt, vals_pt = gseries("Хувь", m, D)
-            hx = [y for y,v in zip(yrs_pt,vals_pt) if y<=CURRENT_YEAR]
-            hy = [v for y,v in zip(yrs_pt,vals_pt) if y<=CURRENT_YEAR]
-            fx = [y for y,v in zip(yrs_pt,vals_pt) if y>CURRENT_YEAR]
-            fy = [v for y,v in zip(yrs_pt,vals_pt) if y>CURRENT_YEAR]
-            fig_pt.add_trace(go.Scatter(x=hx, y=hy, name=lbl, mode="lines+markers",
-                line=dict(color=clr, width=2), marker=dict(size=6)))
-            if fx and hx:
-                fig_pt.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
-                    mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
-        t_pt = dict(**theme(280))
-        t_pt["title"] = dict(text="Гадаад хэл / Солилцоо / Төсөл (%)", font=dict(color=C["white"], size=12))
-        t_pt["yaxis"]["tickformat"] = ".0%"
-        if CURRENT_YEAR in yrs_pt:
-            fig_pt.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
-        fig_pt.update_layout(**t_pt)
-        with st.container(border=True):
-            st.plotly_chart(fig_pt, use_container_width=True)
+        col_a, col_b = st.columns(2)
+    
+        with col_a:
+            yrs, vals = gseries("Багшийн тоо", "Нийт багшийн тоо", D)
+            with st.container(border=True):
+                st.plotly_chart(line_fig("Нийт багшийн тооны өөрчлөлт", yrs, vals, h=280), use_container_width=True)
+    
+            yrs2, vals2 = gseries("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь", D)
+            with st.container(border=True):
+                st.plotly_chart(pct_line_fig("Доктор зэрэгтэй багшийн хувь", yrs2, vals2, h=280), use_container_width=True)
+    
+            yrs3, v3 = gseries("Хувь", "Оюутны сэтгэл ханамжийн үнэлгээний дундаж хувь", D)
+            yrs4, v4 = gseries("Хувь", "Багшийн сэтгэл ханамжийн үнэлгээний дундаж хувь", D)
+            fig3 = go.Figure()
+            fill_colors = {C["green"]: "rgba(0,230,118,0.08)", C["orange"]: "rgba(255,171,64,0.08)"}
+            for lbl2, ylist, vlist, clr2 in [("Оюутны сэтгэл ханамж", yrs3, v3, C["green"]),
+                                               ("Багшийн сэтгэл ханамж", yrs4, v4, C["orange"])]:
+                hx = [y for y,v in zip(ylist,vlist) if y<=CURRENT_YEAR]
+                hy = [v for y,v in zip(ylist,vlist) if y<=CURRENT_YEAR]
+                fx = [y for y,v in zip(ylist,vlist) if y>CURRENT_YEAR]
+                fy = [v for y,v in zip(ylist,vlist) if y>CURRENT_YEAR]
+                fig3.add_trace(go.Scatter(x=hx, y=hy, name=lbl2, mode="lines+markers",
+                    line=dict(color=clr2, width=2), marker=dict(size=6),
+                    fill="tozeroy", fillcolor=fill_colors[clr2]))
+                if fx and hx:
+                    fig3.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
+                        mode="lines", line=dict(color=clr2, dash="dot", width=1.5),
+                        fill="tozeroy", fillcolor=fill_colors[clr2].replace("0.08", "0.03")))
+            t3 = dict(**theme(280))
+            t3["title"] = dict(text="Сэтгэл ханамжийн үнэлгээ", font=dict(color=C["white"], size=12))
+            t3["yaxis"]["tickformat"] = ".0%"
+            fig3.update_layout(**t3)
+            if CURRENT_YEAR in yrs3:
+                fig3.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
+            with st.container(border=True):
+                st.plotly_chart(fig3, use_container_width=True)
+    
+        with col_b:
+            fig_edu = go.Figure()
+            edu_fills = {C["blue"]: "rgba(0,212,255,0.08)", C["purple"]: "rgba(179,136,255,0.08)", C["teal"]: "rgba(100,255,218,0.08)"}
+            for m, clr in [("Бакалавр", C["blue"]), ("Магистр", C["purple"]), ("Доктор", C["teal"])]:
+                yrs_e, vals_e = gseries("Боловсролын түвшин", m, D)
+                hx = [y for y,v in zip(yrs_e,vals_e) if y<=CURRENT_YEAR]
+                hy = [v for y,v in zip(yrs_e,vals_e) if y<=CURRENT_YEAR]
+                fx = [y for y,v in zip(yrs_e,vals_e) if y>CURRENT_YEAR]
+                fy = [v for y,v in zip(yrs_e,vals_e) if y>CURRENT_YEAR]
+                fig_edu.add_trace(go.Scatter(x=hx, y=hy, name=m, mode="lines+markers",
+                    line=dict(color=clr, width=2), marker=dict(size=6),
+                    fill="tozeroy", fillcolor=edu_fills[clr]))
+                if fx and hx:
+                    fig_edu.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
+                        mode="lines", line=dict(color=clr, dash="dot", width=1.5),
+                        fill="tozeroy", fillcolor=edu_fills[clr].replace("0.08", "0.03")))
+            t_edu = dict(**theme(280))
+            t_edu["title"] = dict(text="Багшийн боловсролын түвшин", font=dict(color=C["white"], size=12))
+            if CURRENT_YEAR in yrs_e:
+                fig_edu.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
+            fig_edu.update_layout(**t_edu)
+            with st.container(border=True):
+                st.plotly_chart(fig_edu, use_container_width=True)
+    
+            fig_rk = go.Figure()
+            rk_fills = {
+                C["orange"]: "rgba(255,171,64,0.08)",
+                C["purple"]: "rgba(179,136,255,0.08)",
+                C["blue"]:   "rgba(0,212,255,0.08)",
+                C["green"]:  "rgba(0,230,118,0.08)",
+                C["teal"]:   "rgba(100,255,218,0.08)",
+            }
+            for m, clr in [("Профессор",C["orange"]),("Дэд профессор",C["purple"]),
+                           ("Ахлах багш",C["blue"]),("Багш",C["green"]),("Дадлагажигч багш",C["teal"])]:
+                yrs_r, vals_r = gseries("Зэрэглэл", m, D)
+                hx = [y for y,v in zip(yrs_r,vals_r) if y<=CURRENT_YEAR]
+                hy = [v for y,v in zip(yrs_r,vals_r) if y<=CURRENT_YEAR]
+                fx = [y for y,v in zip(yrs_r,vals_r) if y>CURRENT_YEAR]
+                fy = [v for y,v in zip(yrs_r,vals_r) if y>CURRENT_YEAR]
+                fig_rk.add_trace(go.Scatter(x=hx, y=hy, name=m, mode="lines+markers",
+                    line=dict(color=clr, width=2), marker=dict(size=5),
+                    fill="tozeroy", fillcolor=rk_fills[clr]))
+                if fx and hx:
+                    fig_rk.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
+                        mode="lines", line=dict(color=clr, dash="dot", width=1.5),
+                        fill="tozeroy", fillcolor=rk_fills[clr].replace("0.08", "0.03")))
+            t_rk = dict(**theme(280))
+            t_rk["title"] = dict(text="Багшийн зэрэглэл", font=dict(color=C["white"], size=12))
+            if CURRENT_YEAR in yrs_r:
+                fig_rk.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
+            fig_rk.update_layout(**t_rk)
+            with st.container(border=True):
+                st.plotly_chart(fig_rk, use_container_width=True)
+    
+            fig_pt = go.Figure()
+            pt_fills = {
+                C["blue"]:   "rgba(0,212,255,0.08)",
+                C["purple"]: "rgba(179,136,255,0.08)",
+                C["orange"]: "rgba(255,171,64,0.08)",
+            }
+            for m, lbl, clr in [
+                ("Гадаад хэлээр заах чадвартай багшийн эзлэх хувь", "Гадаад хэл", C["blue"]),
+                ("Солилцооны хөтөлбөрт хамрагдсан багшийн эзлэх хувь", "Солилцооны хөтөлбөрт хамрагдсан", C["purple"]),
+                ("Төсөл удирдсан багшийн эзлэх хувь", "Төсөл удирдсан багш", C["orange"]),
+            ]:
+                yrs_pt, vals_pt = gseries("Хувь", m, D)
+                hx = [y for y,v in zip(yrs_pt,vals_pt) if y<=CURRENT_YEAR]
+                hy = [v for y,v in zip(yrs_pt,vals_pt) if y<=CURRENT_YEAR]
+                fx = [y for y,v in zip(yrs_pt,vals_pt) if y>CURRENT_YEAR]
+                fy = [v for y,v in zip(yrs_pt,vals_pt) if y>CURRENT_YEAR]
+                fig_pt.add_trace(go.Scatter(x=hx, y=hy, name=lbl, mode="lines+markers",
+                    line=dict(color=clr, width=2), marker=dict(size=6),
+                    fill="tozeroy", fillcolor=pt_fills[clr]))
+                if fx and hx:
+                    fig_pt.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
+                        mode="lines", line=dict(color=clr, dash="dot", width=1.5),
+                        fill="tozeroy", fillcolor=pt_fills[clr].replace("0.08", "0.03")))
+            t_pt = dict(**theme(280))
+            t_pt["title"] = dict(text="Гадаад хэл / Солилцоо / Төсөл (%)", font=dict(color=C["white"], size=12))
+            t_pt["yaxis"]["tickformat"] = ".0%"
+            if CURRENT_YEAR in yrs_pt:
+                fig_pt.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)")
+            fig_pt.update_layout(**t_pt)
+            with st.container(border=True):
+                st.plotly_chart(fig_pt, use_container_width=True)
 
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
     metric_options = {
