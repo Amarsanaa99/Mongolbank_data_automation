@@ -1046,7 +1046,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     avg_sd = round(sum(vals_sd) / max(len([v for v in vals_sd if v > 0]), 1), 1)
     fig_sd = go.Figure(go.Bar(
         x=DEPTS_S, y=vals_sd,
-        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+        marker=dict(color=#118DFF, line=dict(color=C["bg"], width=0.5), cornerradius=8),
         text=[str(v) for v in vals_sd], textposition="outside",
         textfont=dict(color=C["text"], size=10),
     ))
