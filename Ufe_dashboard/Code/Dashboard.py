@@ -1314,13 +1314,11 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 
     prog_vals_pc = [sdv_prog_total(sel_met_pc, CURRENT_YEAR, i) or 0 for i in range(len(PROGRAMS_D))]
     avg_pc = round(sum(prog_vals_pc) / max(len([v for v in prog_vals_pc if v > 0]), 1), 1)
-    bar_colors_pc = [C["orange"] if p == SELECTED_PROG else "#118DFF"
-                     for i, p in enumerate(PROGRAMS_D)]
 
     fig_pc = go.Figure(go.Bar(
         x=PROGRAMS_D, y=prog_vals_pc,
         marker=dict(
-            color=bar_colors_pc,
+            color="#118DFF",
             line=dict(color=C["bg"], width=0.5),
             cornerradius=8
         ),
@@ -1328,7 +1326,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         textfont=dict(color=C["text"], size=10),
     ))
     t_pc = dict(**theme(360))
-    t_pc["title"] = dict(text=f"Хөтөлбөр тус бүрийн {sel_pc} (2026) — Шар = {SELECTED_PROG}",
+    t_pc["title"] = dict(text=f"Хөтөлбөр тус бүрийн {sel_pc} (2026)",
                           font=dict(color=C["white"], size=12))
     t_pc["xaxis"]["tickfont"] = dict(size=9)
     t_pc["xaxis"]["tickangle"] = -35
