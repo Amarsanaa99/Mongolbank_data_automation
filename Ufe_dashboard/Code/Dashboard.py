@@ -940,37 +940,18 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 # ============================================================
 elif st.session_state.page == "stud":
 
-    st.markdown("<div class='section-title'>📈 2026 оны хувийн KPI үзүүлэлтүүд</div>", unsafe_allow_html=True)
-
-    pct_kpis_s = [
-        ("Виртуал цахимаар хэрэгжиж буй хичээлийн хувь",        "💻 Цахим хичээл %",         C["blue"]),
-        ("AI суурилсан хичээлийн сэтгэл ханамжийн хувь",        "🤖 AI сэтгэл ханамж %",     C["purple"]),
-        ("Шинэ технологи нэвтрүүлэлтийн үр дүн, үр нөлөө",      "⚡ Технологи нэвтрүүлэлт %", C["teal"]),
-        ("Нийт зэргийн бус сургалтын сэтгэл ханамж",            "😊 Зэргийн бус сэтгэл ханамж %", C["green"]),
-    ]
-
-    pct_s_cols = st.columns(4)
-    for i, (met, lbl, clr) in enumerate(pct_kpis_s):
-        v = sv(met, CURRENT_YEAR, D)
-        val_str = f"{v*100:.1f}%" if v is not None else "—"
-        pct_s_cols[i].markdown(f"""
-<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
-padding:14px 12px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
-    <div style='color:{clr};font-size:24px;font-weight:700;'>{val_str}</div>
-    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
-</div>""", unsafe_allow_html=True)
-
+    # ── SECTION A: 2026 оны тоон KPI ──
     st.markdown("<div class='section-title'>📊 2026 оны тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
 
     count_kpis_s = [
-        ("Хичээлийн тоо",                                                  "📚 Нийт хичээл",               C["blue"]),
-        ("Цахим хэлбэрээр орж буй хичээлийн тоо",                         "💻 Цахим хичээл",               C["teal"]),
-        ("Гадаад хэлээр зааж буй хичээлийн тоо",                          "🌐 Гадаад хэлний хичээл",       C["green"]),
-        ("AI суурилсан хичээлийн тоо",                                     "🤖 AI суурилсан хичээл",        C["purple"]),
-        ("Шинээр хөгжүүлсэн хичээлийн тоо",                               "✨ Шинэ хичээл",                C["orange"]),
-        ("Гадаад хэлээр заасан нийт группийн тоо",                        "👥 Гадаад хэлний групп",        C["pink"]),
-        ("Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо",          "🎯 Зэргийн бус хөтөлбөр",       C["teal"]),
-        ("Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо", "🖥️ Платформ сургалт",            C["blue"]),
+        ("Хичээлийн тоо",                                                  "📚 Нийт хичээл",        C["blue"]),
+        ("Цахим хэлбэрээр орж буй хичээлийн тоо",                         "💻 Цахим хичээл",        C["teal"]),
+        ("Гадаад хэлээр зааж буй хичээлийн тоо",                          "🌐 Гадаад хэлний хичээл",C["green"]),
+        ("AI суурилсан хичээлийн тоо",                                     "🤖 AI суурилсан хичээл", C["purple"]),
+        ("Шинээр хөгжүүлсэн хичээлийн тоо",                               "✨ Шинэ хичээл",         C["orange"]),
+        ("Гадаад хэлээр заасан нийт группийн тоо",                        "👥 Гадаад хэлний групп", C["pink"]),
+        ("Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо",          "🎯 Зэргийн бус хөтөлбөр",C["teal"]),
+        ("Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо", "🖥️ Платформ сургалт",    C["blue"]),
     ]
 
     cnt_cols = st.columns(4)
@@ -984,13 +965,14 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
 
+    # ── SECTION B: Хувийн KPI трендийн графикууд ──
     st.markdown("<div class='section-title'>📉 Хувийн KPI трендийн графикууд — Бодит ба Зорилт</div>", unsafe_allow_html=True)
 
     pct_trend_s = [
-        ("Виртуал цахимаар хэрэгжиж буй хичээлийн хувь",     "Цахим хичээлийн хувь (%)",          C["blue"]),
-        ("AI суурилсан хичээлийн сэтгэл ханамжийн хувь",     "AI хичээлийн сэтгэл ханамж (%)",    C["purple"]),
-        ("Шинэ технологи нэвтрүүлэлтийн үр дүн, үр нөлөө",  "Технологи нэвтрүүлэлтийн үр нөлөө (%)", C["teal"]),
-        ("Нийт зэргийн бус сургалтын сэтгэл ханамж",         "Зэргийн бус сэтгэл ханамж (%)",     C["green"]),
+        ("Виртуал цахимаар хэрэгжиж буй хичээлийн хувь",    "Цахим хичээлийн хувь (%)",           C["blue"]),
+        ("AI суурилсан хичээлийн сэтгэл ханамжийн хувь",    "AI хичээлийн сэтгэл ханамж (%)",     C["purple"]),
+        ("Шинэ технологи нэвтрүүлэлтийн үр дүн, үр нөлөө", "Технологи нэвтрүүлэлтийн үр нөлөө (%)", C["teal"]),
+        ("Нийт зэргийн бус сургалтын сэтгэл ханамж",        "Зэргийн бус сэтгэл ханамж (%)",      C["green"]),
     ]
 
     sc1, sc2 = st.columns(2)
@@ -1019,71 +1001,71 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             with st.container(border=True):
                 st.plotly_chart(fig_s, use_container_width=True)
 
-    st.markdown("<div class='section-title'>📊 2026 оны хичээлийн бүрэлдэхүүн — Pie chart</div>", unsafe_allow_html=True)
+    # ── SECTION C: 2026 оны хичээлийн бүрэлдэхүүн ──
+    st.markdown("<div class='section-title'>📊 2026 оны хичээлийн бүрэлдэхүүн</div>", unsafe_allow_html=True)
 
-    pie_col1, pie_col2, pie_col3 = st.columns(3)
+    pie_left, pie_right = st.columns(2)
 
-    with pie_col1:
-        course_types = [
+    with pie_left:
+        course_labels = ["Цахим", "Гадаад хэлний", "AI суурилсан", "Шинэ"]
+        course_metrics = [
             "Цахим хэлбэрээр орж буй хичээлийн тоо",
             "Гадаад хэлээр зааж буй хичээлийн тоо",
             "AI суурилсан хичээлийн тоо",
             "Шинээр хөгжүүлсэн хичээлийн тоо",
         ]
-        course_labels = ["Цахим", "Гадаад хэлний", "AI суурилсан", "Шинэ"]
-        course_vals = [sv(m, CURRENT_YEAR, D) or 0 for m in course_types]
+        course_vals = [sv(m, CURRENT_YEAR, D) or 0 for m in course_metrics]
         fig_pie1 = go.Figure(go.Pie(
             labels=course_labels, values=course_vals, hole=0.5,
             marker=dict(colors=DEPT_COLORS[:4], line=dict(color=C["bg"], width=2)),
-            textinfo="label+percent", textfont=dict(color=C["text"], size=10),
+            textinfo="label+value+percent", textfont=dict(color=C["text"], size=10),
             insidetextorientation="radial",
         ))
-        t_pie1 = dict(**theme(280))
-        t_pie1["title"] = dict(text="Хичээлийн ангиллын харьцаа", font=dict(color=C["white"], size=12))
+        t_pie1 = dict(**theme(300))
+        t_pie1["title"] = dict(text="Хичээлийн ангиллын харьцаа (2026)", font=dict(color=C["white"], size=12))
         t_pie1["showlegend"] = False
         fig_pie1.update_layout(**t_pie1)
-        st.plotly_chart(fig_pie1, use_container_width=True)
+        with st.container(border=True):
+            st.plotly_chart(fig_pie1, use_container_width=True)
 
-    with pie_col2:
-        grp_val = sv("Гадаад хэлээр заасан нийт группийн тоо", CURRENT_YEAR, D) or 0
-        total_course = sv("Хичээлийн тоо", CURRENT_YEAR, D) or 0
-        other_grp = max(total_course - grp_val, 0)
+    with pie_right:
+        # Гадаад хэлний групп + Платформ + Зэргийн бус нэг pie-д
+        combo_labels = [
+            "Гадаад хэлний групп",
+            "Платформ сургалт",
+            "Зэргийн бус хөтөлбөр",
+        ]
+        combo_vals = [
+            sv("Гадаад хэлээр заасан нийт группийн тоо", CURRENT_YEAR, D) or 0,
+            sv("Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо", CURRENT_YEAR, D) or 0,
+            sv("Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо", CURRENT_YEAR, D) or 0,
+        ]
+        combo_clrs = [C["green"], C["orange"], C["purple"]]
         fig_pie2 = go.Figure(go.Pie(
-            labels=["Гадаад хэлний групп", "Бусад"], values=[grp_val, other_grp], hole=0.5,
-            marker=dict(colors=[C["green"], C["grid"]], line=dict(color=C["bg"], width=2)),
-            textinfo="label+value", textfont=dict(color=C["text"], size=10),
+            labels=combo_labels, values=combo_vals, hole=0.5,
+            marker=dict(colors=combo_clrs, line=dict(color=C["bg"], width=2)),
+            textinfo="label+value+percent", textfont=dict(color=C["text"], size=10),
+            insidetextorientation="radial",
         ))
-        t_pie2 = dict(**theme(280))
-        t_pie2["title"] = dict(text="Гадаад хэлний группийн харьцаа", font=dict(color=C["white"], size=12))
+        t_pie2 = dict(**theme(300))
+        t_pie2["title"] = dict(text="Групп, Платформ & Зэргийн бус сургалт (2026)", font=dict(color=C["white"], size=12))
         t_pie2["showlegend"] = False
         fig_pie2.update_layout(**t_pie2)
-        st.plotly_chart(fig_pie2, use_container_width=True)
+        with st.container(border=True):
+            st.plotly_chart(fig_pie2, use_container_width=True)
 
-    with pie_col3:
-        plat_val = sv("Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо", CURRENT_YEAR, D) or 0
-        cert_val = sv("Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо", CURRENT_YEAR, D) or 0
-        fig_pie3 = go.Figure(go.Pie(
-            labels=["Платформ сургалт", "Зэргийн бус хөтөлбөр"], values=[plat_val, cert_val], hole=0.5,
-            marker=dict(colors=[C["orange"], C["purple"]], line=dict(color=C["bg"], width=2)),
-            textinfo="label+value", textfont=dict(color=C["text"], size=10),
-        ))
-        t_pie3 = dict(**theme(280))
-        t_pie3["title"] = dict(text="Платформ & Зэргийн бус сургалт", font=dict(color=C["white"], size=12))
-        t_pie3["showlegend"] = False
-        fig_pie3.update_layout(**t_pie3)
-        st.plotly_chart(fig_pie3, use_container_width=True)
-
+    # ── SECTION D: Тэнхимийн харьцуулалт ──
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
 
     stud_dept_opts = {
-        "Нийт хичээлийн тоо":                  "Хичээлийн тоо",
-        "Цахим хичээлийн тоо":                  "Цахим хэлбэрээр орж буй хичээлийн тоо",
-        "Гадаад хэлний хичээлийн тоо":          "Гадаад хэлээр зааж буй хичээлийн тоо",
-        "AI суурилсан хичээлийн тоо":            "AI суурилсан хичээлийн тоо",
-        "Шинэ хичээлийн тоо":                   "Шинээр хөгжүүлсэн хичээлийн тоо",
-        "Гадаад хэлний gruppийн тоо":            "Гадаад хэлээр заасан нийт группийн тоо",
-        "Зэргийн бус хөтөлбөрийн тоо":          "Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо",
-        "Платформ сургалтын тоо":                "Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо",
+        "Нийт хичээлийн тоо":         "Хичээлийн тоо",
+        "Цахим хичээлийн тоо":         "Цахим хэлбэрээр орж буй хичээлийн тоо",
+        "Гадаад хэлний хичээлийн тоо": "Гадаад хэлээр зааж буй хичээлийн тоо",
+        "AI суурилсан хичээлийн тоо":  "AI суурилсан хичээлийн тоо",
+        "Шинэ хичээлийн тоо":          "Шинээр хөгжүүлсэн хичээлийн тоо",
+        "Гадаад хэлний группийн тоо":  "Гадаад хэлээр заасан нийт группийн тоо",
+        "Зэргийн бус хөтөлбөрийн тоо": "Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо",
+        "Платформ сургалтын тоо":       "Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо",
     }
 
     sel_sd = st.selectbox("Тэнхимээр харьцуулах үзүүлэлт:", list(stud_dept_opts.keys()), key="stud_dept_sel")
@@ -1106,7 +1088,8 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     with st.container(border=True):
         st.plotly_chart(fig_sd, use_container_width=True)
 
-    st.markdown("<div class='section-title'>🔥 Хичээлийн үзүүлэлтүүдийн тэнхимийн heatmap (2026)</div>", unsafe_allow_html=True)
+    # ── SECTION E: Heatmap ──
+    st.markdown("<div class='section-title'>🔥 Тэнхимийн хичээлийн үзүүлэлтүүдийн heatmap (2026)</div>", unsafe_allow_html=True)
 
     heatmap_metrics = [
         ("Хичээлийн тоо",                                                  "Нийт хичээл"),
@@ -1119,11 +1102,9 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         ("Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо", "Платформ"),
     ]
 
-    hm_data = []
-    hm_labels = []
+    hm_data, hm_labels = [], []
     for met, lbl in heatmap_metrics:
-        row = [sv(met, CURRENT_YEAR, d) or 0 for d in DEPTS_S]
-        hm_data.append(row)
+        hm_data.append([sv(met, CURRENT_YEAR, d) or 0 for d in DEPTS_S])
         hm_labels.append(lbl)
 
     fig_hm = go.Figure(go.Heatmap(
@@ -1142,13 +1123,14 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     with st.container(border=True):
         st.plotly_chart(fig_hm, use_container_width=True)
 
+    # ── SECTION F: Стэк диаграм ──
     st.markdown("<div class='section-title'>📊 Хичээлийн төрлүүдийн стэк диаграм (2026)</div>", unsafe_allow_html=True)
 
     stack_metrics = [
-        ("Цахим хэлбэрээр орж буй хичээлийн тоо",  "Цахим",       C["teal"]),
-        ("Гадаад хэлээр зааж буй хичээлийн тоо",   "Гадаад хэл",  C["green"]),
-        ("AI суурилсан хичээлийн тоо",              "AI суурилсан", C["purple"]),
-        ("Шинээр хөгжүүлсэн хичээлийн тоо",        "Шинэ",        C["orange"]),
+        ("Цахим хэлбэрээр орж буй хичээлийн тоо",  "Цахим",        C["teal"]),
+        ("Гадаад хэлээр зааж буй хичээлийн тоо",   "Гадаад хэл",   C["green"]),
+        ("AI суурилсан хичээлийн тоо",              "AI суурилсан",  C["purple"]),
+        ("Шинээр хөгжүүлсэн хичээлийн тоо",        "Шинэ",         C["orange"]),
     ]
 
     fig_stk = go.Figure()
