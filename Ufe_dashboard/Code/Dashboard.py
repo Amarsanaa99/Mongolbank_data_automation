@@ -1422,10 +1422,10 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 
     # 2-р мөр KPI
     BOT_COUNT_KPIS = [
-        ("Хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо",                         "📋 Хэрэгжсэн төсөл",     C["orange"]),
-        ("Бойжуулсан гарааны компаний тоо",                              "🚀 Гарааны компани",       C["purple"]),
-        ("Патент, лицензийн гэрээ, зохиогчийн эрхийн гэрчилгээний тоо", "📜 Патент/Лиценз",         C["green"]),
-        ("БССА-аас санаачлан хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо",     "🏛️ БССА санаачлага",     C["pink"]),
+        ("Хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо",                         "📋 Хэрэгжсэн төсөл",     C["blue"]),
+        ("Бойжуулсан гарааны компаний тоо",                              "🚀 Гарааны компани",       C["blue"]),
+        ("Патент, лицензийн гэрээ, зохиогчийн эрхийн гэрчилгээний тоо", "📜 Патент/Лиценз",         C["blue"]),
+        ("БССА-аас санаачлан хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо",     "🏛️ БССА санаачлага",     C["blue"]),
     ]
 
     kpi_r_cols2 = st.columns(4)
@@ -1436,7 +1436,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
 padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
     <div style='color:{clr};font-size:26px;font-weight:700;'>{val_str}</div>
-    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
+    <div style='color:#ffffff;font-size:14px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
     # ── SECTION A: Чухал хувийн KPI товчлуур (2026 + trend) ──
     st.markdown("<div class='section-title'>📈 Хувийн KPI үзүүлэлтүүд — 2026 ба Зорилтын трендийн график</div>", unsafe_allow_html=True)
