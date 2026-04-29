@@ -860,7 +860,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             with st.container(border=True):
                 st.plotly_chart(fig_p, use_container_width=True)
 
-    # ── SECTION C: Тэнхимийн харьцуулалт ──
+# ── SECTION C: Тэнхимийн харьцуулалт ──
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
 
     prog_dept_opts = {
@@ -884,7 +884,11 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 
     fig_dp = go.Figure(go.Bar(
         x=DEPTS, y=vals_dp,
-        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+        marker=dict(
+            color="#118DFF",
+            line=dict(color=C["bg"], width=0.5),
+            cornerradius=8
+        ),
         text=[str(v) for v in vals_dp], textposition="outside",
         textfont=dict(color=C["text"], size=10),
     ))
@@ -897,12 +901,15 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
     with st.container(border=True):
         st.plotly_chart(fig_dp, use_container_width=True)
-# ── SECTION D: Хөтөлбөрийн бүрэлдэхүүн ба үзүүлэлтүүд (2026) ──
+
+    # ── SECTION D: Хөтөлбөрийн бүрэлдэхүүн ба үзүүлэлтүүд (2026) ──
     st.markdown("<div class='section-title'>📊 2026 оны хөтөлбөрийн бүрэлдэхүүн ба үзүүлэлтүүд</div>", unsafe_allow_html=True)
+
+    BLUE_PALETTE = ["#1E90FF", "#4DB8FF", "#0A4A8A", "#00BFFF", "#0066CC", "#63CFFF"]
 
     pie_col, bar_col = st.columns(2)
 
-    # Зүүн — Pie chart
+    # Зүүн — Pie chart (цэнхэр өнгийн палитр)
     with pie_col:
         pie_labels = ["Үндсэн", "Цахим", "Цагийн", "Гадаад хэлний", "Хамтарсан", "ОУ дипломтой"]
         pie_metrics = [
@@ -914,11 +921,10 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             "ОУ дипломтой хөтөлбөрийн тоо",
         ]
         pie_vals = [pgv(m, CURRENT_YEAR, D) or 0 for m in pie_metrics]
-        pie_clrs = [C["blue"], C["teal"], C["purple"], C["green"], C["orange"], C["pink"]]
 
         fig_pie_prog = go.Figure(go.Pie(
             labels=pie_labels, values=pie_vals, hole=0.52,
-            marker=dict(colors=pie_clrs, line=dict(color=C["bg"], width=2)),
+            marker=dict(colors=BLUE_PALETTE, line=dict(color=C["bg"], width=2)),
             textinfo="label+value+percent", textfont=dict(color=C["text"], size=11),
             insidetextorientation="radial",
         ))
@@ -929,25 +935,28 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         with st.container(border=True):
             st.plotly_chart(fig_pie_prog, use_container_width=True)
 
-    # Баруун — Horizontal bar chart (2026 оны нэг утга)
+    # Баруун — Horizontal bar chart (rounded + цэнхэр өнгө)
     with bar_col:
         bar_metrics_2026 = [
-            ("Ажиглалтад хамрагдсан хичээлийн тоо",                 "Ажиглалтад хамрагдсан", C["blue"]),
-            ("Хичээлийн СҮД хурлаар хэлэлцүүлсэн хичээлийн тоо",  "СҮД хэлэлцүүлсэн",      C["orange"]),
-            ("СҮД хурлаас гарсан санал, хүсэлтийн тоо",             "СҮД санал хүсэлт",       C["teal"]),
-            ("Хамтын ажиллагааны гэрээтэй байгууллагын тоо",         "Гэрээт байгуулага",      C["purple"]),
-            ("Хамтарсан хөтөлбөр хэрэгжүүлэгч сургуулийн тоо",     "Хамтарсан сургууль",     C["green"]),
-            ("Солилцооны хөтөлбөр хэрэгжүүлэгч институтийн тоо",   "Солилцооны институт",    C["pink"]),
+            ("Ажиглалтад хамрагдсан хичээлийн тоо",                 "Ажиглалтад хамрагдсан"),
+            ("Хичээлийн СҮД хурлаар хэлэлцүүлсэн хичээлийн тоо",  "СҮД хэлэлцүүлсэн"),
+            ("СҮД хурлаас гарсан санал, хүсэлтийн тоо",             "СҮД санал хүсэлт"),
+            ("Хамтын ажиллагааны гэрээтэй байгууллагын тоо",         "Гэрээт байгуулага"),
+            ("Хамтарсан хөтөлбөр хэрэгжүүлэгч сургуулийн тоо",     "Хамтарсан сургууль"),
+            ("Солилцооны хөтөлбөр хэрэгжүүлэгч институтийн тоо",   "Солилцооны институт"),
         ]
 
-        labels = [lbl for _, lbl, _ in bar_metrics_2026]
-        values = [pgv(met, CURRENT_YEAR, D) or 0 for met, _, _ in bar_metrics_2026]
-        colors = [clr for _, _, clr in bar_metrics_2026]
+        labels = [lbl for _, lbl in bar_metrics_2026]
+        values = [pgv(met, CURRENT_YEAR, D) or 0 for met, _ in bar_metrics_2026]
 
         fig_bar6 = go.Figure(go.Bar(
             x=values, y=labels,
             orientation="h",
-            marker=dict(color=colors, line=dict(color=C["bg"], width=0.5)),
+            marker=dict(
+                color="#1E90FF",
+                line=dict(color=C["bg"], width=0.5),
+                cornerradius=8
+            ),
             text=[str(int(v)) for v in values],
             textposition="outside",
             textfont=dict(color=C["text"], size=11),
