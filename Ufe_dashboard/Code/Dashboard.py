@@ -1718,7 +1718,7 @@ elif st.session_state.page == "fin":
 
     def fmt_money(v):
         if v is None: return "—"
-        if v >= 1_000_000_000: return f"₮{v/1_000_000_000:.1f}т.төг"
+        if v >= 1_000_000_000: return f"₮{v/1_000_000_000:.1f}тэрбум"
         if v >= 1_000_000: return f"₮{v/1_000_000:.0f}сая"
         return f"₮{int(v):,}"
 
