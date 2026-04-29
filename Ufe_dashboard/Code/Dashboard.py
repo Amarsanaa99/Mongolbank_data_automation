@@ -2022,12 +2022,12 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     st.markdown("<div class='section-title'>⚖️ Орлого ба Төсвийн харьцуулалт тэнхимээр (2026)</div>", unsafe_allow_html=True)
 
     fig_ov = go.Figure()
-    inc_vals = [fgv("Нийт орлого", CY, d) or 0 for d in FDEPTS]
+    inc_vals = [fgv("Суралцагч дунд зохион байгуулсан үйл ажиллагааны зардал", CY, d) or 0 for d in FDEPTS]
     exp_vals = [fgv("Тэнхимийн үйл ажиллагааны төсөв", CY, d) or 0 for d in FDEPTS]
     tdev_vals = [fgv("Багшийн хөгжилд зориулсан төсөв", CY, d) or 0 for d in FDEPTS]
     dig_vals  = [fgv("Цахим хөгжилд зарцуулсан төсөв", CY, d) or 0 for d in FDEPTS]
 
-    fig_ov.add_trace(go.Bar(x=FDEPTS, y=inc_vals,  name="Нийт орлого",    marker_color=C["blue"]))
+    fig_ov.add_trace(go.Bar(x=FDEPTS, y=inc_vals, name="Суралцагч үйл ажиллагааны зардал", marker_color=C["blue"]))
     fig_ov.add_trace(go.Bar(x=FDEPTS, y=exp_vals,  name="Үйл ажиллагааны төсөв", marker_color=C["orange"]))
     fig_ov.add_trace(go.Bar(x=FDEPTS, y=tdev_vals, name="Багшийн хөгжлийн төсөв", marker_color=C["purple"]))
     fig_ov.add_trace(go.Bar(x=FDEPTS, y=dig_vals,  name="Цахим хөгжлийн төсөв",  marker_color=C["teal"]))
