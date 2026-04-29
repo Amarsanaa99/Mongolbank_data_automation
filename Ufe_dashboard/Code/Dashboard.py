@@ -1260,42 +1260,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     <div style='color:{clr};font-size:22px;font-weight:700;'>{val_str}</div>
     <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
-
-    # ── SECTION E: Нийт суралцагчдын тоон өөрчлөлтийн трендийн графикууд ──
-    st.markdown("<div class='section-title'>📉 Нийт суралцагчдын тоон трендийн графикууд — Бодит ба Зорилт</div>", unsafe_allow_html=True)
-
-    COUNT_TREND_METRICS = [
-        ("Үндсэн + цагийн + цахим суралцагчийн тоо",           "Нийт суралцагчдын өөрчлөлт",   C["blue"]),
-        ("Үндсэн хөтөлбөрийн суралцагчийн тоо",                "Үндсэн хөтөлбөрийн суралцагч", C["teal"]),
-        ("Цагийн хөтөлбөрийн суралцагчийн тоо",                "Цагийн хөтөлбөрийн суралцагч", C["purple"]),
-        ("Цахимаар хэрэгжиж буй хөтөлбөрийн суралцагчийн тоо","Цахим хөтөлбөрийн суралцагч",  C["green"]),
-    ]
-
-    tr1, tr2 = st.columns(2)
-    tr_cols = [tr1, tr2, tr1, tr2]
-    for i, (met, lbl, clr) in enumerate(COUNT_TREND_METRICS):
-        yrs_t, vals_t = sdv_prog_series(met, PROG_IDX)
-        fig_tr = go.Figure()
-        hx = [y for y,v in zip(yrs_t,vals_t) if y<=CURRENT_YEAR]
-        hy = [v for y,v in zip(yrs_t,vals_t) if y<=CURRENT_YEAR]
-        fx = [y for y,v in zip(yrs_t,vals_t) if y>CURRENT_YEAR]
-        fy = [v for y,v in zip(yrs_t,vals_t) if y>CURRENT_YEAR]
-        fig_tr.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
-            line=dict(color=clr, width=2.5), marker=dict(size=7, color=clr)))
-        if fx and hx:
-            fig_tr.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
-                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
-                marker=dict(size=7, color=C["target"], symbol="diamond")))
-        if CURRENT_YEAR in yrs_t:
-            fig_tr.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)",
-                annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)", annotation_font_size=10)
-        tt = dict(**theme(280))
-        tt["title"] = dict(text=f"{lbl} — {SELECTED_PROG}", font=dict(color=C["white"], size=11))
-        fig_tr.update_layout(**tt)
-        with tr_cols[i]:
-            with st.container(border=True):
-                st.plotly_chart(fig_tr, use_container_width=True)
-
     # ── SECTION F: Бүх хөтөлбөрийн харьцуулалт (2026) — баганан диаграм ──
     st.markdown("<div class='section-title'>🏛️ Хөтөлбөр хоорондын харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
 
