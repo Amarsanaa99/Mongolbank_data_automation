@@ -1519,11 +1519,15 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         tick_suffix_rd = ""
 
     fig_rd = go.Figure(go.Bar(
-        x=RDEPTS, y=vals_rd,
-        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
-        text=text_rd, textposition="outside",
-        textfont=dict(color=C["text"], size=10),
-    ))
+            x=RDEPTS, y=vals_rd,
+            marker=dict(
+                color="#118DFF",
+                line=dict(color=C["bg"], width=0.5),
+                cornerradius=8
+            ),
+            text=text_rd, textposition="outside",
+            textfont=dict(color=C["text"], size=10),
+        ))
     t_rd = dict(**theme(340))
     t_rd["title"] = dict(text=f"Тэнхим тус бүрийн {sel_r} (2026)", font=dict(color=C["white"], size=12))
     t_rd["xaxis"]["tickfont"] = dict(size=10)
@@ -1536,13 +1540,14 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     with st.container(border=True):
         st.plotly_chart(fig_rd, use_container_width=True)
 
-    # ── SECTION D: Дугуй диаграм — бүрэлдэхүүн ──
+# ── SECTION D: Дугуй диаграм — бүрэлдэхүүн ──
     st.markdown("<div class='section-title'>🔵 Судалгааны бүрэлдэхүүний харьцаа (2026)</div>", unsafe_allow_html=True)
+
+    BLUE_PALETTE = ["#1E90FF", "#4DB8FF", "#0A4A8A", "#00BFFF", "#0066CC", "#63CFFF"]
 
     pie_r1, pie_r2, pie_r3 = st.columns(3)
 
     with pie_r1:
-        # Бүтээлийн бүрэлдэхүүн
         pie_l1 = ["ОУ импакт", "ОУ сэтгүүл", "Гадаадтай хамтарсан", "Бусад"]
         ou_imp  = rgv("ОУ импакт өндөртэй сэтгүүлд нийтлүүлсэн бүтээлийн тоо", CURRENT_YEAR, D) or 0
         ou_sut  = rgv("ОУ сэтгүүлд нийтлүүлсэн бүтээлийн тоо", CURRENT_YEAR, D) or 0
@@ -1552,8 +1557,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         pie_v1  = [ou_imp, ou_sut, gad_but, busa]
         fig_pr1 = go.Figure(go.Pie(
             labels=pie_l1, values=pie_v1, hole=0.52,
-            marker=dict(colors=[C["orange"], C["blue"], C["teal"], C["grid"]],
-                        line=dict(color=C["bg"], width=2)),
+            marker=dict(colors=BLUE_PALETTE[:4], line=dict(color=C["bg"], width=2)),
             textinfo="label+percent+value", textfont=dict(color=C["text"], size=10),
             insidetextorientation="radial",
         ))
@@ -1561,10 +1565,10 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         t_pr1["title"] = dict(text="ЭШ бүтээлийн ангиллын харьцаа", font=dict(color=C["white"], size=12))
         t_pr1["showlegend"] = False
         fig_pr1.update_layout(**t_pr1)
-        st.plotly_chart(fig_pr1, use_container_width=True)
+        with st.container(border=True):
+            st.plotly_chart(fig_pr1, use_container_width=True)
 
     with pie_r2:
-        # Төсөл хөтөлбөрийн бүрэлдэхүүн
         pie_l2 = ["Хэрэгжсэн төсөл", "Хамтарсан судалгаа", "БССА санаачлага", "Нийгмийн чиглэлт"]
         pie_v2 = [
             rgv("Хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо", CURRENT_YEAR, D) or 0,
@@ -1574,8 +1578,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         ]
         fig_pr2 = go.Figure(go.Pie(
             labels=pie_l2, values=pie_v2, hole=0.52,
-            marker=dict(colors=[C["purple"], C["green"], C["pink"], C["orange"]],
-                        line=dict(color=C["bg"], width=2)),
+            marker=dict(colors=BLUE_PALETTE[:4], line=dict(color=C["bg"], width=2)),
             textinfo="label+percent+value", textfont=dict(color=C["text"], size=10),
             insidetextorientation="radial",
         ))
@@ -1583,10 +1586,10 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         t_pr2["title"] = dict(text="Төсөл хөтөлбөрийн ангиллын харьцаа", font=dict(color=C["white"], size=12))
         t_pr2["showlegend"] = False
         fig_pr2.update_layout(**t_pr2)
-        st.plotly_chart(fig_pr2, use_container_width=True)
+        with st.container(border=True):
+            st.plotly_chart(fig_pr2, use_container_width=True)
 
     with pie_r3:
-        # Хүн хүчний бүрэлдэхүүн
         pie_l3 = ["ЭШ ажилтан", "Оролцсон багш", "Төсөл багш", "Түншлэгч багш"]
         pie_v3 = [
             rgv("Эрдэм шинжилгээний ажилтны тоо", CURRENT_YEAR, D) or 0,
@@ -1596,8 +1599,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         ]
         fig_pr3 = go.Figure(go.Pie(
             labels=pie_l3, values=pie_v3, hole=0.52,
-            marker=dict(colors=[C["blue"], C["teal"], C["purple"], C["green"]],
-                        line=dict(color=C["bg"], width=2)),
+            marker=dict(colors=BLUE_PALETTE[:4], line=dict(color=C["bg"], width=2)),
             textinfo="label+percent+value", textfont=dict(color=C["text"], size=10),
             insidetextorientation="radial",
         ))
@@ -1605,7 +1607,8 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         t_pr3["title"] = dict(text="Судалгааны хүн хүчний бүрэлдэхүүн", font=dict(color=C["white"], size=12))
         t_pr3["showlegend"] = False
         fig_pr3.update_layout(**t_pr3)
-        st.plotly_chart(fig_pr3, use_container_width=True)
+        with st.container(border=True):
+            st.plotly_chart(fig_pr3, use_container_width=True)
 
     # ── SECTION E: Heatmap — тэнхим × үзүүлэлт ──
     st.markdown("<div class='section-title'>🔥 Тэнхим × Судалгааны үзүүлэлтийн heatmap (2026)</div>", unsafe_allow_html=True)
@@ -1648,7 +1651,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     with st.container(border=True):
         st.plotly_chart(fig_hm_r, use_container_width=True)
 
-    # ── SECTION F: Стэк баганан диаграм ──
+# ── SECTION F: Стэк баганан диаграм ──
     st.markdown("<div class='section-title'>📊 Судалгааны үзүүлэлтүүдийн стэк диаграм (2026)</div>", unsafe_allow_html=True)
 
     stk_r_tab = st.radio("Харах:", ["Бүтээл & Эшлэл", "Төсөл & Хамтын ажиллагаа"],
@@ -1656,23 +1659,26 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 
     if stk_r_tab == "Бүтээл & Эшлэл":
         stk_items = [
-            ("Эрдэм шинжилгээний бүтээлийн тоо",                       "ЭШ бүтээл",    C["blue"]),
-            ("ОУ импакт өндөртэй сэтгүүлд нийтлүүлсэн бүтээлийн тоо", "ОУ импакт",    C["orange"]),
-            ("ОУ сэтгүүлд нийтлүүлсэн бүтээлийн тоо",                 "ОУ сэтгүүл",   C["teal"]),
-            ("Гадаадын эрдэмтэдтэй хамтарсан бүтээлийн тоо",           "Гадаадтай",    C["purple"]),
+            ("Эрдэм шинжилгээний бүтээлийн тоо",                       "ЭШ бүтээл",  "#1E90FF"),
+            ("ОУ импакт өндөртэй сэтгүүлд нийтлүүлсэн бүтээлийн тоо", "ОУ импакт",  "#4DB8FF"),
+            ("ОУ сэтгүүлд нийтлүүлсэн бүтээлийн тоо",                 "ОУ сэтгүүл", "#0A4A8A"),
+            ("Гадаадын эрдэмтэдтэй хамтарсан бүтээлийн тоо",           "Гадаадтай",  "#00BFFF"),
         ]
     else:
         stk_items = [
-            ("Хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо",                    "Хэрэгжсэн",   C["green"]),
-            ("Хамтарсан судалгаа, төслийн тоо",                          "Хамтарсан",   C["blue"]),
-            ("БССА-аас санаачлан хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо", "БССА",        C["orange"]),
-            ("Нийгэм эдийн засгийн асуудлыг шийдэхэд чиглэсэн төслийн тоо", "Нийгмийн", C["pink"]),
+            ("Хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо",                         "Хэрэгжсэн", "#1E90FF"),
+            ("Хамтарсан судалгаа, төслийн тоо",                               "Хамтарсан", "#4DB8FF"),
+            ("БССА-аас санаачлан хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо",      "БССА",      "#0A4A8A"),
+            ("Нийгэм эдийн засгийн асуудлыг шийдэхэд чиглэсэн төслийн тоо", "Нийгмийн",  "#00BFFF"),
         ]
 
     fig_stk_r = go.Figure()
     for met, lbl, clr in stk_items:
         vals_stk_r = [rgv(met, CURRENT_YEAR, d) or 0 for d in RDEPTS]
-        fig_stk_r.add_trace(go.Bar(x=RDEPTS, y=vals_stk_r, name=lbl, marker_color=clr))
+        fig_stk_r.add_trace(go.Bar(
+            x=RDEPTS, y=vals_stk_r, name=lbl,
+            marker=dict(color=clr, cornerradius=6),
+        ))
     t_stk_r = dict(**theme(340))
     t_stk_r["title"] = dict(text=f"{stk_r_tab} — Тэнхимээр (2026)", font=dict(color=C["white"], size=12))
     t_stk_r["barmode"] = "stack"
