@@ -1713,12 +1713,12 @@ elif st.session_state.page == "fin":
 
     COUNT_FIN_KPIS = [
         ("Нийт орлого",                       "💎 Нийт орлого",              C["blue"]),
-        ("Бакалаврын сургалтын орлого",        "🎓 Бакалаврын орлого",         C["teal"]),
-        ("Судалгаа, эрдэм шинжилгээний орлого","🔬 Судалгааны орлого",          C["purple"]),
-        ("Зэргийн бус сургалтын орлого",       "📚 Зэргийн бус орлого",        C["green"]),
-        ("Патентын орлого",                    "📜 Патентын орлого",            C["orange"]),
-        ("Гарааны бизнесийн орлого",           "🚀 Гарааны бизнес",             C["pink"]),
-        ("Хандиваар авсан санхүүжилт",         "🤝 Хандив",                    C["teal"]),
+        ("Бакалаврын сургалтын орлого",        "🎓 Бакалаврын орлого",         C["blue"]),
+        ("Судалгаа, эрдэм шинжилгээний орлого","🔬 Судалгааны орлого",          C["blue"]),
+        ("Зэргийн бус сургалтын орлого",       "📚 Зэргийн бус орлого",        C["blue"]),
+        ("Патентын орлого",                    "📜 Патентын орлого",            C["blue"]),
+        ("Гарааны бизнесийн орлого",           "🚀 Гарааны бизнес",             C["blue"]),
+        ("Хандиваар авсан санхүүжилт",         "🤝 Хандив",                    C["blue"]),
         ("Үйлдвэрлэл, худалдааны орлого",      "🏭 Үйлдвэрлэл, худалдаа",      C["blue"]),
     ]
 
@@ -1730,7 +1730,7 @@ elif st.session_state.page == "fin":
 <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
 padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
     <div style='color:{clr};font-size:20px;font-weight:700;'>{val_str}</div>
-    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
+    <div style='color:#ffffff;font-size:14px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
 
 # ── SECTION B: Нийт орлогын бүрэлдэхүүн — Pie chart ──
