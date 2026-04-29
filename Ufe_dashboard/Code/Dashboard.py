@@ -1045,9 +1045,15 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     vals_sd = [int(sv(sel_met_sd, CURRENT_YEAR, d) or 0) for d in DEPTS_S]
     avg_sd = round(sum(vals_sd) / max(len([v for v in vals_sd if v > 0]), 1), 1)
     fig_sd = go.Figure(go.Bar(
-        x=DEPTS_S, y=vals_sd,
-        marker=dict(color=#118DFF, line=dict(color=C["bg"], width=0.5), cornerradius=8),
-        text=[str(v) for v in vals_sd], textposition="outside",
+        x=DEPTS_S, 
+        y=vals_sd,
+        marker=dict(
+            color="#118DFF", 
+            line=dict(color=C["bg"], width=0.5), 
+            cornerradius=8
+        ),
+        text=[str(v) for v in vals_sd],
+        textposition="outside",
         textfont=dict(color=C["text"], size=10),
     ))
     t_sd = dict(**theme(340))
