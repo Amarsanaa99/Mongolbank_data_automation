@@ -213,11 +213,34 @@ def load_res_data():
         df[c] = pd.to_numeric(df[c], errors="coerce")
     df["Үзүүлэлт"] = df["Үзүүлэлт"].str.strip()
     return df
+
+# ============================================================
+# DATA LOADING — Санхүү
+# ============================================================
+@st.cache_data
+def load_fin_data():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_PATH = os.path.join(BASE_DIR, "..", "data", "Fin_dev_cl.xlsx")
+    df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=None)
+    df = df[df[0] == "Санхүү"].copy()
+    df[1] = df[1].ffill()
+    df = df[df[2].notna() & (df[2] != "Он") & (df[2] != "Ангилал")]
+    df[2] = pd.to_numeric(df[2], errors="coerce")
+    df = df[df[2].notna()].copy()
+    COLS = ["Ангилал","Үзүүлэлт","Он",
+            "БУТ","МКТ","МСМТ","НББТ","ОУАЖССИ","ОУНББСМИ",
+            "ОУС","СДСТ","СУТ","СШУТ","ЭкТ","ЭнТИнс","ЭЗТ","Нийт"]
+    df.columns = COLS
+    for c in COLS[3:]:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df["Үзүүлэлт"] = df["Үзүүлэлт"].str.strip()
+    return df
 df, DEPTS       = load_teacher_data()
 dfp, DEPTS_P    = load_prog_data()
 dfs, DEPTS_S    = load_stud_data()
 dfd, PROGRAMS_D, PROG_COLS_D = load_stud_dev_data()
 dfr = load_res_data()
+dff = load_fin_data()
 CURRENT_YEAR = 2026
 
 # ============================================================
@@ -464,7 +487,7 @@ SELECTED_PROG_IDX = PROGRAMS_D.index(SELECTED_PROG) if SELECTED_PROG in PROGRAMS
 # ============================================================
 # HEADER — page navigation tabs
 # ============================================================
-col_h1, col_h2, col_h3, col_h4, col_h5, col_h6 = st.columns([3, 1, 1, 1, 1, 1])
+col_h1, col_h2, col_h3, col_h4, col_h5, col_h6, col_h7 = st.columns([3, 1, 1, 1, 1, 1, 1])
 with col_h1:
     disp_name = dept_labels.get(D, D) if st.session_state.page != "stud_dev" else f"📋 {SELECTED_PROG}"
     st.markdown(f"""
@@ -507,6 +530,12 @@ with col_h6:
     if st.button("🔬 Судалгаа, төсөл", key="nav_res",
                  type="primary" if st.session_state.page == "res" else "secondary"):
         st.session_state.page = "res"
+        st.rerun()
+with col_h7:
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    if st.button("💰 Санхүү", key="nav_fin",
+                 type="primary" if st.session_state.page == "fin" else "secondary"):
+        st.session_state.page = "fin"
         st.rerun()
 st.markdown("<div style='margin-bottom:16px'></div>", unsafe_allow_html=True)
 
@@ -1804,6 +1833,313 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     fig_stk_r.update_layout(**t_stk_r)
     with st.container(border=True):
         st.plotly_chart(fig_stk_r, use_container_width=True)
+# ============================================================
+# PAGE 6 — САНХҮҮ
+# ============================================================
+elif st.session_state.page == "fin":
+
+    FDEPTS = ["БУТ","МКТ","МСМТ","НББТ","ОУАЖССИ","ОУНББСМИ","ОУС","СДСТ","СУТ","СШУТ","ЭкТ","ЭнТИнс","ЭЗТ"]
+    CY = CURRENT_YEAR  # 2026
+
+    def fgv(metric, year, dept):
+        r = dff[(dff["Үзүүлэлт"]==metric)&(dff["Он"]==year)]
+        return r.iloc[0][dept] if not r.empty else None
+
+    def fgseries(metric, dept):
+        s = dff[dff["Үзүүлэлт"]==metric].sort_values("Он")
+        return list(s["Он"]), list(s[dept])
+
+    def fmt_money(v):
+        if v is None: return "—"
+        if v >= 1_000_000_000: return f"₮{v/1_000_000_000:.1f}тн"
+        if v >= 1_000_000: return f"₮{v/1_000_000:.0f}сая"
+        return f"₮{int(v):,}"
+
+    # ── SECTION A: 2026 оны гол орлогын KPI badge ──
+    st.markdown("<div class='section-title'>💰 2026 оны гол санхүүгийн үзүүлэлтүүд</div>", unsafe_allow_html=True)
+
+    COUNT_FIN_KPIS = [
+        ("Нийт орлого",                       "💎 Нийт орлого",              C["blue"]),
+        ("Бакалаврын сургалтын орлого",        "🎓 Бакалаврын орлого",         C["teal"]),
+        ("Судалгаа, эрдэм шинжилгээний орлого","🔬 Судалгааны орлого",          C["purple"]),
+        ("Зэргийн бус сургалтын орлого",       "📚 Зэргийн бус орлого",        C["green"]),
+        ("Патентын орлого",                    "📜 Патентын орлого",            C["orange"]),
+        ("Гарааны бизнесийн орлого",           "🚀 Гарааны бизнес",             C["pink"]),
+        ("Хандиваар авсан санхүүжилт",         "🤝 Хандив",                    C["teal"]),
+        ("Үйлдвэрлэл, худалдааны орлого",      "🏭 Үйлдвэрлэл, худалдаа",      C["blue"]),
+    ]
+
+    fin_cols = st.columns(4)
+    for i, (met, lbl, clr) in enumerate(COUNT_FIN_KPIS):
+        v = fgv(met, CY, D)
+        val_str = fmt_money(v)
+        fin_cols[i % 4].markdown(f"""
+<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
+padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
+    <div style='color:{clr};font-size:20px;font-weight:700;'>{val_str}</div>
+    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
+</div>""", unsafe_allow_html=True)
+
+    # ── SECTION B: Нийт орлогын бүрэлдэхүүн — Pie chart ──
+    st.markdown("<div class='section-title'>🥧 2026 оны нийт орлогын бүрэлдэхүүн</div>", unsafe_allow_html=True)
+
+    pie_f1, pie_f2 = st.columns([1, 2])
+
+    PIE_INCOME_METRICS = [
+        ("Бакалаврын сургалтын орлого",         "Бакалаврын сургалт",    C["blue"]),
+        ("Үйлдвэрлэл, худалдааны орлого",       "Үйлдвэрлэл, худалдаа", C["teal"]),
+        ("Патентын орлого",                     "Патентын орлого",       C["orange"]),
+        ("Судалгаа, эрдэм шинжилгээний орлого", "Судалгааны орлого",     C["purple"]),
+        ("Зэргийн бус сургалтын орлого",        "Зэргийн бус сургалт",   C["green"]),
+        ("Хандиваар авсан санхүүжилт",          "Хандив",                C["pink"]),
+        ("Түншлэгч талуудтай хамтарсан төслийн ивээн тэтгэлэгийн мөнгөн дүн", "Түншлэгч тэтгэлэг", "#80cbc4"),
+        ("Орлогын эх үүсвэрийг нэмэгдүүлэх үйл ажиллагааны орлого", "Орлогын эх үүсвэр", "#ffb74d"),
+        ("Гарааны бизнесийн орлого",            "Гарааны бизнес",        C["teal"]),
+        ("Гадаад оюутаны сургалтын орлого",     "Гадаад оюутан",         "#ce93d8"),
+    ]
+
+    with pie_f1:
+        pie_labels = [lbl for _, lbl, _ in PIE_INCOME_METRICS]
+        pie_vals   = [fgv(met, CY, D) or 0 for met, _, _ in PIE_INCOME_METRICS]
+        pie_clrs   = [clr for _, _, clr in PIE_INCOME_METRICS]
+        fig_pie_fin = go.Figure(go.Pie(
+            labels=pie_labels, values=pie_vals, hole=0.52,
+            marker=dict(colors=pie_clrs, line=dict(color=C["bg"], width=2)),
+            textinfo="label+percent", textfont=dict(color=C["text"], size=10),
+            insidetextorientation="radial",
+        ))
+        t_pf = dict(**theme(360))
+        t_pf["title"] = dict(text="Орлогын эх үүсвэрийн харьцаа (2026)", font=dict(color=C["white"], size=12))
+        t_pf["showlegend"] = False
+        fig_pie_fin.update_layout(**t_pf)
+        with st.container(border=True):
+            st.plotly_chart(fig_pie_fin, use_container_width=True)
+
+    with pie_f2:
+        # Хэвтээ баганан диаграм — орлогын эх үүсвэр харьцуулалт
+        sorted_items = sorted(zip(pie_vals, pie_labels, pie_clrs), reverse=True)
+        s_vals, s_lbls, s_clrs = zip(*sorted_items) if sorted_items else ([], [], [])
+        fig_bar_pie = go.Figure(go.Bar(
+            x=list(s_vals), y=list(s_lbls), orientation="h",
+            marker=dict(color=list(s_clrs)),
+            text=[fmt_money(v) for v in s_vals],
+            textposition="outside", textfont=dict(color=C["text"], size=10),
+        ))
+        t_bp = dict(**theme(360))
+        t_bp["title"] = dict(text="Орлогын эх үүсвэр харьцуулалт (2026)", font=dict(color=C["white"], size=12))
+        t_bp["margin"]["l"] = 220
+        t_bp["xaxis"]["title"] = "₮"
+        fig_bar_pie.update_layout(**t_bp)
+        with st.container(border=True):
+            st.plotly_chart(fig_bar_pie, use_container_width=True)
+
+    # ── SECTION C: Хувийн KPI badge + Зорилтын трендийн графикууд ──
+    st.markdown("<div class='section-title'>📈 Хувийн KPI үзүүлэлтүүд — 2026 ба Зорилтын трендийн график (2024–2031)</div>", unsafe_allow_html=True)
+
+    PCT_FIN_KPIS = [
+        ("СЭЗИС-ийн нийт орлогод эзлэх хувь",                      "🏛️ Нийт орлогод эзлэх хувь",    C["blue"]),
+        ("Бакалаврын сургалтын орлогын нийт орлогод эзлэх хувь",    "🎓 Бакалаврын орлогын хувь",     C["teal"]),
+        ("Судалгаа, эрдэм шинжилгээний орлогын нийт орлогод эзлэх хувь", "🔬 Судалгааны орлогын хувь", C["purple"]),
+        ("Зэргийн бус сургалтын орлогын нийт орлогод эзлэх хувь",  "📚 Зэргийн бус орлогын хувь",    C["green"]),
+        ("Гарааны бизнесийн нийт орлогод эзлэх хувь",              "🚀 Гарааны бизнесийн хувь",       C["orange"]),
+        ("Гадаад оюутнаас олох орлогын нийт орлогод эзлэх хувь",   "🌍 Гадаад оюутны орлогын хувь",  C["pink"]),
+        ("Тэнхимийн үйл ажиллагааны төсвийн эзлэх хувь",           "⚙️ Үйл ажиллагааны төсвийн хувь", C["teal"]),
+        ("Цахим хөгжилд зарцуулсан төсвийн эзлэх хувь",            "💻 Цахим хөгжлийн төсвийн хувь", C["blue"]),
+    ]
+
+    pct_f_cols = st.columns(4)
+    for i, (met, lbl, clr) in enumerate(PCT_FIN_KPIS):
+        v = fgv(met, CY, D)
+        val_str = f"{v*100:.1f}%" if v is not None else "—"
+        pct_f_cols[i % 4].markdown(f"""
+<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
+padding:12px 10px;text-align:center;margin-bottom:10px;border-top:2px solid {clr};'>
+    <div style='color:{clr};font-size:20px;font-weight:700;'>{val_str}</div>
+    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
+</div>""", unsafe_allow_html=True)
+
+    # Хувийн KPI trend графикууд — 2024-2031 (2027+ зорилт)
+    fc1, fc2 = st.columns(2)
+    fc_cycle = [fc1, fc2, fc1, fc2, fc1, fc2, fc1, fc2]
+
+    for i, (met, lbl, clr) in enumerate(PCT_FIN_KPIS):
+        yrs_f, vals_f = fgseries(met, D)
+        fig_f = go.Figure()
+        hx = [y for y, v in zip(yrs_f, vals_f) if y <= CY and v is not None]
+        hy = [v for y, v in zip(yrs_f, vals_f) if y <= CY and v is not None]
+        fx = [y for y, v in zip(yrs_f, vals_f) if y > CY and v is not None]
+        fy = [v for y, v in zip(yrs_f, vals_f) if y > CY and v is not None]
+        fig_f.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
+            line=dict(color=clr, width=2.5), marker=dict(size=7, color=clr)))
+        if fx and hx:
+            fig_f.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
+                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
+                marker=dict(size=7, color=C["target"], symbol="diamond")))
+        if CY in yrs_f:
+            fig_f.add_vline(x=CY, line_dash="dash", line_color="rgba(255,255,255,0.2)",
+                annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)",
+                annotation_font_size=10)
+        tf = dict(**theme(280))
+        tf["title"] = dict(text=lbl, font=dict(color=C["white"], size=12))
+        tf["yaxis"]["tickformat"] = ".1%"
+        fig_f.update_layout(**tf)
+        with fc_cycle[i]:
+            with st.container(border=True):
+                st.plotly_chart(fig_f, use_container_width=True)
+
+    # ── SECTION D: Нийт орлогын өсөлтийн трендийн график ──
+    st.markdown("<div class='section-title'>📉 Нийт орлогын өсөлтийн трендийн график (2024–2031)</div>", unsafe_allow_html=True)
+
+    td1, td2 = st.columns(2)
+
+    with td1:
+        yrs_tot, vals_tot = fgseries("Нийт орлого", D)
+        fig_tot = go.Figure()
+        hx = [y for y, v in zip(yrs_tot, vals_tot) if y <= CY and v is not None]
+        hy = [v for y, v in zip(yrs_tot, vals_tot) if y <= CY and v is not None]
+        fx = [y for y, v in zip(yrs_tot, vals_tot) if y > CY and v is not None]
+        fy = [v for y, v in zip(yrs_tot, vals_tot) if y > CY and v is not None]
+        fig_tot.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
+            line=dict(color=C["blue"], width=2.5), marker=dict(size=8)))
+        if fx and hx:
+            fig_tot.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
+                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
+                marker=dict(size=7, color=C["target"], symbol="diamond")))
+        if CY in yrs_tot:
+            fig_tot.add_vline(x=CY, line_dash="dash", line_color="rgba(255,255,255,0.2)",
+                annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)")
+        tf_tot = dict(**theme(300))
+        tf_tot["title"] = dict(text="Нийт орлогын өсөлт (₮)", font=dict(color=C["white"], size=12))
+        tf_tot["yaxis"]["tickformat"] = ",.0f"
+        fig_tot.update_layout(**tf_tot)
+        with st.container(border=True):
+            st.plotly_chart(fig_tot, use_container_width=True)
+
+    with td2:
+        # Орлогын эх үүсвэр бүрийн трендийн нэгтгэл
+        fig_multi = go.Figure()
+        multi_items = [
+            ("Бакалаврын сургалтын орлого", "Бакалаврын", C["blue"]),
+            ("Судалгаа, эрдэм шинжилгээний орлого", "Судалгаа", C["purple"]),
+            ("Зэргийн бус сургалтын орлого", "Зэргийн бус", C["green"]),
+            ("Патентын орлого", "Патент", C["orange"]),
+            ("Гарааны бизнесийн орлого", "Гараа", C["pink"]),
+        ]
+        for met, lbl, clr in multi_items:
+            yrs_m, vals_m = fgseries(met, D)
+            hx = [y for y, v in zip(yrs_m, vals_m) if y <= CY and v is not None]
+            hy = [v for y, v in zip(yrs_m, vals_m) if y <= CY and v is not None]
+            fx = [y for y, v in zip(yrs_m, vals_m) if y > CY and v is not None]
+            fy = [v for y, v in zip(yrs_m, vals_m) if y > CY and v is not None]
+            fig_multi.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name=lbl,
+                line=dict(color=clr, width=2), marker=dict(size=5)))
+            if fx and hx:
+                fig_multi.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, showlegend=False,
+                    mode="lines", line=dict(color=clr, dash="dot", width=1.5)))
+        if CY in yrs_m:
+            fig_multi.add_vline(x=CY, line_dash="dash", line_color="rgba(255,255,255,0.2)")
+        tf_m = dict(**theme(300))
+        tf_m["title"] = dict(text="Орлогын эх үүсвэрүүдийн трендийн харьцуулалт", font=dict(color=C["white"], size=12))
+        fig_multi.update_layout(**tf_m)
+        with st.container(border=True):
+            st.plotly_chart(fig_multi, use_container_width=True)
+
+    # ── SECTION E: Тэнхимийн харьцуулалт ──
+    st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан санхүүгийн үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
+
+    fin_dept_opts = {
+        "Нийт орлого":                         "Нийт орлого",
+        "Бакалаврын сургалтын орлого":          "Бакалаврын сургалтын орлого",
+        "Судалгааны орлого":                    "Судалгаа, эрдэм шинжилгээний орлого",
+        "Зэргийн бус сургалтын орлого":        "Зэргийн бус сургалтын орлого",
+        "Патентын орлого":                      "Патентын орлого",
+        "Гарааны бизнесийн орлого":             "Гарааны бизнесийн орлого",
+        "Хандиваар авсан санхүүжилт":           "Хандиваар авсан санхүүжилт",
+        "Нэг багшид ногдох судалгааны орлого":  "Нэг багшид ногдох судалгааны орлого",
+        "Тэнхимийн 1 багшид ногдох орлого":     "Тэнхимийн 1 багшид ногдох орлого",
+        "Тэнхимийн үйл ажиллагааны төсөв":      "Тэнхимийн үйл ажиллагааны төсөв",
+        "Багшийн хөгжилд зориулсан төсөв":      "Багшийн хөгжилд зориулсан төсөв",
+        "Цахим хөгжилд зарцуулсан төсөв":       "Цахим хөгжилд зарцуулсан төсөв",
+    }
+
+    sel_fd = st.selectbox("Тэнхимээр харьцуулах санхүүгийн үзүүлэлт:", list(fin_dept_opts.keys()), key="fin_dept_sel")
+    sel_met_fd = fin_dept_opts[sel_fd]
+    vals_fd = [fgv(sel_met_fd, CY, d) or 0 for d in FDEPTS]
+    avg_fd = round(sum(vals_fd) / max(len([v for v in vals_fd if v > 0]), 1), 1)
+
+    fig_fd = go.Figure(go.Bar(
+        x=FDEPTS, y=vals_fd,
+        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+        text=[fmt_money(v) for v in vals_fd],
+        textposition="outside", textfont=dict(color=C["text"], size=10),
+    ))
+    t_fd = dict(**theme(340))
+    t_fd["title"] = dict(text=f"Тэнхим тус бүрийн {sel_fd} (2026)", font=dict(color=C["white"], size=12))
+    t_fd["xaxis"]["tickfont"] = dict(size=10)
+    fig_fd.update_layout(**t_fd)
+    fig_fd.add_hline(y=avg_fd, line_dash="dash", line_color="#ff4d4d", line_width=1.5,
+        annotation_text=f"Дундаж: {fmt_money(avg_fd)}",
+        annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
+    with st.container(border=True):
+        st.plotly_chart(fig_fd, use_container_width=True)
+
+    # ── SECTION F: Орлого vs Зардал харьцуулалт — 2026 тэнхимээр ──
+    st.markdown("<div class='section-title'>⚖️ Орлого ба Төсвийн харьцуулалт тэнхимээр (2026)</div>", unsafe_allow_html=True)
+
+    fig_ov = go.Figure()
+    inc_vals = [fgv("Нийт орлого", CY, d) or 0 for d in FDEPTS]
+    exp_vals = [fgv("Тэнхимийн үйл ажиллагааны төсөв", CY, d) or 0 for d in FDEPTS]
+    tdev_vals = [fgv("Багшийн хөгжилд зориулсан төсөв", CY, d) or 0 for d in FDEPTS]
+    dig_vals  = [fgv("Цахим хөгжилд зарцуулсан төсөв", CY, d) or 0 for d in FDEPTS]
+
+    fig_ov.add_trace(go.Bar(x=FDEPTS, y=inc_vals,  name="Нийт орлого",    marker_color=C["blue"]))
+    fig_ov.add_trace(go.Bar(x=FDEPTS, y=exp_vals,  name="Үйл ажиллагааны төсөв", marker_color=C["orange"]))
+    fig_ov.add_trace(go.Bar(x=FDEPTS, y=tdev_vals, name="Багшийн хөгжлийн төсөв", marker_color=C["purple"]))
+    fig_ov.add_trace(go.Bar(x=FDEPTS, y=dig_vals,  name="Цахим хөгжлийн төсөв",  marker_color=C["teal"]))
+
+    t_ov = dict(**theme(360))
+    t_ov["title"] = dict(text="Орлого ба Төсвийн харьцуулалт тэнхимээр (2026)", font=dict(color=C["white"], size=12))
+    t_ov["barmode"] = "group"
+    t_ov["xaxis"]["tickfont"] = dict(size=10)
+    fig_ov.update_layout(**t_ov)
+    with st.container(border=True):
+        st.plotly_chart(fig_ov, use_container_width=True)
+
+    # ── SECTION G: Хувийн үзүүлэлтийн тэнхимийн харьцуулалт ──
+    st.markdown("<div class='section-title'>📊 Хувийн санхүүгийн KPI тэнхимээр харьцуулалт (2026)</div>", unsafe_allow_html=True)
+
+    pct_dept_opts = {
+        "Нийт орлогод эзлэх хувь":            "СЭЗИС-ийн нийт орлогод эзлэх хувь",
+        "Бакалаврын орлогын хувь":             "Бакалаврын сургалтын орлогын нийт орлогод эзлэх хувь",
+        "Судалгааны орлогын хувь":             "Судалгаа, эрдэм шинжилгээний орлогын нийт орлогод эзлэх хувь",
+        "Зэргийн бус орлогын хувь":           "Зэргийн бус сургалтын орлогын нийт орлогод эзлэх хувь",
+        "Үйл ажиллагааны төсвийн хувь":       "Тэнхимийн үйл ажиллагааны төсвийн эзлэх хувь",
+        "Багшийн хөгжлийн төсвийн хувь":      "Багшийн хөгжилд зориулсан төсвийн эзлэх хувь",
+        "Цахим хөгжлийн төсвийн хувь":        "Цахим хөгжилд зарцуулсан төсвийн эзлэх хувь",
+        "Суралцагчийн үйл ажиллагааны хувь":  "Суралцагч дунд зохион байгуулсан үйл ажиллагааны зардлын эзлэх хувь",
+    }
+
+    sel_pfd = st.selectbox("Харьцуулах хувийн үзүүлэлт:", list(pct_dept_opts.keys()), key="fin_pct_dept_sel")
+    sel_met_pfd = pct_dept_opts[sel_pfd]
+    vals_pfd = [round((fgv(sel_met_pfd, CY, d) or 0)*100, 2) for d in FDEPTS]
+    avg_pfd = round(sum(vals_pfd) / max(len([v for v in vals_pfd if v > 0]), 1), 2)
+
+    fig_pfd = go.Figure(go.Bar(
+        x=FDEPTS, y=vals_pfd,
+        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+        text=[f"{v}%" for v in vals_pfd],
+        textposition="outside", textfont=dict(color=C["text"], size=10),
+    ))
+    t_pfd = dict(**theme(320))
+    t_pfd["title"] = dict(text=f"Тэнхим тус бүрийн {sel_pfd} (2026, %)", font=dict(color=C["white"], size=12))
+    t_pfd["xaxis"]["tickfont"] = dict(size=10)
+    t_pfd["yaxis"]["ticksuffix"] = "%"
+    fig_pfd.update_layout(**t_pfd)
+    fig_pfd.add_hline(y=avg_pfd, line_dash="dash", line_color="#ff4d4d", line_width=1.5,
+        annotation_text=f"Дундаж: {avg_pfd}%",
+        annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
+    with st.container(border=True):
+        st.plotly_chart(fig_pfd, use_container_width=True)
 # ============================================================
 # FOOTER
 # ============================================================
