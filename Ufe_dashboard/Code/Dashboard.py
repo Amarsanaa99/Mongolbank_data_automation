@@ -382,13 +382,13 @@ def line_fig(title, yrs, vals, h=280, target_color=C["target"]):
     fx = [y for y,v in zip(yrs,vals) if y>CURRENT_YEAR and v is not None]
     fy = [v for y,v in zip(yrs,vals) if y>CURRENT_YEAR and v is not None]
     fig.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
-            line=dict(color=C["blue"], width=2.5), marker=dict(size=7, color=C["blue"]),
-            fill="tozeroy", fillcolor=f"rgba(0,212,255,0.08)"))
-        if fx and hx:
-            fig.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
-                name="Зорилт", line=dict(color=target_color, width=2, dash="dot"),
-                marker=dict(size=7, color=target_color, symbol="diamond"),
-                fill="tozeroy", fillcolor=f"rgba(255,77,166,0.05)"))
+        line=dict(color=C["blue"], width=2.5), marker=dict(size=7, color=C["blue"]),
+        fill="tozeroy", fillcolor="rgba(0,212,255,0.08)"))
+    if fx and hx:
+        fig.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
+            name="Зорилт", line=dict(color=target_color, width=2, dash="dot"),
+            marker=dict(size=7, color=target_color, symbol="diamond"),
+            fill="tozeroy", fillcolor="rgba(255,77,166,0.05)"))
     if CURRENT_YEAR in yrs:
         fig.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)",
                       annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)",
