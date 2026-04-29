@@ -1733,31 +1733,33 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
 </div>""", unsafe_allow_html=True)
 
-    # ── SECTION B: Нийт орлогын бүрэлдэхүүн — Pie chart ──
+# ── SECTION B: Нийт орлогын бүрэлдэхүүн — Pie chart ──
     st.markdown("<div class='section-title'>🥧 2026 оны нийт орлогын бүрэлдэхүүн</div>", unsafe_allow_html=True)
+
+    BLUE_PALETTE = ["#1E90FF", "#4DB8FF", "#0A4A8A", "#00BFFF", "#0066CC", "#63CFFF",
+                    "#1565C0", "#42A5F5", "#1976D2", "#90CAF9"]
 
     pie_f1, pie_f2 = st.columns([1, 2])
 
     PIE_INCOME_METRICS = [
-        ("Бакалаврын сургалтын орлого",         "Бакалаврын сургалт",    C["blue"]),
-        ("Үйлдвэрлэл, худалдааны орлого",       "Үйлдвэрлэл, худалдаа", C["teal"]),
-        ("Патентын орлого",                     "Патентын орлого",       C["orange"]),
-        ("Судалгаа, эрдэм шинжилгээний орлого", "Судалгааны орлого",     C["purple"]),
-        ("Зэргийн бус сургалтын орлого",        "Зэргийн бус сургалт",   C["green"]),
-        ("Хандиваар авсан санхүүжилт",          "Хандив",                C["pink"]),
-        ("Түншлэгч талуудтай хамтарсан төслийн ивээн тэтгэлэгийн мөнгөн дүн", "Түншлэгч тэтгэлэг", "#80cbc4"),
-        ("Орлогын эх үүсвэрийг нэмэгдүүлэх үйл ажиллагааны орлого", "Орлогын эх үүсвэр", "#ffb74d"),
-        ("Гарааны бизнесийн орлого",            "Гарааны бизнес",        C["teal"]),
-        ("Гадаад оюутаны сургалтын орлого",     "Гадаад оюутан",         "#ce93d8"),
+        ("Бакалаврын сургалтын орлого",         "Бакалаврын сургалт"),
+        ("Үйлдвэрлэл, худалдааны орлого",       "Үйлдвэрлэл, худалдаа"),
+        ("Патентын орлого",                     "Патентын орлого"),
+        ("Судалгаа, эрдэм шинжилгээний орлого", "Судалгааны орлого"),
+        ("Зэргийн бус сургалтын орлого",        "Зэргийн бус сургалт"),
+        ("Хандиваар авсан санхүүжилт",          "Хандив"),
+        ("Түншлэгч талуудтай хамтарсан төслийн ивээн тэтгэлэгийн мөнгөн дүн", "Түншлэгч тэтгэлэг"),
+        ("Орлогын эх үүсвэрийг нэмэгдүүлэх үйл ажиллагааны орлого", "Орлогын эх үүсвэр"),
+        ("Гарааны бизнесийн орлого",            "Гарааны бизнес"),
+        ("Гадаад оюутаны сургалтын орлого",     "Гадаад оюутан"),
     ]
 
     with pie_f1:
-        pie_labels = [lbl for _, lbl, _ in PIE_INCOME_METRICS]
-        pie_vals   = [fgv(met, CY, D) or 0 for met, _, _ in PIE_INCOME_METRICS]
-        pie_clrs   = [clr for _, _, clr in PIE_INCOME_METRICS]
+        pie_labels = [lbl for _, lbl in PIE_INCOME_METRICS]
+        pie_vals   = [fgv(met, CY, D) or 0 for met, _ in PIE_INCOME_METRICS]
         fig_pie_fin = go.Figure(go.Pie(
             labels=pie_labels, values=pie_vals, hole=0.52,
-            marker=dict(colors=pie_clrs, line=dict(color=C["bg"], width=2)),
+            marker=dict(colors=BLUE_PALETTE[:len(pie_labels)], line=dict(color=C["bg"], width=2)),
             textinfo="label+percent", textfont=dict(color=C["text"], size=10),
             insidetextorientation="radial",
         ))
@@ -1769,12 +1771,15 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             st.plotly_chart(fig_pie_fin, use_container_width=True)
 
     with pie_f2:
-        # Хэвтээ баганан диаграм — орлогын эх үүсвэр харьцуулалт
-        sorted_items = sorted(zip(pie_vals, pie_labels, pie_clrs), reverse=True)
-        s_vals, s_lbls, s_clrs = zip(*sorted_items) if sorted_items else ([], [], [])
+        sorted_items = sorted(zip(pie_vals, pie_labels), reverse=True)
+        s_vals, s_lbls = zip(*sorted_items) if sorted_items else ([], [])
         fig_bar_pie = go.Figure(go.Bar(
             x=list(s_vals), y=list(s_lbls), orientation="h",
-            marker=dict(color=list(s_clrs)),
+            marker=dict(
+                color="#1E90FF",
+                line=dict(color=C["bg"], width=0.5),
+                cornerradius=8
+            ),
             text=[fmt_money(v) for v in s_vals],
             textposition="outside", textfont=dict(color=C["text"], size=10),
         ))
@@ -1828,9 +1833,10 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         with fc_cycle[i]:
             with st.container(border=True):
                 st.plotly_chart(fig_f, use_container_width=True)
+
 # ── SECTION E+G: Тэнхимийн харьцуулалт ──
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан санхүүгийн үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
-    
+
     all_dept_opts = {
         "Нэг багшид ногдох судалгааны орлого":   ("мөнгө", "Нэг багшид ногдох судалгааны орлого"),
         "Тэнхимийн 1 багшид ногдох орлого":      ("мөнгө", "Тэнхимийн 1 багшид ногдох орлого"),
@@ -1866,7 +1872,11 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 
     fig_dept = go.Figure(go.Bar(
         x=FDEPTS, y=vals,
-        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+        marker=dict(
+            color="#118DFF",
+            line=dict(color=C["bg"], width=0.5),
+            cornerradius=8
+        ),
         text=text, textposition="outside", textfont=dict(color=C["text"], size=10),
     ))
     t_dept = dict(**theme(340))
@@ -1879,19 +1889,26 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         annotation_position="top right", annotation_font=dict(color="#ff4d4d", size=11))
     with st.container(border=True):
         st.plotly_chart(fig_dept, use_container_width=True)
-    # ── SECTION F: Орлого vs Зардал харьцуулалт — 2026 тэнхимээр ──
+
+# ── SECTION F: Орлого vs Зардал харьцуулалт — 2026 тэнхимээр ──
     st.markdown("<div class='section-title'>⚖️ Орлого ба Төсвийн харьцуулалт тэнхимээр (2026)</div>", unsafe_allow_html=True)
 
     fig_ov = go.Figure()
-    inc_vals = [fgv("Суралцагч дунд зохион байгуулсан үйл ажиллагааны зардал", CY, d) or 0 for d in FDEPTS]
-    exp_vals = [fgv("Тэнхимийн үйл ажиллагааны төсөв", CY, d) or 0 for d in FDEPTS]
+    inc_vals  = [fgv("Суралцагч дунд зохион байгуулсан үйл ажиллагааны зардал", CY, d) or 0 for d in FDEPTS]
+    exp_vals  = [fgv("Тэнхимийн үйл ажиллагааны төсөв", CY, d) or 0 for d in FDEPTS]
     tdev_vals = [fgv("Багшийн хөгжилд зориулсан төсөв", CY, d) or 0 for d in FDEPTS]
     dig_vals  = [fgv("Цахим хөгжилд зарцуулсан төсөв", CY, d) or 0 for d in FDEPTS]
 
-    fig_ov.add_trace(go.Bar(x=FDEPTS, y=inc_vals, name="Суралцагч үйл ажиллагааны зардал", marker_color=C["blue"]))
-    fig_ov.add_trace(go.Bar(x=FDEPTS, y=exp_vals,  name="Үйл ажиллагааны төсөв", marker_color=C["orange"]))
-    fig_ov.add_trace(go.Bar(x=FDEPTS, y=tdev_vals, name="Багшийн хөгжлийн төсөв", marker_color=C["purple"]))
-    fig_ov.add_trace(go.Bar(x=FDEPTS, y=dig_vals,  name="Цахим хөгжлийн төсөв",  marker_color=C["teal"]))
+    for lbl, vals_ov, clr in [
+        ("Суралцагч үйл ажиллагааны зардал", inc_vals,  "#1E90FF"),
+        ("Үйл ажиллагааны төсөв",            exp_vals,  "#4DB8FF"),
+        ("Багшийн хөгжлийн төсөв",           tdev_vals, "#0A4A8A"),
+        ("Цахим хөгжлийн төсөв",             dig_vals,  "#00BFFF"),
+    ]:
+        fig_ov.add_trace(go.Bar(
+            x=FDEPTS, y=vals_ov, name=lbl,
+            marker=dict(color=clr, cornerradius=6),
+        ))
 
     t_ov = dict(**theme(360))
     t_ov["title"] = dict(text="Орлого ба Төсвийн харьцуулалт тэнхимээр (2026)", font=dict(color=C["white"], size=12))
