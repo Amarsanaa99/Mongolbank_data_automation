@@ -102,7 +102,7 @@ div[data-testid="stSidebar"] .stButton > button:hover {
 }
 
 [data-testid="stSidebar"] > div:first-child {
-    padding-top: 12px !important;
+    padding-top: 4px !important;
 }
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
     gap: 0px !important;
