@@ -222,11 +222,15 @@ def load_fin_data():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DATA_PATH = os.path.join(BASE_DIR, "..", "data", "Fin_dev_cl.xlsx")
     df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=None)
-    df = df[df[0] == "Санхүү"].copy()
+    
+    # ✅ ЗАСВАР: эхлээд ffill хийх, дараа нь шүүх
+    df[0] = df[0].ffill()
     df[1] = df[1].ffill()
+    
     df = df[df[2].notna() & (df[2] != "Он") & (df[2] != "Ангилал")]
     df[2] = pd.to_numeric(df[2], errors="coerce")
     df = df[df[2].notna()].copy()
+    
     COLS = ["Ангилал","Үзүүлэлт","Он",
             "БУТ","МКТ","МСМТ","НББТ","ОУАЖССИ","ОУНББСМИ",
             "ОУС","СДСТ","СУТ","СШУТ","ЭкТ","ЭнТИнс","ЭЗТ","Нийт"]
