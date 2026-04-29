@@ -450,10 +450,13 @@ dept_labels = {
 }
 
 with st.sidebar:
-    if st.session_state.page != "stud_dev":
-        st.markdown("""
+    st.markdown("""
 <div style='color:#fff;font-size:15px;font-weight:700;margin:0 0 4px 0;'>🎓 СЭЗИС</div>
 <div style='border-bottom:1px solid #1a3060;margin-bottom:6px;'></div>
+""", unsafe_allow_html=True)
+
+    if st.session_state.page != "stud_dev":
+        st.markdown("""
 <div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:6px;'>ТЭНХИМ СОНГОХ</div>
 """, unsafe_allow_html=True)
         all_depts = ["Нийт"] + DEPTS
@@ -464,8 +467,6 @@ with st.sidebar:
                 st.rerun()
     else:
         st.markdown("""
-<div style='color:#fff;font-size:15px;font-weight:700;margin:0 0 4px 0;'>🎓 СЭЗИС</div>
-<div style='border-bottom:1px solid #1a3060;margin-bottom:6px;'></div>
 <div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:6px;'>ХӨТӨЛБӨР СОНГОХ</div>
 """, unsafe_allow_html=True)
         for prog in PROGRAMS_D:
