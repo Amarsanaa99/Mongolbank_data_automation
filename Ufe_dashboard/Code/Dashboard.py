@@ -697,7 +697,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     fig_dept_bar = go.Figure(go.Bar(
         x=DEPTS, y=vals_dept,
         marker=dict(
-            color="#FF5C7A",
+            color="#118DFF",
             line=dict(color=C["bg"], width=0.5),
             cornerradius=8
         ),
