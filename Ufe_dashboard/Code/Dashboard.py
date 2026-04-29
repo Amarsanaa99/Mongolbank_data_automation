@@ -1355,18 +1355,6 @@ elif st.session_state.page == "res":
         ("Захиалагчын сэтгэл ханамжийн хувь",      "😊 Захиалагчын сэтгэл ханамж", C["green"]),
     ]
 
-    # KPI badge мөр
-    pct_r_cols = st.columns(4)
-    for i, (met, lbl, clr) in enumerate(PCT_METRICS_R):
-        v = rgv(met, CURRENT_YEAR, D)
-        val_str = f"{v*100:.1f}%" if v is not None else "—"
-        pct_r_cols[i].markdown(f"""
-<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
-padding:14px 12px;text-align:center;margin-bottom:12px;border-top:2px solid {clr};'>
-    <div style='color:{clr};font-size:26px;font-weight:700;'>{val_str}</div>
-    <div style='color:#4a6a98;font-size:10px;margin-top:4px;'>{lbl} (2026)</div>
-</div>""", unsafe_allow_html=True)
-
     # Хувийн trend графикууд — бодит + зорилт
     tr_c1, tr_c2 = st.columns(2)
     tr_cycle = [tr_c1, tr_c2, tr_c1, tr_c2]
