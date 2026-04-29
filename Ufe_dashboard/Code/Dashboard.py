@@ -1430,42 +1430,59 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             with st.container(border=True):
                 st.plotly_chart(fig_r, use_container_width=True)
 
-    # ── SECTION C: Тэнхимийн харьцуулалт — Баганан диаграм ──
+# ── SECTION C: Тэнхимийн харьцуулалт — Баганан диаграм ──
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
 
     res_dept_opts = {
-        "ЭШ бүтээлийн тоо":               "Эрдэм шинжилгээний бүтээлийн тоо",
-        "ЭШ ажилтны тоо":                  "Эрдэм шинжилгээний ажилтны тоо",
-        "ЭШ-д оролцсон багшийн тоо":       "Эрдэм шинжилгээний бүтээлд оролцсон багшийн тоо",
-        "ОУ импакт бүтээлийн тоо":         "ОУ импакт өндөртэй сэтгүүлд нийтлүүлсэн бүтээлийн тоо",
-        "ОУ сэтгүүл бүтээлийн тоо":        "ОУ сэтгүүлд нийтлүүлсэн бүтээлийн тоо",
-        "Гадаадтай хамтарсан бүтээлийн тоо":"Гадаадын эрдэмтэдтэй хамтарсан бүтээлийн тоо",
-        "Эшлэлийн тоо":                    "Эшлэлийн тоо",
-        "Хамтарсан судалгаа/төслийн тоо":  "Хамтарсан судалгаа, төслийн тоо",
-        "Хэрэгжсэн төсөл/хөтөлбөрийн тоо":"Хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо",
-        "Патент/лицензийн тоо":            "Патент, лицензийн гэрээ, зохиогчийн эрхийн гэрчилгээний тоо",
-        "Түншлэгч оролцогчдын тоо":        "Түншлэгч талуудтай хамтарсан төсөлд оролцогчдын тоо",
-        "Бойжуулсан гарааны компани":       "Бойжуулсан гарааны компаний тоо",
+        # Тоон үзүүлэлтүүд
+        "ЭШ бүтээлийн тоо":                "тоо|Эрдэм шинжилгээний бүтээлийн тоо",
+        "ЭШ ажилтны тоо":                  "тоо|Эрдэм шинжилгээний ажилтны тоо",
+        "ЭШ-д оролцсон багшийн тоо":       "тоо|Эрдэм шинжилгээний бүтээлд оролцсон багшийн тоо",
+        "ОУ импакт бүтээлийн тоо":         "тоо|ОУ импакт өндөртэй сэтгүүлд нийтлүүлсэн бүтээлийн тоо",
+        "ОУ сэтгүүл бүтээлийн тоо":        "тоо|ОУ сэтгүүлд нийтлүүлсэн бүтээлийн тоо",
+        "Гадаадтай хамтарсан бүтээлийн тоо":"тоо|Гадаадын эрдэмтэдтэй хамтарсан бүтээлийн тоо",
+        "Эшлэлийн тоо":                    "тоо|Эшлэлийн тоо",
+        "Хамтарсан судалгаа/төслийн тоо":  "тоо|Хамтарсан судалгаа, төслийн тоо",
+        "Хэрэгжсэн төсөл/хөтөлбөрийн тоо":"тоо|Хэрэгжүүлсэн төсөл, хөтөлбөрийн тоо",
+        "Патент/лицензийн тоо":            "тоо|Патент, лицензийн гэрээ, зохиогчийн эрхийн гэрчилгээний тоо",
+        "Түншлэгч оролцогчдын тоо":        "тоо|Түншлэгч талуудтай хамтарсан төсөлд оролцогчдын тоо",
+        "Бойжуулсан гарааны компани":       "тоо|Бойжуулсан гарааны компаний тоо",
+        # Хувийн үзүүлэлтүүд
+        "Гадаадтай хамтарсан бүтээлийн хувь":  "хувь|Гадаадтай хамтарсан бүтээлийн хувь",
+        "Судалгааны бүтээмж (дундаж)":          "хувь|Судалгааны бүтээмж (дундаж)",
+        "Эшлэлийн хэмжээ (дундаж)":            "хувь|Эшлэлийн хэмжээ (дундаж)",
+        "Захиалагчын сэтгэл ханамжийн хувь":   "хувь|Захиалагчын сэтгэл ханамжийн хувь",
     }
 
     sel_r = st.selectbox("Тэнхимээр харьцуулах үзүүлэлт:", list(res_dept_opts.keys()), key="res_dept_sel")
-    sel_met_r = res_dept_opts[sel_r]
+    kind_r, sel_met_r = res_dept_opts[sel_r].split("|")
 
-    vals_rd = [int(rgv(sel_met_r, CURRENT_YEAR, d) or 0) for d in RDEPTS]
-    avg_rd = round(sum(vals_rd) / max(len([v for v in vals_rd if v > 0]), 1), 1)
+    if kind_r == "хувь":
+        vals_rd = [round((rgv(sel_met_r, CURRENT_YEAR, d) or 0) * 100, 2) for d in RDEPTS]
+        avg_rd  = round(sum(vals_rd) / max(len([v for v in vals_rd if v > 0]), 1), 2)
+        text_rd = [f"{v}%" for v in vals_rd]
+        avg_text_rd  = f"Дундаж: {avg_rd}%"
+        tick_suffix_rd = "%"
+    else:
+        vals_rd = [int(rgv(sel_met_r, CURRENT_YEAR, d) or 0) for d in RDEPTS]
+        avg_rd  = round(sum(vals_rd) / max(len([v for v in vals_rd if v > 0]), 1), 1)
+        text_rd = [str(v) for v in vals_rd]
+        avg_text_rd  = f"Дундаж: {avg_rd}"
+        tick_suffix_rd = ""
 
     fig_rd = go.Figure(go.Bar(
         x=RDEPTS, y=vals_rd,
         marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
-        text=[str(v) for v in vals_rd], textposition="outside",
+        text=text_rd, textposition="outside",
         textfont=dict(color=C["text"], size=10),
     ))
     t_rd = dict(**theme(340))
     t_rd["title"] = dict(text=f"Тэнхим тус бүрийн {sel_r} (2026)", font=dict(color=C["white"], size=12))
     t_rd["xaxis"]["tickfont"] = dict(size=10)
+    t_rd["yaxis"]["ticksuffix"] = tick_suffix_rd
     fig_rd.update_layout(**t_rd)
     fig_rd.add_hline(y=avg_rd, line_dash="dash", line_color="#ff4d4d", line_width=1.5,
-        annotation_text=f"Дундаж: {avg_rd}",
+        annotation_text=avg_text_rd,
         annotation_position="top right",
         annotation_font=dict(color="#ff4d4d", size=11))
     with st.container(border=True):
