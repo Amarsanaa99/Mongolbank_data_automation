@@ -1000,60 +1000,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         with s_cols_cycle[i]:
             with st.container(border=True):
                 st.plotly_chart(fig_s, use_container_width=True)
-
-    # ── SECTION C: 2026 оны хичээлийн бүрэлдэхүүн ──
-    st.markdown("<div class='section-title'>📊 2026 оны хичээлийн бүрэлдэхүүн</div>", unsafe_allow_html=True)
-
-    pie_left, pie_right = st.columns(2)
-
-    with pie_left:
-        course_labels = ["Цахим", "Гадаад хэлний", "AI суурилсан", "Шинэ"]
-        course_metrics = [
-            "Цахим хэлбэрээр орж буй хичээлийн тоо",
-            "Гадаад хэлээр зааж буй хичээлийн тоо",
-            "AI суурилсан хичээлийн тоо",
-            "Шинээр хөгжүүлсэн хичээлийн тоо",
-        ]
-        course_vals = [sv(m, CURRENT_YEAR, D) or 0 for m in course_metrics]
-        fig_pie1 = go.Figure(go.Pie(
-            labels=course_labels, values=course_vals, hole=0.5,
-            marker=dict(colors=DEPT_COLORS[:4], line=dict(color=C["bg"], width=2)),
-            textinfo="label+value+percent", textfont=dict(color=C["text"], size=10),
-            insidetextorientation="radial",
-        ))
-        t_pie1 = dict(**theme(300))
-        t_pie1["title"] = dict(text="Хичээлийн ангиллын харьцаа (2026)", font=dict(color=C["white"], size=12))
-        t_pie1["showlegend"] = False
-        fig_pie1.update_layout(**t_pie1)
-        with st.container(border=True):
-            st.plotly_chart(fig_pie1, use_container_width=True)
-
-    with pie_right:
-        # Гадаад хэлний групп + Платформ + Зэргийн бус нэг pie-д
-        combo_labels = [
-            "Гадаад хэлний групп",
-            "Платформ сургалт",
-            "Зэргийн бус хөтөлбөр",
-        ]
-        combo_vals = [
-            sv("Гадаад хэлээр заасан нийт группийн тоо", CURRENT_YEAR, D) or 0,
-            sv("Платформ хэлбэрээр хэрэгжүүлж байгаа сургалт, судалгааны тоо", CURRENT_YEAR, D) or 0,
-            sv("Хэрэгжүүлсэн зэргийн бус сургалтын хөтөлбөрийн тоо", CURRENT_YEAR, D) or 0,
-        ]
-        combo_clrs = [C["green"], C["orange"], C["purple"]]
-        fig_pie2 = go.Figure(go.Pie(
-            labels=combo_labels, values=combo_vals, hole=0.5,
-            marker=dict(colors=combo_clrs, line=dict(color=C["bg"], width=2)),
-            textinfo="label+value+percent", textfont=dict(color=C["text"], size=10),
-            insidetextorientation="radial",
-        ))
-        t_pie2 = dict(**theme(300))
-        t_pie2["title"] = dict(text="Групп, Платформ & Зэргийн бус сургалт (2026)", font=dict(color=C["white"], size=12))
-        t_pie2["showlegend"] = False
-        fig_pie2.update_layout(**t_pie2)
-        with st.container(border=True):
-            st.plotly_chart(fig_pie2, use_container_width=True)
-
     # ── SECTION D: Тэнхимийн харьцуулалт ──
     st.markdown("<div class='section-title'>🏛️ Тэнхимийн харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
 
@@ -1122,28 +1068,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     fig_hm.update_layout(**t_hm)
     with st.container(border=True):
         st.plotly_chart(fig_hm, use_container_width=True)
-
-    # ── SECTION F: Стэк диаграм ──
-    st.markdown("<div class='section-title'>📊 Хичээлийн төрлүүдийн стэк диаграм (2026)</div>", unsafe_allow_html=True)
-
-    stack_metrics = [
-        ("Цахим хэлбэрээр орж буй хичээлийн тоо",  "Цахим",        C["teal"]),
-        ("Гадаад хэлээр зааж буй хичээлийн тоо",   "Гадаад хэл",   C["green"]),
-        ("AI суурилсан хичээлийн тоо",              "AI суурилсан",  C["purple"]),
-        ("Шинээр хөгжүүлсэн хичээлийн тоо",        "Шинэ",         C["orange"]),
-    ]
-
-    fig_stk = go.Figure()
-    for met, lbl, clr in stack_metrics:
-        vals_stk = [sv(met, CURRENT_YEAR, d) or 0 for d in DEPTS_S]
-        fig_stk.add_trace(go.Bar(x=DEPTS_S, y=vals_stk, name=lbl, marker_color=clr))
-    t_stk = dict(**theme(340))
-    t_stk["title"] = dict(text="Хичээлийн төрлүүд тэнхимээр (2026)", font=dict(color=C["white"], size=12))
-    t_stk["barmode"] = "stack"
-    t_stk["xaxis"]["tickfont"] = dict(size=10)
-    fig_stk.update_layout(**t_stk)
-    with st.container(border=True):
-        st.plotly_chart(fig_stk, use_container_width=True)
 
 # ============================================================
 # PAGE 4 — СУРАЛЦАГЧ ХӨГЖИЛ
