@@ -400,9 +400,8 @@ def pct_line_fig(title, yrs, vals, h=280):
     fig = line_fig(title, yrs, vals, h)
     fig.update_layout(yaxis=dict(tickformat=".1%", gridcolor=C["grid"]))
     return fig
-
-def donut_fig(labels, values, title, h=300):
-    clrs = DEPT_COLORS[:len(labels)]
+def donut_fig(labels, values, title, h=300, colors=None):
+    clrs = colors[:len(labels)] if colors else DEPT_COLORS[:len(labels)]
     fig = go.Figure(go.Pie(
         labels=labels, values=values, hole=0.55,
         marker=dict(colors=clrs, line=dict(color=C["bg"], width=2)),
