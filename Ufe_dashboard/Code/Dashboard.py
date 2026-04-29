@@ -696,7 +696,11 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     text_vals = [f"{v}%" if is_pct else str(int(v)) for v in vals_dept]
     fig_dept_bar = go.Figure(go.Bar(
         x=DEPTS, y=vals_dept,
-        marker=dict(color=DEPT_COLORS, line=dict(color=C["bg"], width=0.5)),
+        marker=dict(
+            color="#FF5C7A",
+            line=dict(color=C["bg"], width=0.5),
+            cornerradius=8
+        ),
         text=text_vals, textposition="outside", textfont=dict(color=C["text"], size=10),
     ))
     t_bar = dict(**theme(340))
