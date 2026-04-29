@@ -1077,29 +1077,46 @@ elif st.session_state.page == "stud_dev":
     PROG_IDX = SELECTED_PROG_IDX
     COURSES = ["I курс", "II курс", "III курс", "IV курс", "V+ курс"]
 
-    # ── SECTION A: Хувийн KPI трендийн графикууд ──
+    # ── SECTION A: Сонгосон хөтөлбөрийн 2026 оны тоон KPI ──
+    st.markdown(f"<div class='section-title'>📊 {SELECTED_PROG} — 2026 оны тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
+
+    count_kpis_sd = [
+        ("Үндсэн + цагийн + цахим суралцагчийн тоо",           "👥 Нийт суралцагч",      C["blue"]),
+        ("Үндсэн хөтөлбөрийн суралцагчийн тоо",                "📘 Үндсэн хөтөлбөр",     C["teal"]),
+        ("Цагийн хөтөлбөрийн суралцагчийн тоо",                "⏱ Цагийн хөтөлбөр",      C["purple"]),
+        ("Цахимаар хэрэгжиж буй хөтөлбөрийн суралцагчийн тоо","💻 Цахим хөтөлбөр",       C["green"]),
+        ("Гадаад хэлээр явуулах хөтөлбөрийн суралцагчийн тоо","🌐 Гадаад хэлний",         C["orange"]),
+        ("Хамтарсан хөтөлбөрийн суралцагчийн тоо",             "🤝 Хамтарсан",            C["pink"]),
+        ("ОУ дипломтой хөтөлбөрийн суралцагчийн тоо",          "🎓 ОУ диплом",            C["teal"]),
+        ("ОУ мэргэжлийн зэргийн хөтөлбөрийн оюутны тоо",      "🏅 ОУ мэргэжлийн зэрэг", C["blue"]),
+        ("Үүнээс эмэгтэй оюутны тоо",                          "👩 Эмэгтэй оюутан",      C["pink"]),
+        ("Үүнээс орон нутгийн оюутны тоо",                     "🏘 Орон нутгийн",         C["orange"]),
+        ("Үүнээс гадаад оюутны тоо",                           "✈️ Гадаад оюутан",        C["green"]),
+        ("Тэтгэлэг хүртсэн суралцагчийн тоо",                  "🏆 Тэтгэлэгт",           C["purple"]),
+    ]
+
+    kpi_cols_sd = st.columns(4)
+    for i, (met, lbl, clr) in enumerate(count_kpis_sd):
+        v = sdv_prog_total(met, CURRENT_YEAR, PROG_IDX)
+        val_str = str(int(v)) if v is not None else "—"
+        kpi_cols_sd[i % 4].markdown(f"""
+<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
+padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
+    <div style='color:{clr};font-size:22px;font-weight:700;'>{val_str}</div>
+    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
+</div>""", unsafe_allow_html=True)
+
+    # ── SECTION B: Хувийн KPI трендийн графикууд ──
     st.markdown("<div class='section-title'>📈 Хувийн KPI үзүүлэлтүүдийн трендийн график — Бодит ба Зорилт</div>", unsafe_allow_html=True)
 
     PCT_METRICS = [
-        ("Нийт оюутны тоонд гадаад оюутны эзлэх хувь",         "Гадаад оюутны эзлэх хувь",        C["blue"]),
-        ("Тэтгэлэг хүртсэн оюутны нийт суралцагчдад эзлэх хувь", "Тэтгэлэгт оюутны эзлэх хувь",  C["green"]),
-        ("Гадаадад суралцах хөтөлбөрт хамрагдсан оюутны хувь", "Гадаадад суралцах хөтөлбөрт хамрагдсан оюутны хувь", C["purple"]),
+        ("Нийт оюутны тоонд гадаад оюутны эзлэх хувь",          "Гадаад оюутны эзлэх хувь",                         C["blue"]),
+        ("Тэтгэлэг хүртсэн оюутны нийт суралцагчдад эзлэх хувь","Тэтгэлэгт оюутны эзлэх хувь",                      C["green"]),
+        ("Гадаадад суралцах хөтөлбөрт хамрагдсан оюутны хувь",  "Гадаадад суралцах хөтөлбөрт хамрагдсан оюутны хувь",C["purple"]),
     ]
 
     pc1, pc2, pc3 = st.columns(3)
     pct_cols_list = [pc1, pc2, pc3]
-
-    # Also show KPI cards above
-    kpi_row = st.columns(3)
-    for i, (met, lbl, clr) in enumerate(PCT_METRICS):
-        v = sdv_pct_grand(met, CURRENT_YEAR)
-        val_str = f"{v*100:.1f}%" if v is not None else "—"
-        kpi_row[i].markdown(f"""
-<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
-padding:14px 12px;text-align:center;margin-bottom:12px;border-top:2px solid {clr};'>
-    <div style='color:{clr};font-size:28px;font-weight:700;'>{val_str}</div>
-    <div style='color:#4a6a98;font-size:10px;margin-top:4px;'>{lbl} (2026 дундаж)</div>
-</div>""", unsafe_allow_html=True)
 
     for i, (met, lbl, clr) in enumerate(PCT_METRICS):
         yrs_p, vals_p = sdv_pct_series(met)
@@ -1125,13 +1142,12 @@ padding:14px 12px;text-align:center;margin-bottom:12px;border-top:2px solid {clr
             with st.container(border=True):
                 st.plotly_chart(fig_p, use_container_width=True)
 
-    # ── SECTION B: Pie chart — нийт суралцагчдын бүрэлдэхүүн (2026) ──
+    # ── SECTION C: Нийт суралцагчдын бүрэлдэхүүн (2026) ──
     st.markdown("<div class='section-title'>🥧 2026 оны нийт суралцагчдын бүрэлдэхүүн</div>", unsafe_allow_html=True)
 
     pie1, pie2, pie3 = st.columns(3)
 
     with pie1:
-        # Хөтөлбөрийн төрлөөр (Үндсэн / Цагийн / Цахим)
         prog_type_labels = ["Үндсэн хөтөлбөр", "Цагийн хөтөлбөр", "Цахим хөтөлбөр"]
         prog_type_metrics = [
             "Үндсэн хөтөлбөрийн суралцагчийн тоо",
@@ -1139,10 +1155,9 @@ padding:14px 12px;text-align:center;margin-bottom:12px;border-top:2px solid {clr
             "Цахимаар хэрэгжиж буй хөтөлбөрийн суралцагчийн тоо",
         ]
         prog_type_vals = [sdv_grand_total(m, CURRENT_YEAR) or 0 for m in prog_type_metrics]
-        prog_type_clrs = [C["blue"], C["purple"], C["teal"]]
         fig_pie_type = go.Figure(go.Pie(
             labels=prog_type_labels, values=prog_type_vals, hole=0.52,
-            marker=dict(colors=prog_type_clrs, line=dict(color=C["bg"], width=2)),
+            marker=dict(colors=[C["blue"], C["purple"], C["teal"]], line=dict(color=C["bg"], width=2)),
             textinfo="label+percent+value", textfont=dict(color=C["text"], size=10),
             insidetextorientation="radial",
         ))
@@ -1150,13 +1165,13 @@ padding:14px 12px;text-align:center;margin-bottom:12px;border-top:2px solid {clr
         t_pt["title"] = dict(text="Хөтөлбөрийн төрлийн бүрэлдэхүүн", font=dict(color=C["white"], size=12))
         t_pt["showlegend"] = False
         fig_pie_type.update_layout(**t_pt)
-        st.plotly_chart(fig_pie_type, use_container_width=True)
+        with st.container(border=True):
+            st.plotly_chart(fig_pie_type, use_container_width=True)
 
     with pie2:
-        # Хүйсийн бүрэлдэхүүн (эмэгтэй vs эрэгтэй)
-        total_2026 = sdv_grand_total("Үндсэн + цагийн + цахим суралцагчийн тоо", CURRENT_YEAR) or 1
+        total_2026  = sdv_grand_total("Үндсэн + цагийн + цахим суралцагчийн тоо", CURRENT_YEAR) or 1
         female_2026 = sdv_grand_total("Үүнээс эмэгтэй оюутны тоо", CURRENT_YEAR) or 0
-        male_2026 = max(total_2026 - female_2026, 0)
+        male_2026   = max(total_2026 - female_2026, 0)
         fig_pie_gender = go.Figure(go.Pie(
             labels=["Эмэгтэй", "Эрэгтэй"], values=[female_2026, male_2026], hole=0.52,
             marker=dict(colors=[C["pink"], C["blue"]], line=dict(color=C["bg"], width=2)),
@@ -1166,16 +1181,17 @@ padding:14px 12px;text-align:center;margin-bottom:12px;border-top:2px solid {clr
         t_pg["title"] = dict(text="Хүйсийн бүрэлдэхүүн", font=dict(color=C["white"], size=12))
         t_pg["showlegend"] = False
         fig_pie_gender.update_layout(**t_pg)
-        st.plotly_chart(fig_pie_gender, use_container_width=True)
+        with st.container(border=True):
+            st.plotly_chart(fig_pie_gender, use_container_width=True)
 
     with pie3:
-        # Гарал үүслийн бүрэлдэхүүн (Дотоод / Орон нутаг / Гадаад)
-        total_v = sdv_grand_total("Үндсэн + цагийн + цахим суралцагчийн тоо", CURRENT_YEAR) or 1
-        local_v = sdv_grand_total("Үүнээс орон нутгийн оюутны тоо", CURRENT_YEAR) or 0
+        total_v   = sdv_grand_total("Үндсэн + цагийн + цахим суралцагчийн тоо", CURRENT_YEAR) or 1
+        local_v   = sdv_grand_total("Үүнээс орон нутгийн оюутны тоо", CURRENT_YEAR) or 0
         foreign_v = sdv_grand_total("Үүнээс гадаад оюутны тоо", CURRENT_YEAR) or 0
         domestic_v = max(total_v - local_v - foreign_v, 0)
         fig_pie_origin = go.Figure(go.Pie(
-            labels=["Нийслэлийн", "Орон нутгийн", "Гадаад"], values=[domestic_v, local_v, foreign_v], hole=0.52,
+            labels=["Нийслэлийн", "Орон нутгийн", "Гадаад"],
+            values=[domestic_v, local_v, foreign_v], hole=0.52,
             marker=dict(colors=[C["teal"], C["orange"], C["green"]], line=dict(color=C["bg"], width=2)),
             textinfo="label+percent+value", textfont=dict(color=C["text"], size=10),
             insidetextorientation="radial",
@@ -1184,21 +1200,20 @@ padding:14px 12px;text-align:center;margin-bottom:12px;border-top:2px solid {clr
         t_po["title"] = dict(text="Гарал үүслийн бүрэлдэхүүн", font=dict(color=C["white"], size=12))
         t_po["showlegend"] = False
         fig_pie_origin.update_layout(**t_po)
-        st.plotly_chart(fig_pie_origin, use_container_width=True)
+        with st.container(border=True):
+            st.plotly_chart(fig_pie_origin, use_container_width=True)
 
-    # ── SECTION C: Хөтөлбөр сонгох + курсын жилийн задаргаа ──
-    st.markdown(f"<div class='section-title'>📋 Хөтөлбөр: {SELECTED_PROG} — 2026 оны задаргаа</div>", unsafe_allow_html=True)
+    # ── SECTION D: Хөтөлбөр + курсын жилийн задаргаа ──
+    st.markdown(f"<div class='section-title'>📋 Хөтөлбөр: {SELECTED_PROG} — 2026 оны курсын задаргаа</div>", unsafe_allow_html=True)
 
-    # Course year breakdown for selected program
-    course_vals_total = sdv_course_breakdown("Үндсэн + цагийн + цахим суралцагчийн тоо", CURRENT_YEAR, PROG_IDX)
-    course_vals_undsen = sdv_course_breakdown("Үндсэн хөтөлбөрийн суралцагчийн тоо", CURRENT_YEAR, PROG_IDX)
+    course_vals_total   = sdv_course_breakdown("Үндсэн + цагийн + цахим суралцагчийн тоо", CURRENT_YEAR, PROG_IDX)
+    course_vals_undsen  = sdv_course_breakdown("Үндсэн хөтөлбөрийн суралцагчийн тоо", CURRENT_YEAR, PROG_IDX)
     course_vals_tsagiin = sdv_course_breakdown("Цагийн хөтөлбөрийн суралцагчийн тоо", CURRENT_YEAR, PROG_IDX)
     course_vals_tsakhim = sdv_course_breakdown("Цахимаар хэрэгжиж буй хөтөлбөрийн суралцагчийн тоо", CURRENT_YEAR, PROG_IDX)
 
     sec_c1, sec_c2 = st.columns([1, 2])
 
     with sec_c1:
-        # Pie — курсын жилийн бүрэлдэхүүн
         fig_course_pie = go.Figure(go.Pie(
             labels=COURSES, values=course_vals_total, hole=0.50,
             marker=dict(colors=DEPT_COLORS[:5], line=dict(color=C["bg"], width=2)),
@@ -1206,17 +1221,16 @@ padding:14px 12px;text-align:center;margin-bottom:12px;border-top:2px solid {clr
             insidetextorientation="radial",
         ))
         t_cp = dict(**theme(300))
-        t_cp["title"] = dict(text=f"Курсын жилийн бүрэлдэхүүн (2026)", font=dict(color=C["white"], size=12))
+        t_cp["title"] = dict(text="Курсын жилийн бүрэлдэхүүн (2026)", font=dict(color=C["white"], size=12))
         t_cp["showlegend"] = False
         fig_course_pie.update_layout(**t_cp)
         with st.container(border=True):
             st.plotly_chart(fig_course_pie, use_container_width=True)
 
     with sec_c2:
-        # Stacked bar — хөтөлбөрийн төрлөөр курс бүрт
         fig_course_stk = go.Figure()
         for lbl, vals, clr in [
-            ("Үндсэн", course_vals_undsen, C["blue"]),
+            ("Үндсэн", course_vals_undsen,  C["blue"]),
             ("Цагийн", course_vals_tsagiin, C["purple"]),
             ("Цахим",  course_vals_tsakhim, C["teal"]),
         ]:
@@ -1232,49 +1246,21 @@ padding:14px 12px;text-align:center;margin-bottom:12px;border-top:2px solid {clr
         with st.container(border=True):
             st.plotly_chart(fig_course_stk, use_container_width=True)
 
-    # ── SECTION D: Сонгосон хөтөлбөрийн 2026 оны тоон KPI ──
-    st.markdown(f"<div class='section-title'>📊 {SELECTED_PROG} — 2026 оны тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
-
-    count_kpis_sd = [
-        ("Үндсэн + цагийн + цахим суралцагчийн тоо",           "👥 Нийт суралцагч",         C["blue"]),
-        ("Үндсэн хөтөлбөрийн суралцагчийн тоо",                "📘 Үндсэн хөтөлбөр",         C["teal"]),
-        ("Цагийн хөтөлбөрийн суралцагчийн тоо",                "⏱ Цагийн хөтөлбөр",          C["purple"]),
-        ("Цахимаар хэрэгжиж буй хөтөлбөрийн суралцагчийн тоо","💻 Цахим хөтөлбөр",           C["green"]),
-        ("Гадаад хэлээр явуулах хөтөлбөрийн суралцагчийн тоо","🌐 Гадаад хэлний",             C["orange"]),
-        ("Хамтарсан хөтөлбөрийн суралцагчийн тоо",             "🤝 Хамтарсан",               C["pink"]),
-        ("ОУ дипломтой хөтөлбөрийн суралцагчийн тоо",          "🎓 ОУ диплом",               C["teal"]),
-        ("ОУ мэргэжлийн зэргийн хөтөлбөрийн оюутны тоо",      "🏅 ОУ мэргэжлийн зэрэг",     C["blue"]),
-        ("Үүнээс эмэгтэй оюутны тоо",                          "👩 Эмэгтэй оюутан",          C["pink"]),
-        ("Үүнээс орон нутгийн оюутны тоо",                     "🏘 Орон нутгийн",             C["orange"]),
-        ("Үүнээс гадаад оюутны тоо",                           "✈️ Гадаад оюутан",            C["green"]),
-        ("Тэтгэлэг хүртсэн суралцагчийн тоо",                  "🏆 Тэтгэлэгт",               C["purple"]),
-    ]
-
-    kpi_cols_sd = st.columns(4)
-    for i, (met, lbl, clr) in enumerate(count_kpis_sd):
-        v = sdv_prog_total(met, CURRENT_YEAR, PROG_IDX)
-        val_str = str(int(v)) if v is not None else "—"
-        kpi_cols_sd[i % 4].markdown(f"""
-<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
-padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
-    <div style='color:{clr};font-size:22px;font-weight:700;'>{val_str}</div>
-    <div style='color:#4a6a98;font-size:10px;margin-top:3px;'>{lbl}</div>
-</div>""", unsafe_allow_html=True)
-    # ── SECTION F: Бүх хөтөлбөрийн харьцуулалт (2026) — баганан диаграм ──
+    # ── SECTION E: Хөтөлбөр хоорондын харьцуулалт (2026) ──
     st.markdown("<div class='section-title'>🏛️ Хөтөлбөр хоорондын харьцуулсан үзүүлэлтүүд (2026)</div>", unsafe_allow_html=True)
 
     prog_compare_opts = {
-        "Нийт суралцагчдын тоо":       "Үндсэн + цагийн + цахим суралцагчийн тоо",
-        "Үндсэн хөтөлбөрийн тоо":      "Үндсэн хөтөлбөрийн суралцагчийн тоо",
-        "Цагийн хөтөлбөрийн тоо":      "Цагийн хөтөлбөрийн суралцагчийн тоо",
-        "Цахим хөтөлбөрийн тоо":        "Цахимаар хэрэгжиж буй хөтөлбөрийн суралцагчийн тоо",
-        "Гадаад хэлний тоо":            "Гадаад хэлээр явуулах хөтөлбөрийн суралцагчийн тоо",
-        "Хамтарсан хөтөлбөрийн тоо":   "Хамтарсан хөтөлбөрийн суралцагчийн тоо",
-        "ОУ дипломтой тоо":             "ОУ дипломтой хөтөлбөрийн суралцагчийн тоо",
-        "Эмэгтэй оюутны тоо":           "Үүнээс эмэгтэй оюутны тоо",
-        "Орон нутгийн оюутны тоо":      "Үүнээс орон нутгийн оюутны тоо",
-        "Гадаад оюутны тоо":            "Үүнээс гадаад оюутны тоо",
-        "Тэтгэлэгт оюутны тоо":         "Тэтгэлэг хүртсэн суралцагчийн тоо",
+        "Нийт суралцагчдын тоо":     "Үндсэн + цагийн + цахим суралцагчийн тоо",
+        "Үндсэн хөтөлбөрийн тоо":    "Үндсэн хөтөлбөрийн суралцагчийн тоо",
+        "Цагийн хөтөлбөрийн тоо":    "Цагийн хөтөлбөрийн суралцагчийн тоо",
+        "Цахим хөтөлбөрийн тоо":     "Цахимаар хэрэгжиж буй хөтөлбөрийн суралцагчийн тоо",
+        "Гадаад хэлний тоо":          "Гадаад хэлээр явуулах хөтөлбөрийн суралцагчийн тоо",
+        "Хамтарсан хөтөлбөрийн тоо": "Хамтарсан хөтөлбөрийн суралцагчийн тоо",
+        "ОУ дипломтой тоо":           "ОУ дипломтой хөтөлбөрийн суралцагчийн тоо",
+        "Эмэгтэй оюутны тоо":         "Үүнээс эмэгтэй оюутны тоо",
+        "Орон нутгийн оюутны тоо":    "Үүнээс орон нутгийн оюутны тоо",
+        "Гадаад оюутны тоо":          "Үүнээс гадаад оюутны тоо",
+        "Тэтгэлэгт оюутны тоо":       "Тэтгэлэг хүртсэн суралцагчийн тоо",
     }
 
     sel_pc = st.selectbox("Харьцуулах үзүүлэлт сонгох:", list(prog_compare_opts.keys()), key="prog_compare_sel")
@@ -1282,8 +1268,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 
     prog_vals_pc = [sdv_prog_total(sel_met_pc, CURRENT_YEAR, i) or 0 for i in range(len(PROGRAMS_D))]
     avg_pc = round(sum(prog_vals_pc) / max(len([v for v in prog_vals_pc if v > 0]), 1), 1)
-
-    # Highlight selected program
     bar_colors_pc = [C["orange"] if p == SELECTED_PROG else PROG_COLORS[i % len(PROG_COLORS)]
                      for i, p in enumerate(PROGRAMS_D)]
 
@@ -1306,30 +1290,27 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     with st.container(border=True):
         st.plotly_chart(fig_pc, use_container_width=True)
 
-    # ── SECTION H: Heatmap — бүх хөтөлбөр × үзүүлэлт (2026) ──
+    # ── SECTION F: Heatmap — бүх хөтөлбөр × үзүүлэлт (2026) ──
     st.markdown("<div class='section-title'>🔥 Хөтөлбөр × Үзүүлэлтийн heatmap (2026)</div>", unsafe_allow_html=True)
 
     hm_metrics_sd = [
-        ("Үндсэн + цагийн + цахим суралцагчийн тоо", "Нийт"),
-        ("Үндсэн хөтөлбөрийн суралцагчийн тоо",       "Үндсэн"),
-        ("Цагийн хөтөлбөрийн суралцагчийн тоо",       "Цагийн"),
+        ("Үндсэн + цагийн + цахим суралцагчийн тоо",            "Нийт"),
+        ("Үндсэн хөтөлбөрийн суралцагчийн тоо",                 "Үндсэн"),
+        ("Цагийн хөтөлбөрийн суралцагчийн тоо",                 "Цагийн"),
         ("Цахимаар хэрэгжиж буй хөтөлбөрийн суралцагчийн тоо", "Цахим"),
         ("Гадаад хэлээр явуулах хөтөлбөрийн суралцагчийн тоо", "Гадаад хэл"),
-        ("Хамтарсан хөтөлбөрийн суралцагчийн тоо",    "Хамтарсан"),
-        ("ОУ дипломтой хөтөлбөрийн суралцагчийн тоо", "ОУ диплом"),
-        ("Үүнээс эмэгтэй оюутны тоо",                  "Эмэгтэй"),
-        ("Үүнээс гадаад оюутны тоо",                   "Гадаад"),
-        ("Тэтгэлэг хүртсэн суралцагчийн тоо",          "Тэтгэлэгт"),
+        ("Хамтарсан хөтөлбөрийн суралцагчийн тоо",              "Хамтарсан"),
+        ("ОУ дипломтой хөтөлбөрийн суралцагчийн тоо",           "ОУ диплом"),
+        ("Үүнээс эмэгтэй оюутны тоо",                           "Эмэгтэй"),
+        ("Үүнээс гадаад оюутны тоо",                            "Гадаад"),
+        ("Тэтгэлэг хүртсэн суралцагчийн тоо",                   "Тэтгэлэгт"),
     ]
 
-    hm_z = []
-    hm_y = []
+    hm_z, hm_y = [], []
     for met, lbl in hm_metrics_sd:
-        row_v = [sdv_prog_total(met, CURRENT_YEAR, i) or 0 for i in range(len(PROGRAMS_D))]
-        hm_z.append(row_v)
+        hm_z.append([sdv_prog_total(met, CURRENT_YEAR, i) or 0 for i in range(len(PROGRAMS_D))])
         hm_y.append(lbl)
 
-    # Short program names for x axis
     prog_short = [p[:8] + ".." if len(p) > 8 else p for p in PROGRAMS_D]
 
     fig_hm_sd = go.Figure(go.Heatmap(
