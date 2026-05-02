@@ -510,7 +510,7 @@ with st.sidebar:
     if st.session_state.page != "stud_dev":
         # 2. ТЭНХИМ СОНГОХ гарчиг (СЭЗИС-ийн ДООР, зураасны ДЭЭР)
         st.markdown("""
-<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:6px;padding:3;'>📂 ТЭНХИМ СОНГОХ</div>
+<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:12px;padding:3;'>📂 ТЭНХИМ СОНГОХ</div>
 """, unsafe_allow_html=True)
         
         # 3. Зураас (ТЭНХИМ СОНГОХ-ын ДООР)
@@ -528,10 +528,10 @@ with st.sidebar:
                 st.rerun()
     else:
         st.markdown("""
-<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:20px;padding:0;'>📂 ХӨТӨЛБӨР СОНГОХ</div>
+<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:12px;padding:0;'>📂 ХӨТӨЛБӨР СОНГОХ</div>
 """, unsafe_allow_html=True)
         st.markdown("""
-<div style='border-bottom:1px solid #1a3060;margin-bottom:12px;padding:0;'></div>
+<div style='border-bottom:1px solid #1a3060;margin-bottom:20px;padding:0;'></div>
 """, unsafe_allow_html=True)
         for prog in PROGRAMS_D:
             short = prog[:25] + "…" if len(prog) > 25 else prog
