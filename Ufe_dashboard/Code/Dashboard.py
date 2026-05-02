@@ -41,8 +41,8 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    text-align: center !important;        /* left → center */
-    justify-content: center !important;   /* flex-start → center */
+    text-align: left !important;           /* ← center → left */
+    justify-content: flex-start !important; /* ← center → flex-start */
     background: #0d1830 !important;
     color: #7090c0 !important;
     border: 1px solid #1a2e5a !important;
