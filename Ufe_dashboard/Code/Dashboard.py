@@ -502,42 +502,23 @@ dept_labels = {
 }
 
 with st.sidebar:
-    # 1. СЭЗИС гарчиг
+    # СЭЗИС гарчиг + зураас (margin, padding-ийг 0 болгосон)
     st.markdown("""
-<div style='color:#fff;font-size:15px;font-weight:700;margin:0 0 8px 0;padding:0;'>🎓 СЭЗИС</div>
+<div style='color:#fff;font-size:15px;font-weight:700;margin:0;padding:0;'>🎓 СЭЗИС</div>
+<div style='border-bottom:1px solid #1a3060;margin:4px 0 0 0;padding:0;'></div>
 """, unsafe_allow_html=True)
 
     if st.session_state.page != "stud_dev":
-        # 2. ТЭНХИМ СОНГОХ гарчиг (СЭЗИС-ийн ДООР, зураасны ДЭЭР)
+        # ТЭНХИМ СОНГОХ гарчиг (дээрх зураасны дараа шууд, зайгүй)
         st.markdown("""
-<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:6px;padding:0;'>📂 ТЭНХИМ СОНГОХ</div>
+<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-top:12px;margin-bottom:8px;padding:0;'>📂 ТЭНХИМ СОНГОХ</div>
 """, unsafe_allow_html=True)
-        
-        # 3. Зураас (ТЭНХИМ СОНГОХ-ын ДООР)
-        st.markdown("""
-<div style='border-bottom:1px solid #1a3060;margin-bottom:12px;padding:0;'></div>
-""", unsafe_allow_html=True)
-        
-        # 4. Товчлуурууд (зураасны ДООР)
         all_depts = ["Нийт"] + DEPTS
         for d in all_depts:
             label = dept_labels.get(d, d)
             if st.button(label, key=f"dept_{d}",
                          type="primary" if st.session_state.dept == d else "secondary"):
                 st.session_state.dept = d
-                st.rerun()
-    else:
-        st.markdown("""
-<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:6px;padding:0;'>📂 ХӨТӨЛБӨР СОНГОХ</div>
-""", unsafe_allow_html=True)
-        st.markdown("""
-<div style='border-bottom:1px solid #1a3060;margin-bottom:12px;padding:0;'></div>
-""", unsafe_allow_html=True)
-        for prog in PROGRAMS_D:
-            short = prog[:25] + "…" if len(prog) > 25 else prog
-            if st.button(f"📋 {short}", key=f"prog_{prog}",
-                         type="primary" if st.session_state.sd_prog == prog else "secondary"):
-                st.session_state.sd_prog = prog
                 st.rerun()
     else:
         st.markdown("""
