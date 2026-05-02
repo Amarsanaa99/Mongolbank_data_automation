@@ -515,7 +515,7 @@ with st.sidebar:
         
         # 3. Зураас (ТЭНХИМ СОНГОХ-ын ДООР)
         st.markdown("""
-<div style='border-bottom:1px solid #1a3060;margin-bottom:12px;padding:3;'></div>
+<div style='border-bottom:1px solid #1a3060;margin-bottom:12px;padding:20;'></div>
 """, unsafe_allow_html=True)
         
         # 4. Товчлуурууд (зураасны ДООР)
