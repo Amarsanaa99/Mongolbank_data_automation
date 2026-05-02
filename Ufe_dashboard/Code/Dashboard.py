@@ -541,6 +541,13 @@ with st.sidebar:
         st.markdown("""
 <div style='border-bottom:1px solid #1a3060;margin-bottom:20px;padding:0;'></div>
 """, unsafe_allow_html=True)
+        st.markdown("""<style>
+[data-testid="stSidebar"] .stButton > button {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+}
+</style>""", unsafe_allow_html=True)
         for prog in PROGRAMS_D:
             short = prog[:25] + "…" if len(prog) > 25 else prog
             if st.button(f"📋 {short}", key=f"prog_{prog}",
