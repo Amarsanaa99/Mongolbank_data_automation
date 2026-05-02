@@ -20,31 +20,25 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background: #0a0f1e; color: #c8d8f0; }
 
-[data-testid="stSidebar"] {
+="stSidebar"] {
     background: linear-gradient(180deg, #080d1a 0%, #0a1228 100%);
     border-right: 1px solid #162040;
 }
-[data-testid="stSidebar"] * { color: #8aaad8 !important; }
+="stSidebar"] * { color: #8aaad8 !important; }
 
-/* ==================== ТОВЧЛУУРЫН СТИЛЬ ==================== */
-div[data-testid="stSidebar"] .stButton > button {
+div="stSidebar"] .stButton > button {
     width: 100% !important;
     text-align: left !important;
     background: #0d1830 !important;
     color: #7090c0 !important;
     border: 1px solid #1a2e5a !important;
     border-radius: 8px !important;
-    padding: 10px 14px !important;
+    padding: 8px 14px !important;
     font-size: 13px !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 4px !important;
     transition: all 0.15s !important;
-    white-space: pre !important;
-    font-variant-numeric: tabular-nums;
-    min-width: 100% !important;
-    box-sizing: border-box !important;
 }
-
-div[data-testid="stSidebar"] .stButton > button:hover {
+div="stSidebar"] .stButton > button:hover {
     background: #1a3060 !important;
     color: #fff !important;
     border-color: #3a6adc !important;
@@ -107,15 +101,21 @@ div[data-testid="stSidebar"] .stButton > button:hover {
     color: #8aaad8 !important;
 }
 
-/* Sidebar нэмэлт тохиргоо */
+# Sidebar-ын дээрээс зай ихэсгэх
 [data-testid="stSidebar"] > div:first-child {
-    padding-top: 40px !important;
-}
+    padding-top: 40px !important;   # 8px → 40px болгох
 
+# Товчлуурын хоорондох зай
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-    gap: 4px !important;
-}
+    gap: 4px !important;            # 0px → 4px болгох
 
+# Товчлуур дотоод зай
+div[data-testid="stSidebar"] .stButton > button {
+    margin-bottom: 6px !important;
+    padding: 10px 14px !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
 section[data-testid="stSidebar"] {
     overflow: hidden !important;
     height: 100vh !important;
@@ -466,12 +466,22 @@ if "sd_prog" not in st.session_state:
 # ============================================================
 # SIDEBAR
 # ============================================================
+# SIDEBAR-ын дээд талд (одоо байгаа dept_labels-ыг солих)
 dept_labels = {
-    "Нийт": "🏛️ UFE",
-    "БУТ": "📐 БУТ", "МКТ": "💻 МКТ", "МСМТ": "📊 МСМТ",
-    "НББТ": "💰 НББТ", "ОУАЖССИ": "🌐 ОУАЖССИ", "ОУНББСМИ": "🏦 ОУНББСМИ",
-    "ОУС": "📚 ОУС", "СДСТ": "🔬 СДСТ", "СУТ": "⚙️ СУТ",
-    "СШУТ": "🧮 СШУТ", "ЭкТ": "📈 ЭкТ", "ЭнТИнс": "🏢 ЭнТИнс", "ЭЗТ": "💹 ЭЗТ",
+    "Нийт": "🏛️  UFE          ",
+    "БУТ":   "📐  БУТ         ",
+    "МКТ":   "💻  МКТ         ",
+    "МСМТ":  "📊  МСМТ        ",
+    "НББТ":  "💰  НББТ        ",
+    "ОУАЖССИ": "🌐  ОУАЖССИ    ",
+    "ОУНББСМИ":"🏦  ОУНББСМИ   ",
+    "ОУС":   "📚  ОУС         ",
+    "СДСТ":  "🔬  СДСТ        ",
+    "СУТ":   "⚙️  СУТ         ",
+    "СШУТ":  "🧮  СШУТ        ",
+    "ЭкТ":   "📈  ЭкТ         ",
+    "ЭнТИнс":"🏢  ЭнТИнс      ",
+    "ЭЗТ":   "💹  ЭЗТ         ",
 }
 
 with st.sidebar:
