@@ -505,7 +505,6 @@ with st.sidebar:
         st.markdown("""<style>
 [data-testid="stSidebar"] button[kind="secondary"],
 [data-testid="stSidebar"] button[kind="primary"] {
-    width: 200px !important;
     min-width: 200px !important;
     max-width: 200px !important;
 }
@@ -528,11 +527,12 @@ with st.sidebar:
         
         # 4. Товчлуурууд (зураасны ДООР)
         all_depts = ["Нийт"] + DEPTS
-                for d in all_depts:
-                    label = dept_labels.get(d, d)
-                    if st.button(label, key=f"dept_{d}",
-                                 type="primary" if st.session_state.dept == d else "secondary",
-                                 use_container_width=True):
+        for d in all_depts:
+            label = dept_labels.get(d, d)
+            if st.button(label, key=f"dept_{d}",
+                         type="primary" if st.session_state.dept == d else "secondary"):
+                st.session_state.dept = d
+                st.rerun()
     else:
         st.markdown("""
 <div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:12px;padding:0;'>📂 ХӨТӨЛБӨР СОНГОХ</div>
@@ -540,18 +540,10 @@ with st.sidebar:
         st.markdown("""
 <div style='border-bottom:1px solid #1a3060;margin-bottom:20px;padding:0;'></div>
 """, unsafe_allow_html=True)
-        st.markdown("""<style>
-[data-testid="stSidebar"] .stButton > button {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-}
-</style>""", unsafe_allow_html=True)
         for prog in PROGRAMS_D:
-                    short = prog[:25] + "…" if len(prog) > 25 else prog
-                    if st.button(f"📋 {short}", key=f"prog_{prog}",
-                                 type="primary" if st.session_state.sd_prog == prog else "secondary",
-                                 use_container_width=True):
+            short = prog[:25] + "…" if len(prog) > 25 else prog
+            if st.button(f"📋 {short}", key=f"prog_{prog}",
+                         type="primary" if st.session_state.sd_prog == prog else "secondary"):
                 st.session_state.sd_prog = prog
                 st.rerun()
 D = st.session_state.dept
