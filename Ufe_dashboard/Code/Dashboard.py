@@ -35,7 +35,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stSidebar"] button[kind="secondary"],
 [data-testid="stSidebar"] button[kind="primary"] {
     width: 100% !important;
-    min-width: 210px !important;
+    min-width: 180px !important;
     max-width: 100% !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -58,8 +58,10 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stSidebar"] button[kind="secondary"]:hover,
 [data-testid="stSidebar"] button[kind="primary"]:hover {
     background: #1a3060 !important;
-    color: #fff !important;
+    color: #ffffff !important;
     border-color: #3a6adc !important;
+    transform: translateY(-1px);           
+    box-shadow: 0 2px 6px rgba(58, 106, 220, 0.2);
 }
 
 /* Товчлууруудын хоорондох зай */
