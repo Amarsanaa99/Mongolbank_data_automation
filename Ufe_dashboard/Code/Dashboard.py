@@ -545,7 +545,8 @@ with st.sidebar:
         for d in all_depts:
             label = dept_labels.get(d, d)
             if st.button(label, key=f"dept_{d}",
-                         type="primary" if st.session_state.dept == d else "secondary"):
+                         type="primary" if st.session_state.dept == d else "secondary",
+                         use_container_width=True):  # ← ЭНЭ НЭМЭХ
                 st.session_state.dept = d
                 st.rerun()
     else:
@@ -558,7 +559,8 @@ with st.sidebar:
         for prog in PROGRAMS_D:
             short = prog[:25] + "…" if len(prog) > 25 else prog
             if st.button(f"📋 {short}", key=f"prog_{prog}",
-                         type="primary" if st.session_state.sd_prog == prog else "secondary"):
+                         type="primary" if st.session_state.sd_prog == prog else "secondary",
+                         use_container_width=True):  # ← ЭНЭ НЭМЭХ
                 st.session_state.sd_prog = prog
                 st.rerun()
 D = st.session_state.dept
