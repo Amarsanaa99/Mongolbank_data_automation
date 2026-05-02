@@ -111,8 +111,11 @@ div="stSidebar"] .stButton > button:hover {
 
 # Товчлуур дотоод зай
 div[data-testid="stSidebar"] .stButton > button {
-    margin-bottom: 6px !important;  # 4px → 6px болгох
-    padding: 10px 14px !important;  # 8px → 10px болгох
+    margin-bottom: 6px !important;
+    padding: 10px 14px !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
 section[data-testid="stSidebar"] {
     overflow: hidden !important;
     height: 100vh !important;
