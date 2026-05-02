@@ -20,16 +20,23 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background: #0a0f1e; color: #c8d8f0; }
 
+/* Sidebar суурь */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #080d1a 0%, #0a1228 100%);
     border-right: 1px solid #162040;
 }
 [data-testid="stSidebar"] * { color: #8aaad8 !important; }
 
-/* ========== ТОВЧЛУУРУУДЫГ ИЖИЛ УРТТАЙ БОЛГОХ ========== */
-div[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] button {
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 40px !important;
+}
+
+/* ====== ТОВЧЛУУРУУДЫГ ИЖИЛ УРТТАЙ БОЛГОХ (ЗӨВ СОНГОГЧ) ====== */
+[data-testid="stSidebar"] button[kind="secondary"],
+[data-testid="stSidebar"] button[kind="primary"] {
     width: 100% !important;
     min-width: 210px !important;
+    max-width: 100% !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
@@ -43,18 +50,24 @@ div[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] button {
     font-size: 13px !important;
     margin-bottom: 6px !important;
     transition: all 0.15s !important;
-    display: inline-flex !important;
+    display: flex !important;
     align-items: center !important;
     gap: 8px !important;
 }
 
-div[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] button:hover {
+[data-testid="stSidebar"] button[kind="secondary"]:hover,
+[data-testid="stSidebar"] button[kind="primary"]:hover {
     background: #1a3060 !important;
     color: #fff !important;
     border-color: #3a6adc !important;
 }
 
-/* 냉 Scrollbar болон бусад стиль */
+/* Товчлууруудын хоорондох зай */
+[data-testid="stSidebar"] .stButton {
+    width: 100% !important;
+}
+
+/* Бусад стильүүд */
 .kpi-card {
     background: linear-gradient(135deg, #0d1f4a 0%, #112240 100%);
     border: 1px solid #1a3060;
@@ -110,10 +123,6 @@ div[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] button:hover {
     background: #0d1830 !important;
     border-color: #1a3060 !important;
     color: #8aaad8 !important;
-}
-
-[data-testid="stSidebar"] > div:first-child {
-    padding-top: 40px !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
