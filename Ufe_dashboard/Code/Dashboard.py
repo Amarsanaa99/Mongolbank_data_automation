@@ -505,10 +505,10 @@ with st.sidebar:
         st.markdown("""<style>
 [data-testid="stSidebar"] button[kind="secondary"],
 [data-testid="stSidebar"] button[kind="primary"] {
-    min-width: 190px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
 }
 </style>""", unsafe_allow_html=True)
-
     # 1. СЭЗИС гарчиг
     st.markdown("""
 <div style='color:#fff;font-size:15px;font-weight:700;margin:0 0 8px 0;padding:10;'>🎓 СЭЗИС</div>
