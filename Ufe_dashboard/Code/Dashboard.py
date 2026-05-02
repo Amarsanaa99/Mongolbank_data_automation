@@ -41,9 +41,8 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    text-align: left !important;
-    justify-content: flex-start !important;
-    /* PAGE-н secondary төлөвтэй яг адилхан өнгө */
+    text-align: center !important;        /* left → center */
+    justify-content: center !important;   /* flex-start → center */
     background: #0d1830 !important;
     color: #7090c0 !important;
     border: 1px solid #1a2e5a !important;
