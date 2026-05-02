@@ -36,7 +36,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stSidebar"] button[kind="secondary"],
 [data-testid="stSidebar"] button[kind="primary"] {
     width: 100% !important;
-    min-width: 180px !important;
+    min-width: 200px !important;
     max-width: 100% !important;
     white-space: nowrap !important;
     overflow: hidden !important;
