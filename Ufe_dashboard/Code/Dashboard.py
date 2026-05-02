@@ -533,6 +533,8 @@ with st.sidebar:
                     if st.button(label, key=f"dept_{d}",
                                  type="primary" if st.session_state.dept == d else "secondary",
                                  use_container_width=True):
+                st.session_state.dept = d
+                st.rerun()
     else:
         st.markdown("""
 <div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:12px;padding:0;'>📂 ХӨТӨЛБӨР СОНГОХ</div>
