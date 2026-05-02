@@ -31,7 +31,8 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     padding-top: 0px !important;
 }
 
-/* ====== ТОВЧЛУУРУУДЫГ ИЖИЛ УРТТАЙ БОЛГОХ (ЗӨВ СОНГОГЧ) ====== */
+/* ====== САЙДБАР ТОВЧЛУУРУУД (PAGE-ТАЙ АДИЛХАН) ====== */
+/* Үндсэн төлөв (сонгогдоогүй) - secondary төлөвтэй адил */
 [data-testid="stSidebar"] button[kind="secondary"],
 [data-testid="stSidebar"] button[kind="primary"] {
     width: 100% !important;
@@ -42,6 +43,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     text-overflow: ellipsis !important;
     text-align: left !important;
     justify-content: flex-start !important;
+    /* PAGE-н secondary төлөвтэй яг адилхан өнгө */
     background: #0d1830 !important;
     color: #7090c0 !important;
     border: 1px solid #1a2e5a !important;
@@ -49,10 +51,29 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     padding: 10px 14px !important;
     font-size: 13px !important;
     margin-bottom: 6px !important;
-    transition: all 0.15s !important;
+    transition: all 0.15s ease-in-out !important;
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
+}
+
+/* HOVER төлөв - PAGE-н hover-тэй яг адилхан */
+[data-testid="stSidebar"] button[kind="secondary"]:hover,
+[data-testid="stSidebar"] button[kind="primary"]:hover {
+    background: #1a3060 !important;
+    color: #ffffff !important;
+    border-color: #3a6adc !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(58, 106, 220, 0.25);
+}
+
+/* SELECT (СОНГОГДСОН) төлөв - PAGE-н primary төлөвтэй яг адилхан */
+/* Энд: сонгогдсон тэнхимийн товчлуур нь page-н сонгогдсон төлөвтэй ижил өнгөтэй болно */
+[data-testid="stSidebar"] button[kind="primary"] {
+    background: #1a3060 !important;
+    color: #ffffff !important;
+    border-left: 3px solid #00d4ff !important;
+    border-color: #3a6adc !important;
 }
 
 /* Товчлууруудын хоорондох зай */
