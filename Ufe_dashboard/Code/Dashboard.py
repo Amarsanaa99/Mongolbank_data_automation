@@ -504,7 +504,7 @@ dept_labels = {
 with st.sidebar:
     # 1. СЭЗИС гарчиг
     st.markdown("""
-<div style='color:#fff;font-size:15px;font-weight:700;margin:0 0 8px 0;padding:0;'>🎓 СЭЗИС</div>
+<div style='color:#fff;font-size:15px;font-weight:700;margin:0 0 8px 0;padding:10;'>🎓 СЭЗИС</div>
 """, unsafe_allow_html=True)
 
     if st.session_state.page != "stud_dev":
@@ -515,7 +515,7 @@ with st.sidebar:
         
         # 3. Зураас (ТЭНХИМ СОНГОХ-ын ДООР)
         st.markdown("""
-<div style='border-bottom:1px solid #1a3060;margin-bottom:12px;padding:0;'></div>
+<div style='border-bottom:1px solid #1a3060;margin-top:8px;margin-bottom:12px;padding:0;'></div>
 """, unsafe_allow_html=True)
         
         # 4. Товчлуурууд (зураасны ДООР)
