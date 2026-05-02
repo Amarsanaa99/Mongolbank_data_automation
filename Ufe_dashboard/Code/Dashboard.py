@@ -55,10 +55,19 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     gap: 8px !important;
 }
 
+/* Hover үед */
 [data-testid="stSidebar"] button[kind="secondary"]:hover,
 [data-testid="stSidebar"] button[kind="primary"]:hover {
     background: #1a3060 !important;
     color: #fff !important;
+    border-color: #3a6adc !important;
+}
+
+/* ✅ Сонгогдсон төлөв (active/selected) - PAGE ТОВЧЛУУРТАЙ АДИЛ */
+[data-testid="stSidebar"] button[kind="primary"] {
+    background: #1a3060 !important;
+    color: #ffffff !important;
+    border-left: 3px solid #00d4ff !important;
     border-color: #3a6adc !important;
 }
 
