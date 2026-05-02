@@ -101,36 +101,18 @@ div="stSidebar"] .stButton > button:hover {
     color: #8aaad8 !important;
 }
 
-[data-testid="stSidebar"] .stButton > button {
-    width: 100% !important;
-    min-width: 100% !important;
-    box-sizing: border-box !important;
-    text-align: left !important;
-    background: #0d1830 !important;
-    color: #7090c0 !important;
-    border: 1px solid #1a2e5a !important;
-    border-radius: 8px !important;
-    padding: 8px 14px !important;
-    font-size: 13px !important;
-    margin-bottom: 4px !important;
-    transition: all 0.15s !important;
-}
-[data-testid="stSidebar"] .stButton > button:hover {
-    background: #1a3060 !important;
-    color: #fff !important;
-    border-color: #3a6adc !important;
-}
-[data-testid="stSidebar"] .stButton {
-    width: 100% !important;
-    display: block !important;
-}
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #080d1a 0%, #0a1228 100%);
-    border-right: 1px solid #162040;
-}
-[data-testid="stSidebar"] * { color: #8aaad8 !important; }
-[data-testid="stSidebar"] > div:first-child { padding-top: 40px !important; }
-[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: 4px !important; }
+# Sidebar-ын дээрээс зай ихэсгэх
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 40px !important;   # 8px → 40px болгох
+
+# Товчлуурын хоорондох зай
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 4px !important;            # 0px → 4px болгох
+
+# Товчлуур дотоод зай
+div[data-testid="stSidebar"] .stButton > button {
+    margin-bottom: 6px !important;  # 4px → 6px болгох
+    padding: 10px 14px !important;  # 8px → 10px болгох
 section[data-testid="stSidebar"] {
     overflow: hidden !important;
     height: 100vh !important;
