@@ -31,24 +31,19 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 /* ==================== ТОВЧЛУУРЫН СТИЛЬ ==================== */
 div[data-testid="stSidebar"] .stButton > button {
     width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
+    min-width: 205px !important;        /* ← Энд урт тохируулна */
     text-align: left !important;
     background: #0d1830 !important;
     color: #7090c0 !important;
     border: 1px solid #1a2e5a !important;
     border-radius: 8px !important;
-    padding: 10px 16px !important;
-    font-size: 13.5px !important;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
     margin-bottom: 6px !important;
-    transition: all 0.15s !important;
     white-space: pre !important;
-    font-variant-numeric: tabular-nums;
     box-sizing: border-box !important;
-    overflow: hidden;
 }
 
-/* Hover эффект */
 div[data-testid="stSidebar"] .stButton > button:hover {
     background: #1a3060 !important;
     color: #fff !important;
