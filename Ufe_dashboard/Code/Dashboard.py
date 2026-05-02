@@ -28,7 +28,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stSidebar"] * { color: #8aaad8 !important; }
 
 [data-testid="stSidebar"] > div:first-child {
-    padding-top: 20px !important;
+    padding-top: 0px !important;
 }
 
 /* ====== ТОВЧЛУУРУУДЫГ ИЖИЛ УРТТАЙ БОЛГОХ (ЗӨВ СОНГОГЧ) ====== */
