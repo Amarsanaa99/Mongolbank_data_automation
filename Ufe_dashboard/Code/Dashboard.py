@@ -58,10 +58,8 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stSidebar"] button[kind="secondary"]:hover,
 [data-testid="stSidebar"] button[kind="primary"]:hover {
     background: #1a3060 !important;
-    color: #ffffff !important;
+    color: #fff !important;
     border-color: #3a6adc !important;
-    transform: translateY(-1px);           
-    box-shadow: 0 2px 6px rgba(58, 106, 220, 0.2);
 }
 
 /* Товчлууруудын хоорондох зай */
