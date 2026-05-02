@@ -36,7 +36,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stSidebar"] button[kind="secondary"],
 [data-testid="stSidebar"] button[kind="primary"] {
     width: 100% !important;
-    min-width: 200px !important;
+    min-width: 120px !important;
     max-width: 100% !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -501,6 +501,15 @@ dept_labels = {
 }
 
 with st.sidebar:
+with st.sidebar:
+    # ЭНЭ МӨРИЙГ НЭМЭХ — sidebar блокийн хамгийн эхэнд
+    if st.session_state.page == "stud_dev":
+        st.markdown("""<style>
+[data-testid="stSidebar"] button[kind="secondary"],
+[data-testid="stSidebar"] button[kind="primary"] {
+    min-width: 190px !important;
+}
+</style>""", unsafe_allow_html=True)
     # 1. СЭЗИС гарчиг
     st.markdown("""
 <div style='color:#fff;font-size:15px;font-weight:700;margin:0 0 8px 0;padding:10;'>🎓 СЭЗИС</div>
