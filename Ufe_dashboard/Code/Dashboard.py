@@ -26,17 +26,32 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 ="stSidebar"] * { color: #8aaad8 !important; }
 
-div="stSidebar"] .stButton > button {
+/* Sidebar товчлуурууд - ижил урттай болгох */
+div[data-testid="stSidebar"] .stButton > button {
     width: 100% !important;
+    min-width: 200px !important;        /* ✅ Ижил хамгийн бага өргөн */
+    white-space: nowrap !important;      /* ✅ Нэг мөрөнд харуулах */
+    overflow: hidden !important;         /* ✅ Халихгүй байх */
+    text-overflow: ellipsis !important;  /* ✅ Урт нэрийг "..." болгох */
+    justify-content: flex-start !important;
     text-align: left !important;
     background: #0d1830 !important;
     color: #7090c0 !important;
     border: 1px solid #1a2e5a !important;
     border-radius: 8px !important;
-    padding: 8px 14px !important;
+    padding: 10px 14px !important;
     font-size: 13px !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 6px !important;
     transition: all 0.15s !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+div[data-testid="stSidebar"] .stButton > button:hover {
+    background: #1a3060 !important;
+    color: #fff !important;
+    border-color: #3a6adc !important;
 }
 div="stSidebar"] .stButton > button:hover {
     background: #1a3060 !important;
