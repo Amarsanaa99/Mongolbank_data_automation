@@ -55,14 +55,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     align-items: center !important;
     gap: 8px !important;
 }
-.stApp:has(.stSidebar .stButton button:contains("Эдийн засаг")) 
-[data-testid="stSidebar"] button[kind="secondary"],
-.stApp:has(.stSidebar .stButton button:contains("Эдийн засаг")) 
-[data-testid="stSidebar"] button[kind="primary"] {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-}
+
 /* HOVER төлөв - PAGE-н hover-тэй яг адилхан */
 [data-testid="stSidebar"] button[kind="secondary"]:hover,
 [data-testid="stSidebar"] button[kind="primary"]:hover {
