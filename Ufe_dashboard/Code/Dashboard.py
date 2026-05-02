@@ -502,14 +502,16 @@ dept_labels = {
 }
 
 with st.sidebar:
+    # СЭЗИС гарчиг + зураас (margin, padding-ийг 0 болгосон)
     st.markdown("""
-<div style='color:#fff;font-size:15px;font-weight:700;margin:0 0 4px 0;'>🎓 СЭЗИС</div>
-<div style='border-bottom:1px solid #1a3060;margin-bottom:6px;'></div>
+<div style='color:#fff;font-size:15px;font-weight:700;margin:0;padding:0;'>🎓 СЭЗИС</div>
+<div style='border-bottom:1px solid #1a3060;margin:4px 0 0 0;padding:0;'></div>
 """, unsafe_allow_html=True)
 
     if st.session_state.page != "stud_dev":
+        # ТЭНХИМ СОНГОХ гарчиг (дээрх зураасны дараа шууд, зайгүй)
         st.markdown("""
-<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:6px;'>ТЭНХИМ СОНГОХ</div>
+<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-top:12px;margin-bottom:8px;padding:0;'>📂 ТЭНХИМ СОНГОХ</div>
 """, unsafe_allow_html=True)
         all_depts = ["Нийт"] + DEPTS
         for d in all_depts:
@@ -520,7 +522,7 @@ with st.sidebar:
                 st.rerun()
     else:
         st.markdown("""
-<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:6px;'>ХӨТӨЛБӨР СОНГОХ</div>
+<div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-top:12px;margin-bottom:8px;padding:0;'>📂 ХӨТӨЛБӨР СОНГОХ</div>
 """, unsafe_allow_html=True)
         for prog in PROGRAMS_D:
             short = prog[:25] + "…" if len(prog) > 25 else prog
@@ -528,7 +530,6 @@ with st.sidebar:
                          type="primary" if st.session_state.sd_prog == prog else "secondary"):
                 st.session_state.sd_prog = prog
                 st.rerun()
-
 D = st.session_state.dept
 SELECTED_PROG = st.session_state.sd_prog
 SELECTED_PROG_IDX = PROGRAMS_D.index(SELECTED_PROG) if SELECTED_PROG in PROGRAMS_D else 0
