@@ -505,6 +505,7 @@ with st.sidebar:
         st.markdown("""<style>
 [data-testid="stSidebar"] button[kind="secondary"],
 [data-testid="stSidebar"] button[kind="primary"] {
+    width: 200px !important;
     min-width: 200px !important;
     max-width: 200px !important;
 }
