@@ -492,7 +492,7 @@ with st.sidebar:
 <div style='color:#4a7acc;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:6px;'>ХӨТӨЛБӨР СОНГОХ</div>
 """, unsafe_allow_html=True)
         for prog in PROGRAMS_D:
-            short = prog[:14] + "…" if len(prog) > 14 else prog
+            short = prog[:20] + "…" if len(prog) > 20 else prog
             if st.button(f"📋 {short}", key=f"prog_{prog}"):
                 st.session_state.sd_prog = prog
                 st.rerun()
