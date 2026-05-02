@@ -101,28 +101,21 @@ div="stSidebar"] .stButton > button:hover {
     color: #8aaad8 !important;
 }
 
-# Sidebar-ын дээрээс зай ихэсгэ
+# Sidebar-ын дээрээс зай ихэсгэх
 [data-testid="stSidebar"] > div:first-child {
-    padding-top: 40px !important;
-}
+    padding-top: 40px !important;   # 8px → 40px болгох
+
+# Товчлуурын хоорондох зай
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-    gap: 4px !important;
-}
+    gap: 4px !important;            # 0px → 4px болгох
+
+# Товчлуур дотоод зай
 div[data-testid="stSidebar"] .stButton > button {
     margin-bottom: 6px !important;
     padding: 10px 14px !important;
     width: 100% !important;
     min-width: 100% !important;
     box-sizing: border-box !important;
-    white-space: normal !important;
-    word-wrap: break-word !important;
-    height: auto !important;
-    min-height: 40px !important;
-}
-div[data-testid="stSidebar"] .stButton {
-    width: 100% !important;
-    display: block !important;
-}
 section[data-testid="stSidebar"] {
     overflow: hidden !important;
     height: 100vh !important;
