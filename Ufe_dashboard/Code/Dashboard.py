@@ -128,6 +128,15 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     margin: 24px 0 12px 0;
 }
 
+div[data-testid="stSelectbox"] > div > div {
+    background: #0d1830 !important;
+    border: 1px solid #1a3060 !important;
+    border-radius: 8px !important;
+    color: #00d4ff !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: #080d1a; }
 ::-webkit-scrollbar-thumb { background: #1a3060; border-radius: 3px; }
@@ -451,6 +460,16 @@ def pct_line_fig(title, yrs, vals, h=280):
     fig = line_fig(title, yrs, vals, h)
     fig.update_layout(yaxis=dict(tickformat=".1%", gridcolor=C["grid"]))
     return fig
+# ── Он сонгох helper ──
+def section_with_year(title, key, src_df, default_year=CURRENT_YEAR):
+    t_col, y_col = st.columns([7, 1])
+    with t_col:
+        st.markdown(f"<div class='section-title'>{title}</div>", unsafe_allow_html=True)
+    with y_col:
+        years = sorted([int(y) for y in src_df["Он"].dropna().unique()])
+        idx   = years.index(default_year) if default_year in years else len(years) - 1
+        return st.selectbox("", years, index=idx,
+                            key=key, label_visibility="collapsed")
 def donut_fig(labels, values, title, h=300, colors=None):
     clrs = colors[:len(labels)] if colors else DEPT_COLORS[:len(labels)]
     fig = go.Figure(go.Pie(
@@ -629,7 +648,7 @@ if st.session_state.page == "teacher":
 # ============================================================
 # SECTION 1 — KPI КАРТ ҮЗҮҮЛЭЛТҮҮД
 # ============================================================
-    st.markdown("<div class='section-title'>📈 2026 оны хувийн KPI үзүүлэлтүүд</div>", unsafe_allow_html=True)
+    kpi_yr_t = section_with_year("📈 Хувийн KPI үзүүлэлтүүд", "kpi_yr_teacher", df)
     pct_kpis = [
         ("Хувь", "Доктор зэрэгтэй багшийн эзлэх хувь",                     "🔬 Доктор зэрэгтэй багш",             C["blue"]),
         ("Хувь", "Гадаад багшийн эзлэх хувь",                               "🌍 Гадаад багш",              C["blue"]),
@@ -644,7 +663,7 @@ if st.session_state.page == "teacher":
     ]
     pct_cols = st.columns(5)
     for i, (cat, met, lbl, clr) in enumerate(pct_kpis):
-        v = gv(cat, met, CURRENT_YEAR, D)
+        v = gv(cat, met, kpi_yr_t, D)
         pct_str = f"{v*100:.1f}%" if v is not None else "—"
         pct_cols[i % 5].markdown(f"""
 <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
@@ -879,8 +898,7 @@ elif st.session_state.page == "prog":
         return list(s["Он"]), list(s[dept])
 
     # ── SECTION A: 2026 оны тоон KPI ──
-    st.markdown("<div class='section-title'>📊 2026 оны үндсэн үзүүлэлтүүд</div>", unsafe_allow_html=True)
-
+    kpi_yr_p = section_with_year("📊 Үндсэн үзүүлэлтүүд", "kpi_yr_prog", dfp)
     count_kpis = [
         ("Хэрэгжүүлж буй үндсэн хөтөлбөрийн тоо",          "📋 Үндсэн хөтөлбөр",            C["blue"]),
         ("Цахимаар хэрэгжиж буй хөтөлбөрийн тоо",           "💻 Цахим хөтөлбөр",              C["blue"]),
@@ -895,7 +913,7 @@ elif st.session_state.page == "prog":
     ]
     kpi_cols = st.columns(5)
     for i, (met, lbl, clr) in enumerate(count_kpis):
-        v = pgv(met, CURRENT_YEAR, D)
+        v = pgv(met, kpi_yr_p, D)
         val_str = str(int(v)) if v is not None else "—"
         kpi_cols[i % 5].markdown(f"""
 <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
@@ -1056,8 +1074,7 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 elif st.session_state.page == "stud":
 
     # ── SECTION A: 2026 оны тоон KPI ──
-    st.markdown("<div class='section-title'>📊 2026 оны тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
-
+    kpi_yr_s = section_with_year("📊 Тоон үзүүлэлтүүд", "kpi_yr_stud", dfs)
     count_kpis_s = [
         ("Хичээлийн тоо",                                                  "📚 Нийт хичээл",        C["blue"]),
         ("Цахим хэлбэрээр орж буй хичээлийн тоо",                         "💻 Цахим хичээл",        C["blue"]),
@@ -1071,7 +1088,7 @@ elif st.session_state.page == "stud":
 
     cnt_cols = st.columns(4)
     for i, (met, lbl, clr) in enumerate(count_kpis_s):
-        v = sv(met, CURRENT_YEAR, D)
+        v = sv(met, kpi_yr_s, D)
         val_str = str(int(v)) if v is not None else "—"
         cnt_cols[i % 4].markdown(f"""
 <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
@@ -1199,8 +1216,7 @@ elif st.session_state.page == "stud_dev":
     COURSES = ["I курс", "II курс", "III курс", "IV курс", "V+ курс"]
 
     # ── SECTION A: Сонгосон хөтөлбөрийн 2026 оны тоон KPI ──
-    st.markdown(f"<div class='section-title'>📊 {SELECTED_PROG} — 2026 оны тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
-
+    kpi_yr_sd = section_with_year(f"📊 {SELECTED_PROG} — Тоон үзүүлэлтүүд", "kpi_yr_stud_dev", dfd.rename(columns={2:"Он"}))
     count_kpis_sd = [
         ("Үндсэн + цагийн + цахим суралцагчийн тоо",           "👥 Нийт суралцагч",      C["blue"]),
         ("Үндсэн хөтөлбөрийн суралцагчийн тоо",                "📘 Үндсэн хөтөлбөр",     C["blue"]),
@@ -1218,7 +1234,7 @@ elif st.session_state.page == "stud_dev":
 
     kpi_cols_sd = st.columns(4)
     for i, (met, lbl, clr) in enumerate(count_kpis_sd):
-        v = sdv_prog_total(met, CURRENT_YEAR, PROG_IDX)
+        v = sdv_prog_total(met, kpi_yr_sd, PROG_IDX)
         val_str = str(int(v)) if v is not None else "—"
         kpi_cols_sd[i % 4].markdown(f"""
 <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
@@ -1472,10 +1488,8 @@ elif st.session_state.page == "res":
     def rgseries(metric, dept):
         s = dfr[dfr["Үзүүлэлт"] == metric].sort_values("Он")
         return list(s["Он"]), list(s[dept])
-
     # ── SECTION B: 2026 оны тоон KPI товчлуур ──
-    st.markdown("<div class='section-title'>🔢 2026 оны тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
-    
+    kpi_yr_r = section_with_year("🔢 Тоон үзүүлэлтүүд", "kpi_yr_res", dfr)
     ALL_COUNT_KPIS = [
         ("Эрдэм шинжилгээний бүтээлийн тоо",                                "📄 ЭШ бүтээл",                    C["blue"]),
         ("Эрдэм шинжилгээний ажилтны тоо",                                  "👩‍🔬 ЭШ ажилтан",                  C["blue"]),
@@ -1493,7 +1507,7 @@ elif st.session_state.page == "res":
     
     kpi_cols = st.columns(4)
     for i, (met, lbl, clr) in enumerate(ALL_COUNT_KPIS):
-        v = rgv(met, CURRENT_YEAR, D)
+        v = rgv(met, kpi_yr_r, D)
         val_str = str(int(v)) if v is not None else "—"
         kpi_cols[i % 4].markdown(f"""
     <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
@@ -1773,8 +1787,7 @@ elif st.session_state.page == "fin":
         return f"₮{int(v):,}"
 
     # ── SECTION A: 2026 оны гол орлогын KPI badge ──
-    st.markdown("<div class='section-title'>💰 2026 оны гол санхүүгийн үзүүлэлтүүд</div>", unsafe_allow_html=True)
-
+    kpi_yr_f = section_with_year("💰 Гол санхүүгийн үзүүлэлтүүд", "kpi_yr_fin", dff)
     COUNT_FIN_KPIS = [
         ("Нийт орлого",                       "💎 Нийт орлого",              C["blue"]),
         ("Бакалаврын сургалтын орлого",        "🎓 Бакалаврын орлого",         C["blue"]),
@@ -1788,7 +1801,7 @@ elif st.session_state.page == "fin":
 
     fin_cols = st.columns(4)
     for i, (met, lbl, clr) in enumerate(COUNT_FIN_KPIS):
-        v = fgv(met, CY, D)
+        v = fgv(met, kpi_yr_f, D)
         val_str = fmt_money(v)
         fin_cols[i % 4].markdown(f"""
 <div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
