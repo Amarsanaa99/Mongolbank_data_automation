@@ -1812,12 +1812,9 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 
 # ── SECTION B: Нийт орлогын бүрэлдэхүүн — Pie chart ──
     st.markdown("<div class='section-title'>🥧 2026 оны нийт орлогын бүрэлдэхүүн</div>", unsafe_allow_html=True)
-
     BLUE_PALETTE = ["#1E90FF", "#4DB8FF", "#0A4A8A", "#00BFFF", "#0066CC", "#63CFFF",
                     "#1565C0", "#42A5F5", "#1976D2", "#90CAF9"]
-
-    pie_f1, pie_f2 = st.columns([1, 2])
-
+    pie_f1, pie_f2 = st.columns([1, 1])
     PIE_INCOME_METRICS = [
         ("Бакалаврын сургалтын орлого",         "Бакалаврын сургалт"),
         ("Үйлдвэрлэл, худалдааны орлого",       "Үйлдвэрлэл, худалдаа"),
@@ -1830,7 +1827,6 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
         ("Гарааны бизнесийн орлого",            "Гарааны бизнес"),
         ("Гадаад оюутаны сургалтын орлого",     "Гадаад оюутан"),
     ]
-
     with pie_f1:
         pie_labels = [lbl for _, lbl in PIE_INCOME_METRICS]
         pie_vals   = [fgv(met, CY, D) or 0 for met, _ in PIE_INCOME_METRICS]
@@ -1840,13 +1836,12 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             textinfo="label+percent", textfont=dict(color=C["text"], size=10),
             insidetextorientation="radial",
         ))
-        t_pf = dict(**theme(360))
+        t_pf = dict(**theme(420))
         t_pf["title"] = dict(text="Орлогын эх үүсвэрийн харьцаа (2026)", font=dict(color=C["white"], size=12))
         t_pf["showlegend"] = False
         fig_pie_fin.update_layout(**t_pf)
         with st.container(border=True):
             st.plotly_chart(fig_pie_fin, use_container_width=True)
-
     with pie_f2:
         sorted_items = sorted(zip(pie_vals, pie_labels), reverse=True)
         s_vals, s_lbls = zip(*sorted_items) if sorted_items else ([], [])
@@ -1860,9 +1855,10 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
             text=[fmt_money(v) for v in s_vals],
             textposition="outside", textfont=dict(color=C["text"], size=10),
         ))
-        t_bp = dict(**theme(360))
+        t_bp = dict(**theme(420))
         t_bp["title"] = dict(text="Орлогын эх үүсвэр харьцуулалт (2026)", font=dict(color=C["white"], size=12))
-        t_bp["margin"]["l"] = 220
+        t_bp["margin"]["l"] = 160
+        t_bp["margin"]["r"] = 100
         t_bp["xaxis"]["title"] = "₮"
         fig_bar_pie.update_layout(**t_bp)
         with st.container(border=True):
