@@ -2085,36 +2085,6 @@ elif st.session_state.page == "kpimain":
         "Суралцахаа орхисон оюутны хувь",
         "Төгсөгчдийн төгсөөд 6–12 сарын дотор ажилд орсон хувь",
     ]
-
-    # ── SECTION A: 2026 оны KPI badge-үүд ──
-    kpi_yr_k = section_with_year("📊 Гол KPI үзүүлэлтүүд — 2026", "kpi_yr_kpimain", dfk)
-
-    st.markdown("<div class='section-title'>🔢 Тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
-    cnt_cols = st.columns(4)
-    for i, met in enumerate(COUNT_KPIS):
-        v = kv(met, kpi_yr_k, D)
-        val_str = str(int(v)) if v is not None else "—"
-        short = met[:30] + "…" if len(met) > 30 else met
-        cnt_cols[i % 4].markdown(f"""
-<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
-padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid #00d4ff;'>
-    <div style='color:#00d4ff;font-size:26px;font-weight:700;'>{val_str}</div>
-    <div style='color:#ffffff;font-size:12px;margin-top:4px;'>{short}</div>
-</div>""", unsafe_allow_html=True)
-
-    st.markdown("<div class='section-title'>📈 Хувийн үзүүлэлтүүд</div>", unsafe_allow_html=True)
-    pct_cols_k = st.columns(4)
-    for i, met in enumerate(PCT_KPIS):
-        v = kv(met, kpi_yr_k, D)
-        val_str = f"{v*100:.1f}%" if v is not None else "—"
-        short = met[:30] + "…" if len(met) > 30 else met
-        pct_cols_k[i % 4].markdown(f"""
-<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
-padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid #00e676;'>
-    <div style='color:#00e676;font-size:26px;font-weight:700;'>{val_str}</div>
-    <div style='color:#ffffff;font-size:12px;margin-top:4px;'>{short}</div>
-</div>""", unsafe_allow_html=True)
-
     # ── SECTION B: Тоон KPI трендийн графикууд ──
     st.markdown("<div class='section-title'>📉 Тоон KPI — Бодит ба Зорилтын трендийн график (2024–2031)</div>", unsafe_allow_html=True)
 
