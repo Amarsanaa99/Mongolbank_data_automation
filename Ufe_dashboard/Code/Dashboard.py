@@ -694,7 +694,7 @@ with col_h8:
         st.session_state.page = "fin"
         st.rerun()
 # ============================================================
-# PAGE 7 — ГОЛ KPI ҮЗҮҮЛЭЛТҮҮД (kpimain)
+# PAGE 1 — ГОЛ KPI ҮЗҮҮЛЭЛТҮҮД (kpimain)
 # ============================================================
 if st.session_state.page == "kpimain":
 
@@ -765,12 +765,6 @@ if st.session_state.page == "kpimain":
         "#00d4ff", "#00e676", "#b388ff", "#ffab40",
         "#ff80ab", "#64ffda", "#3a8aff", "#ff9800", "#f06292",
     ]
-
-    # ── 4 TAB ─────────────────────────────────────────────────
-    st.markdown(
-        "<div class='section-title'>📉 Трендийн графикууд — Бодит ба Зорилт (2024–2031)</div>",
-        unsafe_allow_html=True,
-    )
     tabs = st.tabs([g[0] for g in GROUPS])
 
     for tab_idx, (tab_label, group_items) in enumerate(GROUPS):
