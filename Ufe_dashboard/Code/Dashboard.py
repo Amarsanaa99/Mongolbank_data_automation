@@ -687,7 +687,7 @@ with col_h7:
 st.markdown("<div style='margin-bottom:16px'></div>", unsafe_allow_html=True)
 with col_h8:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    if st.button("📊 Гол KPI үзүүлэлт", key="nav_kpimain",
+    if st.button("📊 KPI үзүүлэлт", key="nav_kpimain",
                  type="primary" if st.session_state.page == "kpimain" else "secondary"):
         st.session_state.page = "kpimain"
         st.rerun()
