@@ -299,15 +299,6 @@ def load_fin_data():
         df[c] = pd.to_numeric(df[c], errors="coerce")
     df["Үзүүлэлт"] = df["Үзүүлэлт"].str.strip()
     return df
-
-df, DEPTS       = load_teacher_data()
-dfp, DEPTS_P    = load_prog_data()
-dfs, DEPTS_S    = load_stud_data()
-dfd, PROGRAMS_D, PROG_COLS_D = load_stud_dev_data()
-dfr = load_res_data()
-dff = load_fin_data()
-dfk = load_kpimain_data()
-CURRENT_YEAR = 2026
 # ============================================================
 # DATA LOADING — KPI Үндсэн үзүүлэлтүүд (kpimain)
 # ============================================================
@@ -326,6 +317,16 @@ def load_kpimain_data():
     for c in DEPTS + ["Нийт"]:
         df[c] = pd.to_numeric(df[c], errors="coerce")
     return df
+
+df, DEPTS       = load_teacher_data()
+dfp, DEPTS_P    = load_prog_data()
+dfs, DEPTS_S    = load_stud_data()
+dfd, PROGRAMS_D, PROG_COLS_D = load_stud_dev_data()
+dfr = load_res_data()
+dff = load_fin_data()
+dfk = load_kpimain_data()
+CURRENT_YEAR = 2026
+
 # ============================================================
 # HELPERS
 # ============================================================
