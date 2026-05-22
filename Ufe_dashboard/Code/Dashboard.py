@@ -2185,7 +2185,7 @@ padding:10px 8px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};
                             line=dict(color=clr, width=2, dash="dot"),
                             marker=dict(size=7, color=clr, symbol="diamond"),
                             yaxis="y2",
-                            showlegend=false,
+                            showlegend=False,
                         ))
 
                 fig_main.update_layout(
