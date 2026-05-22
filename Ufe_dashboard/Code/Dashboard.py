@@ -2154,6 +2154,15 @@ padding:10px 8px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};
                         line=dict(color=clr, width=2.5),
                         marker=dict(size=8, color=clr),
                         yaxis="y1",
+                    ))
+                    if fx and hx:
+                        fig_main.add_trace(go.Scatter(
+                            x=[hx[-1]] + fx, y=[hy[-1]] + fy,
+                            name=f"{short} (зорилт)", mode="lines+markers",
+                            line=dict(color=clr, width=2, dash="dot"),
+                            marker=dict(size=7, color=clr, symbol="diamond"),
+                            yaxis="y1",
+                            showlegend=False,
                         ))
 
                 for pi, (met, short) in enumerate(pct_items):
@@ -2168,6 +2177,15 @@ padding:10px 8px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};
                         line=dict(color=clr, width=2.5),
                         marker=dict(size=8, color=clr),
                         yaxis="y2",
+                    ))
+                    if fx and hx:
+                        fig_main.add_trace(go.Scatter(
+                            x=[hx[-1]] + fx, y=[hy[-1]] + fy,
+                            name=f"{short} (зорилт)", mode="lines+markers",
+                            line=dict(color=clr, width=2, dash="dot"),
+                            marker=dict(size=7, color=clr, symbol="diamond"),
+                            yaxis="y2",
+                            showlegend=false,
                         ))
 
                 fig_main.update_layout(
@@ -2217,6 +2235,15 @@ padding:10px 8px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};
                         x=hx, y=hy, name=short, mode="lines+markers",
                         line=dict(color=clr, width=2.5), marker=dict(size=8, color=clr),
                     ))
+                    if fx and hx:
+                        fig_main.add_trace(go.Scatter(
+                            x=[hx[-1]] + fx, y=[hy[-1]] + fy,
+                            name=f"{short} (зорилт)", mode="lines+markers",
+                            line=dict(color=clr, width=2, dash="dot"),
+                            marker=dict(size=7, color=clr, symbol="diamond"),
+                            showlegend=False,
+                        ))
+
                 fig_main.update_layout(
                     plot_bgcolor=C["bg"], paper_bgcolor=C["bg"],
                     font=dict(color=C["text"], size=11),
