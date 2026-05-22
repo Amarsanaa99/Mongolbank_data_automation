@@ -306,20 +306,33 @@ def load_fin_data():
 def load_kpimain_data():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DATA_PATH = os.path.join(BASE_DIR, "..", "data", "kpimain_data.xlsx")
-    
-    # ✅ header=0 — эхний мөрийг гарчиг болгон уншина
+
     df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=0)
-    
-    # ✅ header=0 тул columns оноох шаардлагагүй — аль хэдийн байна
-    # df.columns = [...] ← ЭНЭ МӨРИЙГ УСТГА
-    
+
+    # Он цэвэрлэх
     df = df[df["Он"].notna() & (df["Он"] != "Он")]
     df["Он"] = pd.to_numeric(df["Он"], errors="coerce").astype("Int64")
     df = df[df["Он"].notna()]
+
+    # Үзүүлэлт ffill + strip
     df["Үзүүлэлт"] = df["Үзүүлэлт"].ffill().str.strip()
-    DEPTS = ["БУТ","МКТ","МСМТ","НББТ","ОУАЖССИ","ОУНББСМИ","ОУС","СДСТ","СУТ","СШУТ","ЭкТ","ЭнТИнс","ЭЗТ"]
-    for c in DEPTS + ["Нийт"]:
-        df[c] = pd.to_numeric(df[c], errors="coerce")
+
+    # Тоон баганануудыг цэвэрлэх
+    DEPTS_K = ["БУТ", "МКТ", "МСМТ", "НББТ", "ОУАЖССИ", "ОУНББСМИ",
+               "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ"]
+
+    # UFE багана байвал "Нийт" гэж нэрлэн ашиглана, байхгүй бол тооцоолно
+    if "UFE" in df.columns:
+        df = df.rename(columns={"UFE": "Нийт"})
+    
+    for c in DEPTS_K + ["Нийт"]:
+        if c in df.columns:
+            df[c] = pd.to_numeric(df[c], errors="coerce")
+
+    # "Нийт" огт байхгүй бол тэнхимүүдийн нийлбэрээр тооцно
+    if "Нийт" not in df.columns:
+        df["Нийт"] = df[[c for c in DEPTS_K if c in df.columns]].sum(axis=1, skipna=True)
+
     return df
 
 df, DEPTS       = load_teacher_data()
@@ -2026,14 +2039,26 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 elif st.session_state.page == "kpimain":
 
     CURRENT_YEAR = 2026
+    DEPTS_K = ["БУТ", "МКТ", "МСМТ", "НББТ", "ОУАЖССИ", "ОУНББСМИ",
+               "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ"]
 
     def kv(metric, year, dept):
-        r = dfk[(dfk["Үзүүлэлт"]==metric) & (dfk["Он"]==year)]
-        return r.iloc[0][dept] if not r.empty else None
+        r = dfk[(dfk["Үзүүлэлт"] == metric) & (dfk["Он"] == year)]
+        if r.empty:
+            return None
+        # sidebar-аас "Нийт" сонгосон → UFE/Нийт баганаас уншина
+        col = dept if (dept in dfk.columns and dept != "Нийт") else "Нийт"
+        if col not in dfk.columns:
+            return None
+        val = r.iloc[0][col]
+        return val if pd.notna(val) else None
 
     def kseries(metric, dept):
-        s = dfk[dfk["Үзүүлэлт"]==metric].sort_values("Он")
-        return list(s["Он"]), list(s[dept])
+        s = dfk[dfk["Үзүүлэлт"] == metric].sort_values("Он")
+        col = dept if (dept in dfk.columns and dept != "Нийт") else "Нийт"
+        if col not in dfk.columns:
+            return list(s["Он"]), [None] * len(s)
+        return list(s["Он"]), list(s[col])
 
     # KPI-уудыг 2 бүлэгт хуваах
     COUNT_KPIS = [
