@@ -633,7 +633,6 @@ with col_h1:
 <div style='background:linear-gradient(90deg,#0d1f4a,#1a2d6b,#0d1f4a);
 border:1px solid #1e3a8a;border-radius:14px;padding:12px 20px;'>
 <span style='color:#fff;font-size:17px;font-weight:700;'>🎓 СЭЗИС — Стратегийн KPI Самбар</span><br>
-<span style='color:#5a80b8;font-size:12px;'>Сонголт: <b style='color:#00d4ff'>{disp_name}</b> &nbsp;|&nbsp; Одоогийн жил: <b style='color:#00d4ff'>2026</b></span>
 </div>
 """, unsafe_allow_html=True)
 
