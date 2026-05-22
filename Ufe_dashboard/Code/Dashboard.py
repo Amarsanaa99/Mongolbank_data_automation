@@ -682,7 +682,7 @@ with col_h6:
 
 with col_h7:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    if st.button("🔬 Судалгаа, төсөл", key="nav_res",
+    if st.button("🔬 Судалгаа, төсөл хөтөлбөр", key="nav_res",
                  type="primary" if st.session_state.page == "res" else "secondary"):
         st.session_state.page = "res"
         st.rerun()
