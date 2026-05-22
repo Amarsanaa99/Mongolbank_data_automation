@@ -552,7 +552,7 @@ if "page" not in st.session_state:
 if "dept" not in st.session_state:
     st.session_state.dept = "Нийт"
 if "sd_prog" not in st.session_state:
-    st.session_state.sd_prog = "СУТ"
+    st.session_state.sd_prog = "Эдийн засаг"
 
 # ============================================================
 # SIDEBAR
