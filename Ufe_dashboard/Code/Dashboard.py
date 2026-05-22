@@ -306,9 +306,13 @@ def load_fin_data():
 def load_kpimain_data():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DATA_PATH = os.path.join(BASE_DIR, "..", "data", "kpimain_data.xlsx")
-    df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=None)
-    df.columns = ["Үзүүлэлт", "Он", "БУТ", "МКТ", "МСМТ", "НББТ",
-                  "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ", "Нийт"]
+    
+    # ✅ header=0 — эхний мөрийг гарчиг болгон уншина
+    df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=0)
+    
+    # ✅ header=0 тул columns оноох шаардлагагүй — аль хэдийн байна
+    # df.columns = [...] ← ЭНЭ МӨРИЙГ УСТГА
+    
     df = df[df["Он"].notna() & (df["Он"] != "Он")]
     df["Он"] = pd.to_numeric(df["Он"], errors="coerce").astype("Int64")
     df = df[df["Он"].notna()]
