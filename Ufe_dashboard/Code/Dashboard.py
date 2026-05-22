@@ -647,49 +647,51 @@ border:1px solid #1e3a8a;border-radius:14px;padding:6px 12px;'>
 
 with col_h2:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    if st.button("📊 Чухал KPI үзүүлэлтүүд", key="nav_kpimain",
+                 type="primary" if st.session_state.page == "kpimain" else "secondary"):
+        st.session_state.page = "kpimain"
+        st.rerun()
+
+with col_h3:
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     if st.button("👩‍🏫 Багшийн хөгжил", key="nav_teacher",
                  type="primary" if st.session_state.page == "teacher" else "secondary"):
         st.session_state.page = "teacher"
         st.rerun()
 
-with col_h3:
+with col_h4:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     if st.button("📚 Хөтөлбөр хөгжил", key="nav_prog",
                  type="primary" if st.session_state.page == "prog" else "secondary"):
         st.session_state.page = "prog"
         st.rerun()
 
-with col_h4:
+with col_h5:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     if st.button("🎓 Хичээл, Сургалт", key="nav_stud",
                  type="primary" if st.session_state.page == "stud" else "secondary"):
         st.session_state.page = "stud"
         st.rerun()
 
-with col_h5:
+with col_h6:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     if st.button("🏫 Суралцагч хөгжил", key="nav_stud_dev",
                  type="primary" if st.session_state.page == "stud_dev" else "secondary"):
         st.session_state.page = "stud_dev"
         st.rerun()
-with col_h6:
+
+with col_h7:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     if st.button("🔬 Судалгаа, төсөл", key="nav_res",
                  type="primary" if st.session_state.page == "res" else "secondary"):
         st.session_state.page = "res"
         st.rerun()
-with col_h7:
+
+with col_h8:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     if st.button("💰 Санхүүгийн мэдээлэл", key="nav_fin",
                  type="primary" if st.session_state.page == "fin" else "secondary"):
         st.session_state.page = "fin"
-        st.rerun()
-st.markdown("<div style='margin-bottom:16px'></div>", unsafe_allow_html=True)
-with col_h8:
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    if st.button("📊 Чухал KPI үзүүлэлтүүд", key="nav_kpimain",
-                 type="primary" if st.session_state.page == "kpimain" else "secondary"):
-        st.session_state.page = "kpimain"
         st.rerun()
 # ============================================================
 # PAGE 7 — ГОЛ KPI ҮЗҮҮЛЭЛТҮҮД (kpimain)
