@@ -2035,6 +2035,9 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
 # ============================================================
 # PAGE 7 — ГОЛ KPI ҮЗҮҮЛЭЛТҮҮД (kpimain)
 # ============================================================
+# ЭНЭ БЛОКИЙГ БҮТНЭЭР НЬ СОЛИНО:
+# elif st.session_state.page == "kpimain": ... (footer хүртэл биш)
+
 elif st.session_state.page == "kpimain":
 
     CURRENT_YEAR = 2026
@@ -2045,7 +2048,6 @@ elif st.session_state.page == "kpimain":
         r = dfk[(dfk["Үзүүлэлт"] == metric) & (dfk["Он"] == year)]
         if r.empty:
             return None
-        # sidebar-аас "Нийт" сонгосон → UFE/Нийт баганаас уншина
         col = dept if (dept in dfk.columns and dept != "Нийт") else "Нийт"
         if col not in dfk.columns:
             return None
@@ -2059,89 +2061,311 @@ elif st.session_state.page == "kpimain":
             return list(s["Он"]), [None] * len(s)
         return list(s["Он"]), list(s[col])
 
-    # KPI-уудыг 2 бүлэгт хуваах
-    COUNT_KPIS = [
-        "Олон улсад магадлан итгэмжлэгдсэн хөтөлбөрийн тоо, нэр",
-        "Олон улсын мэргэжлийн байгуулагаар итгэмжлэгдсэн хөтөлбөрийн тоо",
-        "AI хосолсон хөтөлбөрийн тоо",
-        "Гадаад хэлээр явуулах хөтөлбөрийн тоо",
-        "Олон улсын дипломтой хөтөлбөрийн тоо",
-        "Хамтарсан хөтөлбөр хэрэгжүүлэгч сургууль, институтын тоо",
-        "Гадаад хэлээр зааж буй хичээлийн тоо",
-        "Хэрэгжүүлсэн зэргийн бус сургалтын тоо",
-        "Идэвхтэй суралцаж буй оюутны тоо",
-        "Тэтгэлэгт хамрагдсан оюутны тоо",
-        "Гадаад хэл дээр хичээл заах чадвартай багшийн тоо",
-        "Олон улсын мэргэжлийн зэрэгтэй багшийн тоо",
+    # ── 4 БҮЛГИЙН ТОДОРХОЙЛОЛТ ──────────────────────────────
+    # Формат: (үзүүлэлтийн нэр, богино нэр, хувь эсэх)
+    GROUP1 = [  # Хөтөлбөрийн олон улсын хүрэх чадвар
+        ("Олон улсад магадлан итгэмжлэгдсэн хөтөлбөрийн тоо, нэр",        "ОУ магадлан итгэмжлэлт",    False),
+        ("Олон улсын мэргэжлийн байгуулагаар итгэмжлэгдсэн хөтөлбөрийн тоо","ОУ мэргэжлийн байгуулага", False),
+        ("AI хосолсон хөтөлбөрийн тоо",                                      "AI хосолсон хөтөлбөр",     False),
+        ("Гадаад хэлээр явуулах хөтөлбөрийн тоо",                            "Гадаад хэлний хөтөлбөр",   False),
+        ("Олон улсын дипломтой хөтөлбөрийн тоо",                             "ОУ дипломтой",             False),
+        ("Хамтарсан хөтөлбөр хэрэгжүүлэгч сургууль, институтын тоо",       "Хамтарсан сургууль",        False),
     ]
-    PCT_KPIS = [
-        "AI ба дижитал шилжилт",
-        "Хичээлийн суралцахуйн үр дүнгийн биелэлт",
-        "Хөтөлбөрийн суралцахуйн үр дүнгийн биелэлт",
-        "Оюутны сэтгэл ханамжийн хувь",
-        "Оюутны үргэлжлүүлэн суралцах хувь",
-        "Хугацаандаа төгссөн оюутны хувь",
-        "Суралцахаа орхисон оюутны хувь",
-        "Төгсөгчдийн төгсөөд 6–12 сарын дотор ажилд орсон хувь",
+    GROUP2 = [  # Хичээл, сургалт, AI
+        ("Гадаад хэлээр зааж буй хичээлийн тоо",   "Гадаад хэлний хичээл",  False),
+        ("AI ба дижитал шилжилт",                    "AI & Дижитал шилжилт", True),
+        ("Хэрэгжүүлсэн зэргийн бус сургалтын тоо", "Зэргийн бус сургалт",   False),
     ]
-    # ── SECTION B: Тоон KPI трендийн графикууд ──
-    st.markdown("<div class='section-title'>📉 Тоон KPI — Бодит ба Зорилтын трендийн график (2024–2031)</div>", unsafe_allow_html=True)
+    GROUP3 = [  # Оюутны үзүүлэлтүүд
+        ("Идэвхтэй суралцаж буй оюутны тоо",                          "Идэвхтэй оюутан",       False),
+        ("Тэтгэлэгт хамрагдсан оюутны тоо",                           "Тэтгэлэгт оюутан",      False),
+        ("Хичээлийн суралцахуйн үр дүнгийн биелэлт",                  "Хичээлийн СҮД",         True),
+        ("Хөтөлбөрийн суралцахуйн үр дүнгийн биелэлт",               "Хөтөлбөрийн СҮД",       True),
+        ("Оюутны сэтгэл ханамжийн хувь",                              "Сэтгэл ханамж",          True),
+        ("Оюутны үргэлжлүүлэн суралцах хувь",                         "Үргэлжлүүлэн суралцах", True),
+        ("Хугацаандаа төгссөн оюутны хувь",                           "Хугацаандаа төгссөн",   True),
+        ("Суралцахаа орхисон оюутны хувь",                             "Орхисон оюутан",        True),
+        ("Төгсөгчдийн төгсөөд 6–12 сарын дотор ажилд орсон хувь",    "Ажилд орсон %",          True),
+    ]
+    GROUP4 = [  # Багшийн чадавх
+        ("Гадаад хэл дээр хичээл заах чадвартай багшийн тоо", "Гадаад хэлтэй багш",       False),
+        ("Олон улсын мэргэжлийн зэрэгтэй багшийн тоо",        "ОУ мэргэжлийн зэрэгтэй",  False),
+    ]
 
-    kc1, kc2 = st.columns(2)
-    kc_cycle = [kc1, kc2] * 6
-    for i, met in enumerate(COUNT_KPIS):
-        yrs_k, vals_k = kseries(met, D)
-        fig_k = go.Figure()
-        hx = [y for y,v in zip(yrs_k,vals_k) if y<=CURRENT_YEAR and v is not None]
-        hy = [v for y,v in zip(yrs_k,vals_k) if y<=CURRENT_YEAR and v is not None]
-        fx = [y for y,v in zip(yrs_k,vals_k) if y>CURRENT_YEAR and v is not None]
-        fy = [v for y,v in zip(yrs_k,vals_k) if y>CURRENT_YEAR and v is not None]
-        short_title = met[:45] + "…" if len(met) > 45 else met
-        fig_k.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
-            line=dict(color=C["blue"], width=2.5), marker=dict(size=7, color=C["blue"])))
-        if fx and hx:
-            fig_k.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
-                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
-                marker=dict(size=7, color=C["target"], symbol="diamond")))
-        if CURRENT_YEAR in yrs_k:
-            fig_k.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)",
-                annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)", annotation_font_size=10)
-        tk = dict(**theme(280))
-        tk["title"] = dict(text=short_title, font=dict(color=C["white"], size=11))
-        fig_k.update_layout(**tk)
-        with kc_cycle[i]:
+    GROUPS = [
+        ("📋 Хөтөлбөрийн хөгжил",    GROUP1),
+        ("📚 Хичээл & AI",             GROUP2),
+        ("🎓 Оюутны үзүүлэлтүүд",    GROUP3),
+        ("👩‍🏫 Багшийн чадавх",        GROUP4),
+    ]
+
+    # ── KPI BADGE - нийт 2026 оны тоо ────────────────────────
+    kpi_yr_k = section_with_year("📊 Гол KPI үзүүлэлтүүд — 2026", "kpi_yr_kpimain", dfk)
+
+    all_kpis_flat = GROUP1 + GROUP2 + GROUP3 + GROUP4
+    badge_cols = st.columns(5)
+    for i, (met, short, is_pct) in enumerate(all_kpis_flat):
+        v = kv(met, kpi_yr_k, D)
+        if v is None:
+            val_str = "—"
+            clr = C["blue"]
+        elif is_pct:
+            val_str = f"{v*100:.1f}%"
+            clr = C["green"]
+        else:
+            val_str = str(int(v))
+            clr = C["blue"]
+        badge_cols[i % 5].markdown(f"""
+<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
+padding:10px 8px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
+    <div style='color:{clr};font-size:22px;font-weight:700;line-height:1.1'>{val_str}</div>
+    <div style='color:#c0d0e8;font-size:11px;margin-top:4px;line-height:1.3'>{short}</div>
+</div>""", unsafe_allow_html=True)
+
+    # ── 4 TAB — БҮР БҮТЭН ДЭЛГЭЦИЙН GROUPED CHART ───────────
+    st.markdown("<div class='section-title'>📉 Бүлгийн трендийн графикууд — Бодит ба Зорилт (2024–2031)</div>",
+                unsafe_allow_html=True)
+
+    tab_labels = [g[0] for g in GROUPS]
+    tabs = st.tabs(tab_labels)
+
+    # Өнгөний палитр — бодит ба зорилтын хослол
+    SERIES_COLORS = [
+        "#00d4ff", "#00e676", "#b388ff", "#ffab40",
+        "#ff80ab", "#64ffda", "#3a8aff", "#ff9800", "#f06292",
+    ]
+
+    for tab_idx, (tab_label, group_items) in enumerate(GROUPS):
+        with tabs[tab_idx]:
+
+            n = len(group_items)
+
+            # ── GROUPED LINE CHART — бүх үзүүлэлт нэг графикт ──
+            # Хувь болон тоог тусад нь Y тэнхлэгт гаргана
+            pct_items   = [(m, s, p) for m, s, p in group_items if p]
+            count_items = [(m, s, p) for m, s, p in group_items if not p]
+
+            # Нийт 1 их chart + доод хэсэгт тэнхимийн харьцуулалт
+            if pct_items and count_items:
+                # Хоёр subplot — тоо дээр, хувь доор
+                from plotly.subplots import make_subplots
+                fig_main = make_subplots(
+                    rows=2, cols=1,
+                    subplot_titles=["Тоон үзүүлэлтүүд", "Хувийн үзүүлэлтүүд (%)"],
+                    vertical_spacing=0.12,
+                    row_heights=[0.45, 0.55],
+                )
+                for ci, (met, short, _) in enumerate(count_items):
+                    yrs_k, vals_k = kseries(met, D)
+                    hx = [y for y, v in zip(yrs_k, vals_k) if y <= CURRENT_YEAR and v is not None]
+                    hy = [v for y, v in zip(yrs_k, vals_k) if y <= CURRENT_YEAR and v is not None]
+                    fx = [y for y, v in zip(yrs_k, vals_k) if y > CURRENT_YEAR and v is not None]
+                    fy = [v for y, v in zip(yrs_k, vals_k) if y > CURRENT_YEAR and v is not None]
+                    clr = SERIES_COLORS[ci % len(SERIES_COLORS)]
+                    fig_main.add_trace(go.Scatter(
+                        x=hx, y=hy, name=short, mode="lines+markers",
+                        line=dict(color=clr, width=2.5),
+                        marker=dict(size=8, color=clr),
+                        legendgroup=f"cnt{ci}", showlegend=True,
+                    ), row=1, col=1)
+                    if fx and hx:
+                        fig_main.add_trace(go.Scatter(
+                            x=[hx[-1]] + fx, y=[hy[-1]] + fy,
+                            name=f"{short} (зорилт)",
+                            mode="lines+markers",
+                            line=dict(color=clr, width=2, dash="dot"),
+                            marker=dict(size=7, color=clr, symbol="diamond"),
+                            legendgroup=f"cnt{ci}", showlegend=True,
+                        ), row=1, col=1)
+
+                for pi, (met, short, _) in enumerate(pct_items):
+                    yrs_k, vals_k = kseries(met, D)
+                    hx = [y for y, v in zip(yrs_k, vals_k) if y <= CURRENT_YEAR and v is not None]
+                    hy = [v for y, v in zip(yrs_k, vals_k) if y <= CURRENT_YEAR and v is not None]
+                    fx = [y for y, v in zip(yrs_k, vals_k) if y > CURRENT_YEAR and v is not None]
+                    fy = [v for y, v in zip(yrs_k, vals_k) if y > CURRENT_YEAR and v is not None]
+                    clr = SERIES_COLORS[(pi + len(count_items)) % len(SERIES_COLORS)]
+                    fig_main.add_trace(go.Scatter(
+                        x=hx, y=hy, name=short, mode="lines+markers",
+                        line=dict(color=clr, width=2.5),
+                        marker=dict(size=8, color=clr),
+                        legendgroup=f"pct{pi}", showlegend=True,
+                    ), row=2, col=1)
+                    if fx and hx:
+                        fig_main.add_trace(go.Scatter(
+                            x=[hx[-1]] + fx, y=[hy[-1]] + fy,
+                            name=f"{short} (зорилт)",
+                            mode="lines+markers",
+                            line=dict(color=clr, width=2, dash="dot"),
+                            marker=dict(size=7, color=clr, symbol="diamond"),
+                            legendgroup=f"pct{pi}", showlegend=True,
+                        ), row=2, col=1)
+
+                fig_main.update_yaxes(
+                    tickformat=".0%", gridcolor=C["grid"],
+                    zerolinecolor=C["grid"], row=2, col=1
+                )
+                fig_main.update_yaxes(
+                    gridcolor=C["grid"], zerolinecolor=C["grid"], row=1, col=1
+                )
+                fig_main.update_xaxes(gridcolor=C["grid"], zerolinecolor=C["grid"])
+                fig_main.update_layout(
+                    plot_bgcolor=C["bg"], paper_bgcolor=C["bg"],
+                    font=dict(color=C["text"], size=11),
+                    height=700,
+                    margin=dict(l=60, r=40, t=60, b=40),
+                    legend=dict(
+                        bgcolor="rgba(8,14,28,0.8)",
+                        font=dict(color=C["text"], size=10),
+                        orientation="v", x=1.01, y=1,
+                        bordercolor=C["grid"], borderwidth=1,
+                    ),
+                )
+                # Subplot гарчгийн өнгө
+                for ann in fig_main.layout.annotations:
+                    ann.font.color = C["white"]
+                    ann.font.size = 13
+
+            elif count_items:
+                # Зөвхөн тоон
+                fig_main = go.Figure()
+                for ci, (met, short, _) in enumerate(count_items):
+                    yrs_k, vals_k = kseries(met, D)
+                    hx = [y for y, v in zip(yrs_k, vals_k) if y <= CURRENT_YEAR and v is not None]
+                    hy = [v for y, v in zip(yrs_k, vals_k) if y <= CURRENT_YEAR and v is not None]
+                    fx = [y for y, v in zip(yrs_k, vals_k) if y > CURRENT_YEAR and v is not None]
+                    fy = [v for y, v in zip(yrs_k, vals_k) if y > CURRENT_YEAR and v is not None]
+                    clr = SERIES_COLORS[ci % len(SERIES_COLORS)]
+                    fig_main.add_trace(go.Scatter(
+                        x=hx, y=hy, name=short, mode="lines+markers",
+                        line=dict(color=clr, width=2.5), marker=dict(size=8, color=clr),
+                    ))
+                    if fx and hx:
+                        fig_main.add_trace(go.Scatter(
+                            x=[hx[-1]] + fx, y=[hy[-1]] + fy,
+                            name=f"{short} (зорилт)", mode="lines+markers",
+                            line=dict(color=clr, width=2, dash="dot"),
+                            marker=dict(size=7, color=clr, symbol="diamond"),
+                        ))
+                fig_main.update_layout(
+                    plot_bgcolor=C["bg"], paper_bgcolor=C["bg"],
+                    font=dict(color=C["text"], size=11),
+                    height=500,
+                    margin=dict(l=60, r=40, t=40, b=40),
+                    xaxis=dict(gridcolor=C["grid"], zerolinecolor=C["grid"]),
+                    yaxis=dict(gridcolor=C["grid"], zerolinecolor=C["grid"]),
+                    legend=dict(
+                        bgcolor="rgba(8,14,28,0.8)",
+                        font=dict(color=C["text"], size=10),
+                        orientation="v", x=1.01, y=1,
+                        bordercolor=C["grid"], borderwidth=1,
+                    ),
+                )
+
+            else:
+                # Зөвхөн хувь
+                fig_main = go.Figure()
+                for pi, (met, short, _) in enumerate(pct_items):
+                    yrs_k, vals_k = kseries(met, D)
+                    hx = [y for y, v in zip(yrs_k, vals_k) if y <= CURRENT_YEAR and v is not None]
+                    hy = [v for y, v in zip(yrs_k, vals_k) if y <= CURRENT_YEAR and v is not None]
+                    fx = [y for y, v in zip(yrs_k, vals_k) if y > CURRENT_YEAR and v is not None]
+                    fy = [v for y, v in zip(yrs_k, vals_k) if y > CURRENT_YEAR and v is not None]
+                    clr = SERIES_COLORS[pi % len(SERIES_COLORS)]
+                    fig_main.add_trace(go.Scatter(
+                        x=hx, y=hy, name=short, mode="lines+markers",
+                        line=dict(color=clr, width=2.5), marker=dict(size=8, color=clr),
+                    ))
+                    if fx and hx:
+                        fig_main.add_trace(go.Scatter(
+                            x=[hx[-1]] + fx, y=[hy[-1]] + fy,
+                            name=f"{short} (зорилт)", mode="lines+markers",
+                            line=dict(color=clr, width=2, dash="dot"),
+                            marker=dict(size=7, color=clr, symbol="diamond"),
+                        ))
+                fig_main.update_layout(
+                    plot_bgcolor=C["bg"], paper_bgcolor=C["bg"],
+                    font=dict(color=C["text"], size=11),
+                    height=500,
+                    margin=dict(l=60, r=40, t=40, b=40),
+                    xaxis=dict(gridcolor=C["grid"], zerolinecolor=C["grid"]),
+                    yaxis=dict(
+                        tickformat=".0%",
+                        gridcolor=C["grid"], zerolinecolor=C["grid"]
+                    ),
+                    legend=dict(
+                        bgcolor="rgba(8,14,28,0.8)",
+                        font=dict(color=C["text"], size=10),
+                        orientation="v", x=1.01, y=1,
+                        bordercolor=C["grid"], borderwidth=1,
+                    ),
+                )
+
+            # 2026 оны босоо шугам нэмэх
+            fig_main.add_vline(
+                x=CURRENT_YEAR, line_dash="dash",
+                line_color="rgba(255,255,255,0.25)",
+                annotation_text="2026",
+                annotation_font_color="rgba(255,255,255,0.5)",
+                annotation_font_size=11,
+            )
+
             with st.container(border=True):
-                st.plotly_chart(fig_k, use_container_width=True)
+                st.plotly_chart(fig_main, use_container_width=True)
 
-    # ── SECTION C: Хувийн KPI трендийн графикууд ──
-    st.markdown("<div class='section-title'>📉 Хувийн KPI — Бодит ба Зорилтын трендийн график (2024–2031)</div>", unsafe_allow_html=True)
+            # ── ТЭНХИМИЙН GROUPED BAR — 2026 оны харьцуулалт ────
+            st.markdown(
+                f"<div class='section-title'>🏛️ {tab_label} — Тэнхимийн харьцуулалт (2026)</div>",
+                unsafe_allow_html=True,
+            )
 
-    kp1, kp2 = st.columns(2)
-    kp_cycle = [kp1, kp2] * 4
-    for i, met in enumerate(PCT_KPIS):
-        yrs_k, vals_k = kseries(met, D)
-        fig_kp = go.Figure()
-        hx = [y for y,v in zip(yrs_k,vals_k) if y<=CURRENT_YEAR and v is not None]
-        hy = [v for y,v in zip(yrs_k,vals_k) if y<=CURRENT_YEAR and v is not None]
-        fx = [y for y,v in zip(yrs_k,vals_k) if y>CURRENT_YEAR and v is not None]
-        fy = [v for y,v in zip(yrs_k,vals_k) if y>CURRENT_YEAR and v is not None]
-        short_title = met[:45] + "…" if len(met) > 45 else met
-        fig_kp.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
-            line=dict(color=C["green"], width=2.5), marker=dict(size=7, color=C["green"])))
-        if fx and hx:
-            fig_kp.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
-                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
-                marker=dict(size=7, color=C["target"], symbol="diamond")))
-        if CURRENT_YEAR in yrs_k:
-            fig_kp.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)",
-                annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)", annotation_font_size=10)
-        tkp = dict(**theme(280))
-        tkp["title"] = dict(text=short_title, font=dict(color=C["white"], size=11))
-        tkp["yaxis"]["tickformat"] = ".0%"
-        fig_kp.update_layout(**tkp)
-        with kp_cycle[i]:
+            fig_dept = go.Figure()
+            for ci, (met, short, is_pct) in enumerate(group_items):
+                clr = SERIES_COLORS[ci % len(SERIES_COLORS)]
+                dept_vals = []
+                for dept in DEPTS_K:
+                    v = kv(met, CURRENT_YEAR, dept)
+                    if v is None:
+                        dept_vals.append(0)
+                    elif is_pct:
+                        dept_vals.append(round(v * 100, 1))
+                    else:
+                        dept_vals.append(v)
+                fig_dept.add_trace(go.Bar(
+                    x=DEPTS_K, y=dept_vals,
+                    name=short,
+                    marker=dict(color=clr, cornerradius=6),
+                    text=[f"{v}%" if is_pct else str(int(v)) if v > 0 else "" for v in dept_vals],
+                    textposition="outside",
+                    textfont=dict(color=C["text"], size=9),
+                ))
+
+            fig_dept.update_layout(
+                plot_bgcolor=C["bg"], paper_bgcolor=C["bg"],
+                font=dict(color=C["text"], size=11),
+                height=420,
+                barmode="group",
+                bargap=0.18,
+                bargroupgap=0.05,
+                margin=dict(l=50, r=40, t=36, b=60),
+                xaxis=dict(
+                    gridcolor=C["grid"], zerolinecolor=C["grid"],
+                    tickfont=dict(size=10),
+                ),
+                yaxis=dict(
+                    gridcolor=C["grid"], zerolinecolor=C["grid"],
+                    ticksuffix="%" if all(p for _, _, p in group_items) else "",
+                ),
+                legend=dict(
+                    bgcolor="rgba(8,14,28,0.8)",
+                    font=dict(color=C["text"], size=10),
+                    orientation="h", y=-0.22,
+                    bordercolor=C["grid"], borderwidth=1,
+                ),
+            )
+
             with st.container(border=True):
-                st.plotly_chart(fig_kp, use_container_width=True)
+                st.plotly_chart(fig_dept, use_container_width=True)
 # ============================================================
 # FOOTER
 # ============================================================
