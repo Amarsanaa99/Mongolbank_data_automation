@@ -299,14 +299,33 @@ def load_fin_data():
         df[c] = pd.to_numeric(df[c], errors="coerce")
     df["Үзүүлэлт"] = df["Үзүүлэлт"].str.strip()
     return df
+
 df, DEPTS       = load_teacher_data()
 dfp, DEPTS_P    = load_prog_data()
 dfs, DEPTS_S    = load_stud_data()
 dfd, PROGRAMS_D, PROG_COLS_D = load_stud_dev_data()
 dfr = load_res_data()
 dff = load_fin_data()
+dfk = load_kpimain_data()
 CURRENT_YEAR = 2026
-
+# ============================================================
+# DATA LOADING — KPI Үндсэн үзүүлэлтүүд (kpimain)
+# ============================================================
+@st.cache_data
+def load_kpimain_data():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_PATH = os.path.join(BASE_DIR, "..", "data", "kpimain_data.xlsx")
+    df = pd.read_excel(DATA_PATH, sheet_name="Sheet1", header=None)
+    df.columns = ["Үзүүлэлт", "Он", "БУТ", "МКТ", "МСМТ", "НББТ",
+                  "ОУАЖССИ", "ОУНББСМИ", "ОУС", "СДСТ", "СУТ", "СШУТ", "ЭкТ", "ЭнТИнс", "ЭЗТ", "Нийт"]
+    df = df[df["Он"].notna() & (df["Он"] != "Он")]
+    df["Он"] = pd.to_numeric(df["Он"], errors="coerce").astype("Int64")
+    df = df[df["Он"].notna()]
+    df["Үзүүлэлт"] = df["Үзүүлэлт"].ffill().str.strip()
+    DEPTS = ["БУТ","МКТ","МСМТ","НББТ","ОУАЖССИ","ОУНББСМИ","ОУС","СДСТ","СУТ","СШУТ","ЭкТ","ЭнТИнс","ЭЗТ"]
+    for c in DEPTS + ["Нийт"]:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    return df
 # ============================================================
 # HELPERS
 # ============================================================
@@ -589,7 +608,7 @@ SELECTED_PROG_IDX = PROGRAMS_D.index(SELECTED_PROG) if SELECTED_PROG in PROGRAMS
 # ============================================================
 # HEADER — page navigation tabs
 # ============================================================
-col_h1, col_h2, col_h3, col_h4, col_h5, col_h6, col_h7 = st.columns([3, 1, 1, 1, 1, 1, 1])
+col_h1, col_h2, col_h3, col_h4, col_h5, col_h6, col_h7, col_h8 = st.columns([3, 1, 1, 1, 1, 1, 1, 1])
 with col_h1:
     disp_name = dept_labels.get(D, D) if st.session_state.page != "stud_dev" else f"📋 {SELECTED_PROG}"
     st.markdown(f"""
@@ -640,7 +659,12 @@ with col_h7:
         st.session_state.page = "fin"
         st.rerun()
 st.markdown("<div style='margin-bottom:16px'></div>", unsafe_allow_html=True)
-
+with col_h8:
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    if st.button("📊 Гол KPI үзүүлэлт", key="nav_kpimain",
+                 type="primary" if st.session_state.page == "kpimain" else "secondary"):
+        st.session_state.page = "kpimain"
+        st.rerun()
 # ============================================================
 # PAGE 1 — БАГШИЙН ХӨГЖИЛ
 # ============================================================
@@ -1990,6 +2014,135 @@ padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid {clr}
     fig_ov.update_layout(**t_ov)
     with st.container(border=True):
         st.plotly_chart(fig_ov, use_container_width=True)
+
+# ============================================================
+# PAGE 7 — ГОЛ KPI ҮЗҮҮЛЭЛТҮҮД (kpimain)
+# ============================================================
+elif st.session_state.page == "kpimain":
+
+    CURRENT_YEAR = 2026
+
+    def kv(metric, year, dept):
+        r = dfk[(dfk["Үзүүлэлт"]==metric) & (dfk["Он"]==year)]
+        return r.iloc[0][dept] if not r.empty else None
+
+    def kseries(metric, dept):
+        s = dfk[dfk["Үзүүлэлт"]==metric].sort_values("Он")
+        return list(s["Он"]), list(s[dept])
+
+    # KPI-уудыг 2 бүлэгт хуваах
+    COUNT_KPIS = [
+        "Олон улсад магадлан итгэмжлэгдсэн хөтөлбөрийн тоо, нэр",
+        "Олон улсын мэргэжлийн байгуулагаар итгэмжлэгдсэн хөтөлбөрийн тоо",
+        "AI хосолсон хөтөлбөрийн тоо",
+        "Гадаад хэлээр явуулах хөтөлбөрийн тоо",
+        "Олон улсын дипломтой хөтөлбөрийн тоо",
+        "Хамтарсан хөтөлбөр хэрэгжүүлэгч сургууль, институтын тоо",
+        "Гадаад хэлээр зааж буй хичээлийн тоо",
+        "Хэрэгжүүлсэн зэргийн бус сургалтын тоо",
+        "Идэвхтэй суралцаж буй оюутны тоо",
+        "Тэтгэлэгт хамрагдсан оюутны тоо",
+        "Гадаад хэл дээр хичээл заах чадвартай багшийн тоо",
+        "Олон улсын мэргэжлийн зэрэгтэй багшийн тоо",
+    ]
+    PCT_KPIS = [
+        "AI ба дижитал шилжилт",
+        "Хичээлийн суралцахуйн үр дүнгийн биелэлт",
+        "Хөтөлбөрийн суралцахуйн үр дүнгийн биелэлт",
+        "Оюутны сэтгэл ханамжийн хувь",
+        "Оюутны үргэлжлүүлэн суралцах хувь",
+        "Хугацаандаа төгссөн оюутны хувь",
+        "Суралцахаа орхисон оюутны хувь",
+        "Төгсөгчдийн төгсөөд 6–12 сарын дотор ажилд орсон хувь",
+    ]
+
+    # ── SECTION A: 2026 оны KPI badge-үүд ──
+    kpi_yr_k = section_with_year("📊 Гол KPI үзүүлэлтүүд — 2026", "kpi_yr_kpimain", dfk)
+
+    st.markdown("<div class='section-title'>🔢 Тоон үзүүлэлтүүд</div>", unsafe_allow_html=True)
+    cnt_cols = st.columns(4)
+    for i, met in enumerate(COUNT_KPIS):
+        v = kv(met, kpi_yr_k, D)
+        val_str = str(int(v)) if v is not None else "—"
+        short = met[:30] + "…" if len(met) > 30 else met
+        cnt_cols[i % 4].markdown(f"""
+<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
+padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid #00d4ff;'>
+    <div style='color:#00d4ff;font-size:26px;font-weight:700;'>{val_str}</div>
+    <div style='color:#ffffff;font-size:12px;margin-top:4px;'>{short}</div>
+</div>""", unsafe_allow_html=True)
+
+    st.markdown("<div class='section-title'>📈 Хувийн үзүүлэлтүүд</div>", unsafe_allow_html=True)
+    pct_cols_k = st.columns(4)
+    for i, met in enumerate(PCT_KPIS):
+        v = kv(met, kpi_yr_k, D)
+        val_str = f"{v*100:.1f}%" if v is not None else "—"
+        short = met[:30] + "…" if len(met) > 30 else met
+        pct_cols_k[i % 4].markdown(f"""
+<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
+padding:12px 10px;text-align:center;margin-bottom:8px;border-top:2px solid #00e676;'>
+    <div style='color:#00e676;font-size:26px;font-weight:700;'>{val_str}</div>
+    <div style='color:#ffffff;font-size:12px;margin-top:4px;'>{short}</div>
+</div>""", unsafe_allow_html=True)
+
+    # ── SECTION B: Тоон KPI трендийн графикууд ──
+    st.markdown("<div class='section-title'>📉 Тоон KPI — Бодит ба Зорилтын трендийн график (2024–2031)</div>", unsafe_allow_html=True)
+
+    kc1, kc2 = st.columns(2)
+    kc_cycle = [kc1, kc2] * 6
+    for i, met in enumerate(COUNT_KPIS):
+        yrs_k, vals_k = kseries(met, D)
+        fig_k = go.Figure()
+        hx = [y for y,v in zip(yrs_k,vals_k) if y<=CURRENT_YEAR and v is not None]
+        hy = [v for y,v in zip(yrs_k,vals_k) if y<=CURRENT_YEAR and v is not None]
+        fx = [y for y,v in zip(yrs_k,vals_k) if y>CURRENT_YEAR and v is not None]
+        fy = [v for y,v in zip(yrs_k,vals_k) if y>CURRENT_YEAR and v is not None]
+        short_title = met[:45] + "…" if len(met) > 45 else met
+        fig_k.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
+            line=dict(color=C["blue"], width=2.5), marker=dict(size=7, color=C["blue"])))
+        if fx and hx:
+            fig_k.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
+                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
+                marker=dict(size=7, color=C["target"], symbol="diamond")))
+        if CURRENT_YEAR in yrs_k:
+            fig_k.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)",
+                annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)", annotation_font_size=10)
+        tk = dict(**theme(280))
+        tk["title"] = dict(text=short_title, font=dict(color=C["white"], size=11))
+        fig_k.update_layout(**tk)
+        with kc_cycle[i]:
+            with st.container(border=True):
+                st.plotly_chart(fig_k, use_container_width=True)
+
+    # ── SECTION C: Хувийн KPI трендийн графикууд ──
+    st.markdown("<div class='section-title'>📉 Хувийн KPI — Бодит ба Зорилтын трендийн график (2024–2031)</div>", unsafe_allow_html=True)
+
+    kp1, kp2 = st.columns(2)
+    kp_cycle = [kp1, kp2] * 4
+    for i, met in enumerate(PCT_KPIS):
+        yrs_k, vals_k = kseries(met, D)
+        fig_kp = go.Figure()
+        hx = [y for y,v in zip(yrs_k,vals_k) if y<=CURRENT_YEAR and v is not None]
+        hy = [v for y,v in zip(yrs_k,vals_k) if y<=CURRENT_YEAR and v is not None]
+        fx = [y for y,v in zip(yrs_k,vals_k) if y>CURRENT_YEAR and v is not None]
+        fy = [v for y,v in zip(yrs_k,vals_k) if y>CURRENT_YEAR and v is not None]
+        short_title = met[:45] + "…" if len(met) > 45 else met
+        fig_kp.add_trace(go.Scatter(x=hx, y=hy, mode="lines+markers", name="Бодит",
+            line=dict(color=C["green"], width=2.5), marker=dict(size=7, color=C["green"])))
+        if fx and hx:
+            fig_kp.add_trace(go.Scatter(x=[hx[-1]]+fx, y=[hy[-1]]+fy, mode="lines+markers",
+                name="Зорилт", line=dict(color=C["target"], width=2, dash="dot"),
+                marker=dict(size=7, color=C["target"], symbol="diamond")))
+        if CURRENT_YEAR in yrs_k:
+            fig_kp.add_vline(x=CURRENT_YEAR, line_dash="dash", line_color="rgba(255,255,255,0.2)",
+                annotation_text="2026", annotation_font_color="rgba(255,255,255,0.4)", annotation_font_size=10)
+        tkp = dict(**theme(280))
+        tkp["title"] = dict(text=short_title, font=dict(color=C["white"], size=11))
+        tkp["yaxis"]["tickformat"] = ".0%"
+        fig_kp.update_layout(**tkp)
+        with kp_cycle[i]:
+            with st.container(border=True):
+                st.plotly_chart(fig_kp, use_container_width=True)
 # ============================================================
 # FOOTER
 # ============================================================
