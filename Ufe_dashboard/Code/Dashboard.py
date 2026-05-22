@@ -19,7 +19,14 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background: #0a0f1e; color: #c8d8f0; }
-
+[data-testid="stHorizontalBlock"] button {
+    white-space: nowrap !important;
+    font-size: 11px !important;
+    padding: 6px 4px !important;
+    min-height: 44px !important;
+    line-height: 1.3 !important;
+    word-break: keep-all !important;
+}
 /* Sidebar суурь */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #080d1a 0%, #0a1228 100%);
@@ -626,7 +633,7 @@ SELECTED_PROG_IDX = PROGRAMS_D.index(SELECTED_PROG) if SELECTED_PROG in PROGRAMS
 # ============================================================
 # HEADER — page navigation tabs
 # ============================================================
-col_h1, col_h2, col_h3, col_h4, col_h5, col_h6, col_h7, col_h8 = st.columns([3, 1, 1, 1, 1, 1, 1, 1])
+col_h1, col_h2, col_h3, col_h4, col_h5, col_h6, col_h7, col_h8 = st.columns([2.5, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2])
 with col_h1:
     disp_name = dept_labels.get(D, D) if st.session_state.page != "stud_dev" else f"📋 {SELECTED_PROG}"
     st.markdown(f"""
