@@ -2154,14 +2154,6 @@ padding:10px 8px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};
                         line=dict(color=clr, width=2.5),
                         marker=dict(size=8, color=clr),
                         yaxis="y1",
-                    ))
-                    if fx and hx:
-                        fig_main.add_trace(go.Scatter(
-                            x=[hx[-1]] + fx, y=[hy[-1]] + fy,
-                            name=f"{short} (зорилт)", mode="lines+markers",
-                            line=dict(color=clr, width=2, dash="dot"),
-                            marker=dict(size=7, color=clr, symbol="diamond"),
-                            yaxis="y1",
                         ))
 
                 for pi, (met, short) in enumerate(pct_items):
