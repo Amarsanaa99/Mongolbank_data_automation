@@ -687,7 +687,7 @@ with col_h7:
 st.markdown("<div style='margin-bottom:16px'></div>", unsafe_allow_html=True)
 with col_h8:
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    if st.button("📊 KPI үзүүлэлт", key="nav_kpimain",
+    if st.button("📊 Чухал KPI үзүүлэлтүүд", key="nav_kpimain",
                  type="primary" if st.session_state.page == "kpimain" else "secondary"):
         st.session_state.page = "kpimain"
         st.rerun()
@@ -2113,8 +2113,6 @@ elif st.session_state.page == "kpimain":
         "#00d4ff", "#00e676", "#b388ff", "#ffab40",
         "#ff80ab", "#64ffda", "#3a8aff", "#ff9800", "#f06292",
     ]
-
-    # ── KPI BADGE — 2026 оны утга ─────────────────────────────
 
     # ── 4 TAB ─────────────────────────────────────────────────
     st.markdown(
