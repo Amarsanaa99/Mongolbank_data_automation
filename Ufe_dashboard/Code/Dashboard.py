@@ -2106,24 +2106,6 @@ elif st.session_state.page == "kpimain":
     ]
 
     # ── KPI BADGE — 2026 оны утга ─────────────────────────────
-    kpi_yr_k = section_with_year("📊 Гол KPI үзүүлэлтүүд", "kpi_yr_kpimain", dfk)
-
-    all_flat = GROUP1 + GROUP2 + GROUP3 + GROUP4
-    badge_cols = st.columns(5)
-    for i, (met, short, is_pct) in enumerate(all_flat):
-        v = kv(met, kpi_yr_k, D)
-        if v is None:
-            val_str, clr = "—", C["blue"]
-        elif is_pct:
-            val_str, clr = f"{v*100:.1f}%", C["green"]
-        else:
-            val_str, clr = str(int(v)), C["blue"]
-        badge_cols[i % 5].markdown(f"""
-<div style='background:#0a1428;border:1px solid #162040;border-radius:10px;
-padding:10px 8px;text-align:center;margin-bottom:8px;border-top:2px solid {clr};'>
-    <div style='color:{clr};font-size:22px;font-weight:700;line-height:1.1'>{val_str}</div>
-    <div style='color:#c0d0e8;font-size:11px;margin-top:4px;line-height:1.3'>{short}</div>
-</div>""", unsafe_allow_html=True)
 
     # ── 4 TAB ─────────────────────────────────────────────────
     st.markdown(
