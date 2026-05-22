@@ -20,7 +20,7 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background: #0a0f1e; color: #c8d8f0; }
 [data-testid="stHorizontalBlock"] button {
-    white-space: nowrap !important;
+    white-space: normal !important;
     font-size: 10px !important;
     padding: 4px 3px !important;
     min-height: 38px !important;
