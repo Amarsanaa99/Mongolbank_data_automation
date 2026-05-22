@@ -548,11 +548,11 @@ def stacked_bar_fig(title, cat, metrics, labels, colors, year, h=300, src="teach
 # SESSION STATE
 # ============================================================
 if "page" not in st.session_state:
-    st.session_state.page = "teacher"
+    st.session_state.page = "main"
 if "dept" not in st.session_state:
     st.session_state.dept = "Нийт"
 if "sd_prog" not in st.session_state:
-    st.session_state.sd_prog = "Эдийн засаг"
+    st.session_state.sd_prog = "СУТ"
 
 # ============================================================
 # SIDEBAR
