@@ -554,6 +554,9 @@ with right:
             grid=False,
             domain=True,
             orient='bottom',
+            labelColor="#cbd5e1",
+            tickColor="#475569",
+            domainColor="#475569",
         
             labelExpr="""
             timeFormat(
@@ -634,8 +637,12 @@ with right:
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
+                        gridColor="#334155",
                         domain=True,
                         labelFontSize=11,
+                        labelColor="#cbd5e1",
+                        tickColor="#475569",
+                        domainColor="#475569",
                         offset=5,
                         format=",.2f"
                     )
@@ -692,8 +699,12 @@ with right:
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
+                        gridColor="#334155",
                         domain=True,
                         labelFontSize=11,
+                        labelColor="#cbd5e1",
+                        tickColor="#475569",
+                        domainColor="#475569",
                         offset=5,
                         format=",.2f"
                     )
@@ -781,8 +792,12 @@ with right:
                         axis=alt.Axis(
                             grid=True,
                             gridOpacity=0.25,
+                            gridColor="#334155",
                             domain=True,
                             labelFontSize=11,
+                            labelColor="#cbd5e1",
+                            tickColor="#475569",
+                            domainColor="#475569",
                             offset=5,
                             orient="left"
                         )
@@ -992,8 +1007,11 @@ with right:
             )
             .configure_axis(
                 grid=True,
-                gridColor='#e0e0e0',
-                gridOpacity=0.3
+                gridColor='#334155',
+                gridOpacity=0.3,
+                labelColor="#cbd5e1",
+                tickColor="#475569",
+                domainColor="#475569"
             )
         )
 
