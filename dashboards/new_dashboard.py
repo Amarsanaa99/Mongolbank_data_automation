@@ -39,7 +39,7 @@ h2, h3 {
 </style>
 """, unsafe_allow_html=True)
 
-BASE_DIR = Path(__file__).resolve().parent  # dashboards хавтас
+BASE_DIR = Path(__file__).resolve().parents[1]
 EXCEL_PATH = BASE_DIR / "Dashboard_cleaned_data.xlsx"
 
 @st.cache_data(show_spinner=False)
