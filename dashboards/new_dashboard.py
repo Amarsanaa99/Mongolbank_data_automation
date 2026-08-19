@@ -660,7 +660,7 @@ with right:
         
         # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
         hover = alt.selection_single(
-            name='hover_sel',           # 🔑 ЭНЭ мөрийг нэмнэ
+            name='main_chart_hover',   # 🔑 илүү өвөрмөц нэр
             fields=["time_dt"],
             nearest=True,
             on="mouseover",
