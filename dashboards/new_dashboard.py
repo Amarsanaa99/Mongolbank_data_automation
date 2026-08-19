@@ -502,7 +502,10 @@ with right:
             st.stop()
 
         import altair as alt
-        
+        import uuid
+
+        # 🔑 SCRIPT RERUN БҮРТ ШИНЭ ӨВӨРМӨЦ ID
+        _uid = uuid.uuid4().hex[:8]
         # ===== 3️⃣ TIME FORMATTING =====
         chart_df = chart_df.copy()
         
