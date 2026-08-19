@@ -554,9 +554,6 @@ with right:
             grid=False,
             domain=True,
             orient='bottom',
-            labelColor="#cbd5e1",
-            tickColor="#475569",
-            domainColor="#475569",
         
             labelExpr="""
             timeFormat(
@@ -591,7 +588,15 @@ with right:
             bind='scales',  # Mouse wheel zoom + drag pan
             translate=True,  # Зүүн баруун тийш гүйлгэх
             zoom=True,       # Zoom идэвхжүүлэх
-            #empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
+            empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
+        )
+        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
+        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
+        mini_brush = alt.selection_interval(
+            encodings=['x'],
+            translate=True,   # Зүүн баруун тийш гүйлгэх
+            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
+            empty=False
         )
         
         # ===== 7️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
@@ -621,7 +626,7 @@ with right:
                     "time_dt:T",
                     title=None,
                     axis=x_axis,
-                    scale=alt.Scale(zero=False)
+                    scale=alt.Scale(zero=False, domain=mini_brush)
                 ),
                 y=alt.Y(
                     "DisplayValue:Q",
@@ -629,12 +634,8 @@ with right:
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
-                        gridColor="#334155",
                         domain=True,
                         labelFontSize=11,
-                        labelColor="#cbd5e1",
-                        tickColor="#475569",
-                        domainColor="#475569",
                         offset=5,
                         format=",.2f"
                     )
@@ -691,12 +692,8 @@ with right:
                     axis=alt.Axis(
                         grid=True,
                         gridOpacity=0.25,
-                        gridColor="#334155",
                         domain=True,
                         labelFontSize=11,
-                        labelColor="#cbd5e1",
-                        tickColor="#475569",
-                        domainColor="#475569",
                         offset=5,
                         format=",.2f"
                     )
@@ -775,7 +772,7 @@ with right:
                         "time_dt:T",
                         title=None,
                         axis=x_axis,
-                        scale=alt.Scale(zero=False)
+                        scale=alt.Scale(zero=False, domain=mini_brush)
                     ),
                     y=alt.Y(
                         "Value:Q",
@@ -784,12 +781,8 @@ with right:
                         axis=alt.Axis(
                             grid=True,
                             gridOpacity=0.25,
-                            gridColor="#334155",
                             domain=True,
                             labelFontSize=11,
-                            labelColor="#cbd5e1",
-                            tickColor="#475569",
-                            domainColor="#475569",
                             offset=5,
                             orient="left"
                         )
@@ -932,9 +925,18 @@ with right:
         )
         
         mini_chart = (
-        alt.layer(mini_line, mini_window)
-        .properties(height=60, width=800)
+            alt.layer(
+                mini_line,
+                mini_window
+            )
+            .properties(
+                height=60,
+                width=800
+            )
+            # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
+            .add_params(mini_brush)
         )
+
         if is_credit_supply and all([household_bar, corporate_bar, household_line, corporate_line]):
             # Custom legend for Credit Supply
             all_inds = [household_bar, corporate_bar, household_line, corporate_line]
@@ -990,11 +992,8 @@ with right:
             )
             .configure_axis(
                 grid=True,
-                gridColor='#334155',
-                gridOpacity=0.3,
-                labelColor="#cbd5e1",
-                tickColor="#475569",
-                domainColor="#475569"
+                gridColor='#e0e0e0',
+                gridOpacity=0.3
             )
         )
 
