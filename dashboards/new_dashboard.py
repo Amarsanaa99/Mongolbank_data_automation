@@ -596,10 +596,9 @@ with right:
         # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
         # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
         mini_brush = alt.selection_interval(
-            encodings=['x'],
-            translate=True,   # Зүүн баруун тийш гүйлгэх
-            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
-            empty=False
+        encodings=['x'],
+        translate=True,   # Зүүн баруун тийш гүйлгэх
+        zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
         )
         
         # ===== 7️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
