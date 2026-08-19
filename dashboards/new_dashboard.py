@@ -627,7 +627,7 @@ with right:
                     "time_dt:T",
                     title=None,
                     axis=x_axis,
-                    scale=alt.Scale(zero=False, domain=mini_brush)
+                    scale=alt.Scale(zero=False)   # domain-г Vega-Lite өөрөө bind:'scales'-аар удирдана
                 ),
                 y=alt.Y(
                     "DisplayValue:Q",
@@ -773,7 +773,7 @@ with right:
                         "time_dt:T",
                         title=None,
                         axis=x_axis,
-                        scale=alt.Scale(zero=False, domain=mini_brush)
+                        scale=alt.Scale(zero=False)
                     ),
                     y=alt.Y(
                         "Value:Q",
