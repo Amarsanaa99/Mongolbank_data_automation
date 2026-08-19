@@ -584,21 +584,22 @@ with right:
         # ===== 6️⃣ SHARED BRUSH/ZOOM SELECTION =====
         # ЗӨВЛӨГӨӨ: НЭГ selection_interval ашиглан хоёр графикийг холбоно
         zoom_brush = alt.selection_interval(
+            name='zoom_brush_sel',      # 🔑 ЭНЭ мөрийг нэмнэ
             encodings=['x'],
-            bind='scales',  # Mouse wheel zoom + drag pan
-            translate=True,  # Зүүн баруун тийш гүйлгэх
-            zoom=True,       # Zoom идэвхжүүлэх
-            empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
+            bind='scales',
+            translate=True,
+            zoom=True,
+            empty=False
         )
         # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
         # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
         mini_brush = alt.selection_interval(
+            name='mini_brush_sel',      # 🔑 ЭНЭ мөрийг нэмнэ
             encodings=['x'],
-            translate=True,   # Зүүн баруун тийш гүйлгэх
-            zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
+            translate=True,
+            zoom=False,
             empty=False
         )
-        
         # ===== 7️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
         base = (
             alt.Chart(chart_df)
@@ -659,13 +660,13 @@ with right:
         
         # ===== 8️⃣ HOVER СОНГОЛТ - ЯГ ӨМНӨХ ШИГ =====
         hover = alt.selection_single(
+            name='hover_sel',           # 🔑 ЭНЭ мөрийг нэмнэ
             fields=["time_dt"],
             nearest=True,
             on="mouseover",
             empty=False,
             clear="mouseout"
         )
-        
         # 🔥 CREDIT SUPPLY DETECTION
         is_credit_supply = (group == "Credit supply" and freq == "Quarterly")
         
