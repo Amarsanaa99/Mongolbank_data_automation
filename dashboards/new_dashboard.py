@@ -584,7 +584,8 @@ with right:
             cornerRadius=0,
             labelLimit=180
         )
-        # ===== PLOTLY MAIN CHART (Vega selection-signal алдааг бүрмөсөн тойрч гарна) =====
+
+        # ===== PLOTLY MAIN CHART — PREMIUM DARK FINTECH DESIGN =====
         import plotly.graph_objects as go
 
         # 🔥 Percentage indicator-уудыг 100-аар үржүүлсэн display DataFrame
@@ -603,6 +604,15 @@ with right:
             household_line = next((ind for ind in valid_indicators if "household" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
             corporate_line = next((ind for ind in valid_indicators if "corporate" in ind.lower() and "supply" in ind.lower() and "issued" not in ind.lower()), None)
 
+        # 🎨 PREMIUM COLOR PALETTE (dashboard-ийн өнгийг баримтална)
+        PALETTE = ["#60a5fa", "#fbbf24", "#34d399", "#f87171",
+                   "#c084fc", "#22d3ee", "#fb923c", "#f472b6"]
+
+        def hex_to_rgba(hex_color, alpha):
+            hex_color = hex_color.lstrip("#")
+            r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+            return f"rgba({r},{g},{b},{alpha})"
+
         fig = go.Figure()
 
         if is_credit_supply and all([household_bar, corporate_bar, household_line, corporate_line]):
@@ -610,76 +620,136 @@ with right:
             fig.add_trace(go.Bar(
                 x=display_df["time_dt"], y=display_df[household_bar],
                 name=household_bar,
-                marker=dict(color="rgba(251,191,36,0.15)", line=dict(color="#fbbf24", width=2))
+                marker=dict(color="rgba(251,191,36,0.18)", line=dict(color="#fbbf24", width=1.5)),
+                hovertemplate="<b>%{fullData.name}</b><br>%{y:,.2f}<extra></extra>"
             ))
             fig.add_trace(go.Bar(
                 x=display_df["time_dt"], y=display_df[corporate_bar],
                 name=corporate_bar,
-                marker=dict(color="rgba(59,130,246,0.15)", line=dict(color="#3b82f6", width=2))
+                marker=dict(color="rgba(96,165,250,0.18)", line=dict(color="#60a5fa", width=1.5)),
+                hovertemplate="<b>%{fullData.name}</b><br>%{y:,.2f}<extra></extra>"
             ))
-            fig.update_layout(barmode="stack")
+            fig.update_layout(barmode="stack", bargap=0.25)
 
             fig.add_trace(go.Scatter(
                 x=display_df["time_dt"], y=display_df[household_line],
                 name=household_line, mode="lines",
-                line=dict(color="#fbbf24", width=2.5),
-                yaxis="y2"
+                line=dict(color="#fbbf24", width=2.5, shape="spline", smoothing=0.6),
+                yaxis="y2",
+                hovertemplate="<b>%{fullData.name}</b><br>%{y:,.2f}<extra></extra>"
             ))
             fig.add_trace(go.Scatter(
                 x=display_df["time_dt"], y=display_df[corporate_line],
                 name=corporate_line, mode="lines",
-                line=dict(color="#3b82f6", width=2.5, dash="dash"),
-                yaxis="y2"
+                line=dict(color="#60a5fa", width=2.5, dash="dot", shape="spline", smoothing=0.6),
+                yaxis="y2",
+                hovertemplate="<b>%{fullData.name}</b><br>%{y:,.2f}<extra></extra>"
             ))
             fig.update_layout(
-                yaxis2=dict(overlaying="y", side="right", showgrid=False)
+                yaxis2=dict(overlaying="y", side="right", showgrid=False, zeroline=False)
             )
         else:
-            # ===== ЕРДИЙН LINE CHART (олон indicator) =====
-            palette = ["#3b82f6", "#fbbf24", "#22c55e", "#ef4444",
-                       "#a855f7", "#06b6d4", "#f97316", "#ec4899"]
-
+            # ===== ЕРДИЙН SMOOTH LINE CHART + GRADIENT FILL =====
             for i, ind in enumerate(valid_indicators):
-                color = palette[i % len(palette)]
+                color = PALETTE[i % len(PALETTE)]
                 s = display_df[["time_dt", ind]].dropna()
                 if s.empty:
                     continue
+
+                # Цорын ганц indicator үед л gradient fill хийнэ (олон indicator дээр fill эмх замбараагүй харагддаг)
+                fill_mode = "tozeroy" if len(valid_indicators) == 1 else None
 
                 fig.add_trace(go.Scatter(
                     x=s["time_dt"], y=s[ind],
                     mode="lines",
                     name=ind,
-                    line=dict(width=2.4, color=color),
-                    hovertemplate="%{x|%Y-%m}<br>" + ind + ": %{y:,.2f}<extra></extra>"
+                    line=dict(width=2.6, color=color, shape="spline", smoothing=0.55),
+                    fill=fill_mode,
+                    fillcolor=hex_to_rgba(color, 0.12) if fill_mode else None,
+                    hovertemplate="<b>%{fullData.name}</b>: %{y:,.2f}<extra></extra>"
                 ))
 
-                # 🔴 Сүүлийн бодит утгын цэг
+                # 🔴 Сүүлийн бодит утга — GLOW эффект (том тунгалаг цэг + жижиг цэвэр цэг)
                 last_row = s.iloc[-1]
                 fig.add_trace(go.Scatter(
                     x=[last_row["time_dt"]], y=[last_row[ind]],
                     mode="markers",
-                    marker=dict(size=10, color=color, line=dict(color="white", width=2)),
-                    showlegend=False,
-                    hoverinfo="skip"
+                    marker=dict(size=22, color=hex_to_rgba(color, 0.18), line=dict(width=0)),
+                    showlegend=False, hoverinfo="skip"
+                ))
+                fig.add_trace(go.Scatter(
+                    x=[last_row["time_dt"]], y=[last_row[ind]],
+                    mode="markers",
+                    marker=dict(size=9, color=color, line=dict(color="#0f172a", width=2)),
+                    showlegend=False, hoverinfo="skip"
                 ))
 
-        # ===== ЕРДИЙН LAYOUT (zoom/pan/mini-overview бүгд built-in) =====
+        # ===== PREMIUM LAYOUT =====
         fig.update_layout(
             height=460,
             hovermode="x unified",
-            legend=dict(orientation="v", yanchor="top", y=1, xanchor="left", x=1.02),
-            margin=dict(l=10, r=10, t=20, b=10),
+            font=dict(family="Inter, -apple-system, sans-serif", size=12, color="#cbd5e1"),
+            legend=dict(
+                orientation="v",
+                yanchor="top", y=1,
+                xanchor="left", x=1.02,
+                bgcolor="rgba(0,0,0,0)",
+                font=dict(size=11, color="#cbd5e1")
+            ),
+            margin=dict(l=10, r=10, t=10, b=10),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
+
+            # 🎯 STYLIZED UNIFIED HOVER LABEL
+            hoverlabel=dict(
+                bgcolor="rgba(15,23,42,0.95)",
+                bordercolor="rgba(96,165,250,0.4)",
+                font=dict(family="Monaco, 'Courier New', monospace", size=12, color="#e2e8f0")
+            ),
+
             xaxis=dict(
-                rangeslider=dict(visible=True, thickness=0.08),  # 🔥 MINI OVERVIEW ОРНЫ ОРОНД
                 showgrid=False,
-                type="date"
+                type="date",
+                showspikes=True,
+                spikemode="across",
+                spikesnap="cursor",
+                spikedash="dot",
+                spikethickness=1,
+                spikecolor="rgba(148,163,184,0.5)",
+                rangeslider=dict(
+                    visible=True,
+                    thickness=0.09,
+                    bgcolor="rgba(255,255,255,0.02)",
+                    bordercolor="rgba(96,165,250,0.25)",
+                    borderwidth=1
+                ),
+                rangeselector=dict(
+                    buttons=[
+                        dict(count=1, label="1Y", step="year", stepmode="backward"),
+                        dict(count=5, label="5Y", step="year", stepmode="backward"),
+                        dict(count=10, label="10Y", step="year", stepmode="backward"),
+                        dict(step="all", label="All"),
+                    ],
+                    bgcolor="rgba(255,255,255,0.04)",
+                    activecolor="rgba(96,165,250,0.35)",
+                    bordercolor="rgba(148,163,184,0.15)",
+                    borderwidth=1,
+                    font=dict(size=11, color="#cbd5e1"),
+                    y=1.12,
+                    x=0
+                )
             ),
             yaxis=dict(
                 showgrid=True,
-                gridcolor="rgba(150,150,150,0.2)",
-                zeroline=False
+                gridcolor="rgba(148,163,184,0.12)",
+                gridwidth=1,
+                zeroline=False,
+                tickformat=",.2f",
+                showspikes=True,
+                spikemode="across",
+                spikedash="dot",
+                spikethickness=1,
+                spikecolor="rgba(148,163,184,0.5)"
             )
         )
 
@@ -699,8 +769,19 @@ with right:
                 use_container_width=True
             )
 
-        # ===== MAIN CHART DISPLAY =====
-        st.plotly_chart(fig, use_container_width=True)
+        # ===== MAIN CHART DISPLAY (цэвэрхэн modebar) =====
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+            config={
+                "displaylogo": False,
+                "modeBarButtonsToRemove": [
+                    "lasso2d", "select2d", "autoScale2d",
+                    "toggleSpikelines"
+                ],
+                "scrollZoom": True
+            }
+        )
 
 
     
