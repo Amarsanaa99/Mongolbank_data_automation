@@ -591,14 +591,7 @@ with right:
             bind='scales',  # Mouse wheel zoom + drag pan
             translate=True,  # Зүүн баруун тийш гүйлгэх
             zoom=True,       # Zoom идэвхжүүлэх
-            empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
-        )
-        # ===== 1️⃣1️⃣ MINI OVERVIEW - ЯГ ӨМНӨХ ШИГЭЭ ХЭМЖЭЭ =====
-        # MINI CHART-д ЗӨВХӨН PAN (NO ZOOM) - FRED ШИГЭЭ
-        mini_brush = alt.selection_interval(
-        encodings=['x'],
-        translate=True,   # Зүүн баруун тийш гүйлгэх
-        zoom=False,       # ❌ ZOOM ХИЙХГҮЙ
+            #empty=False      # Анхны байдлаар бүх өгөгдөл харагдана
         )
         
         # ===== 7️⃣ BASE CHART - ЯГ ӨМНӨХ ШИГЭЭ =====
@@ -628,7 +621,7 @@ with right:
                     "time_dt:T",
                     title=None,
                     axis=x_axis,
-                    scale=alt.Scale(zero=False, domain=mini_brush)
+                    scale=alt.Scale(zero=False)
                 ),
                 y=alt.Y(
                     "DisplayValue:Q",
@@ -782,7 +775,7 @@ with right:
                         "time_dt:T",
                         title=None,
                         axis=x_axis,
-                        scale=alt.Scale(zero=False, domain=mini_brush)
+                        scale=alt.Scale(zero=False)
                     ),
                     y=alt.Y(
                         "Value:Q",
@@ -939,18 +932,9 @@ with right:
         )
         
         mini_chart = (
-            alt.layer(
-                mini_line,
-                mini_window
-            )
-            .properties(
-                height=60,
-                width=800
-            )
-            # ✅ MINI CHART ДЭЭР PAN ХИЙХ БОЛОМЖТОЙ (WINDOW-Г ЧИРЖ БАЙРЛУУЛАХ)
-            .add_params(mini_brush)
+        alt.layer(mini_line, mini_window)
+        .properties(height=60, width=800)
         )
-
         if is_credit_supply and all([household_bar, corporate_bar, household_line, corporate_line]):
             # Custom legend for Credit Supply
             all_inds = [household_bar, corporate_bar, household_line, corporate_line]
